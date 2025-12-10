@@ -151,12 +151,12 @@ const signInWithGitHub = async () => {
   const strengthCount = Object.values(strength).filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-yellow-200 to-orange-200 flex items-center justify-center px-4">
+    <div className="min-h-screen  flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-2xl">
         
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Join Aisha</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Join Students Hub</h1>
         <p className="text-gray-600 text-center mb-8">
-          Create your account and start sharing
+          Create your account and get your first Job
         </p>
 
         {error && (
@@ -182,7 +182,7 @@ const signInWithGitHub = async () => {
 
           <button 
                    onClick={signInWithGitHub}
-                  className="w-full flex items-center justify-center gap-3 bg-gray-700 hover:bg-gray-800 transition p-3 rounded-lg text-white font-medium">
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-400 to-orange-400 hover:bg-green-800 transition p-3 rounded-lg text-white font-medium">
             <FaGithub className="text-indigo-400" /> Continue with GitHub
           </button>
 
@@ -332,7 +332,7 @@ const signInWithGitHub = async () => {
           <button
             onClick={handleSignup}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 transition p-3 rounded-lg text-lg font-bold text-gray-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-green-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 transition p-3 rounded-lg text-lg font-bold text-gray-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
