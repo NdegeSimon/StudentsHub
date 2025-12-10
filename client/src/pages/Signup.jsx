@@ -151,7 +151,7 @@ const signInWithGitHub = async () => {
   const strengthCount = Object.values(strength).filter(Boolean).length;
 
   return (
-    <div className="min-h-screen  flex items-center justify-center px-4">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-orange-50 m-0">
       <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-2xl">
         
         <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Join Students Hub</h1>
@@ -175,21 +175,21 @@ const signInWithGitHub = async () => {
         <div className="space-y-3 mb-8">
           <button 
                  onClick={handleGoogleSignUp}
-                   className="w-full flex items-center justify-center gap-3 bg-gray-700 hover:bg-gray-800 transition p-3 rounded-lg text-white font-medium">
+                   className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-400 to-orange-400 hover:bg-green-800 transition p-3 rounded-lg text-black font-medium">
                <FaGoogle className="text-red" /> Sign up with Google
           </button>
 
 
           <button 
                    onClick={signInWithGitHub}
-                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-400 to-orange-400 hover:bg-green-800 transition p-3 rounded-lg text-white font-medium">
-            <FaGithub className="text-indigo-400" /> Continue with GitHub
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-400 to-orange-400 hover:bg-green-800 transition p-3 rounded-lg text-black font-medium">
+            <FaGithub className="text-black-400" /> Continue with GitHub
           </button>
 
           <button
             onClick={handleFacebookLogin}
-            className="w-full flex items-center justify-center gap-3 bg-gray-700 hover:bg-gray-800 transition p-3 rounded-lg text-white font-medium">
-            <FaFacebook className="text-orange-400" /> Continue with Facebook
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-400 to-orange-400 hover:bg-green-800 transition p-3 rounded-lg text-black font-medium">
+            <FaFacebook className="text-black-400" /> Continue with Facebook
           </button>
         </div>
 
@@ -332,7 +332,7 @@ const signInWithGitHub = async () => {
           <button
             onClick={handleSignup}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 transition p-3 rounded-lg text-lg font-bold text-gray-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-green-400 to-orange-400 hover:from-yellow-500 hover:to-green-500 transition p-3 rounded-lg text-lg font-bold text-gray-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
