@@ -41,7 +41,7 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-yellow-400 bg-cover bg-center"
+      className="min-h-screen flex items-center justify-center bg-white-400 bg-cover bg-center"
       style={{ backgroundImage: "url('/src/assets/back.png')" }}
     >
       <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-2xl">
@@ -85,7 +85,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-black text-white w-full py-3 rounded-3xl hover:bg-gray-900 transition disabled:opacity-50"
+            className="bg-green-900 text-white w-full py-3 rounded-3xl hover:bg-gray-900 transition disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
