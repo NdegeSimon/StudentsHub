@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import SignUp from "./pages/Signup.jsx";
+import JobCard from "./components/JobCard.jsx";
 
 export default function App() {
   return (
@@ -9,6 +10,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/job" element={<JobCard />} />
+        
       </Routes>
     </BrowserRouter>
   );
