@@ -1,7 +1,7 @@
 // src/pages/JobsPage.jsx
 import React, { useState } from "react";
-import { Search, X, Bookmark, Share2, CheckCircle } from "lucide-react";
-import JobCard from "../components/JobCard";
+import { Search, X } from "lucide-react";
+import JobCardFull from "../components/JobCard";
 
 export default function JobsPage() {
   const [searchText, setSearchText] = useState("");
@@ -9,7 +9,7 @@ export default function JobsPage() {
   const [filterLocation, setFilterLocation] = useState("All");
   const [filterAgency, setFilterAgency] = useState("All");
 
-  // Sample jobs (replace later with API from Flask)
+  // Sample jobs (replace with API from Flask later)
   const jobs = [
     {
       id: 1,
@@ -26,6 +26,7 @@ export default function JobsPage() {
       verified: true,
       logo: "https://upload.wikimedia.org/wikipedia/commons/5/57/KRA_Logo.png",
       applicationMethod: "Apply on Portal",
+      estimatedCompensation: "KSh 15,000 - 20,000",
     },
     {
       id: 2,
@@ -42,6 +43,24 @@ export default function JobsPage() {
       verified: false,
       logo: "https://via.placeholder.com/50",
       applicationMethod: "Email CV",
+      estimatedCompensation: "KSh 18,000 - 22,000",
+    },
+    {
+      id: 3,
+      title: "Data Clerk",
+      company: "Huduma",
+      location: "Nairobi",
+      type: "Full-Time",
+      deadline: "2025-12-15",
+      stipend: "KSh 20,000/month",
+      summary: "Input and verify data records for projects.",
+      requirements: ["High school diploma", "Basic Excel skills"],
+      tags: ["Government Opportunity", "Trending"],
+      postedDate: "2025-12-05",
+      verified: false,
+      logo: "https://via.placeholder.com/50",
+      applicationMethod: "Email CV",
+      estimatedCompensation: "KSh 18,000 - 22,000",
     },
   ];
 
@@ -154,27 +173,16 @@ export default function JobsPage() {
         </select>
       </div>
 
-      {/* Job Listings */}
-      <div className="max-w-5xl mx-auto grid gap-6">
+      {/* Job Listings Grid */}
+      <div className="max-w-5xl mx-auto grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
-            <JobCard
+            <JobCardFull
               key={job.id}
-              title={job.title}
-              company={job.company}
-              location={job.location}
-              type={job.type}
-              deadline={job.deadline}
-              stipend={job.stipend}
-              summary={job.summary}
-              requirements={job.requirements}
-              tags={job.tags}
-              postedDate={job.postedDate}
-              verified={job.verified}
-              logo={job.logo}
+              {...job}
               onApply={() => alert(`Applying for ${job.title}`)}
               onSave={() => alert(`Saved ${job.title}`)}
-              onShare={() => alert(`Share ${job.title}`)}
+              onShare={() => alert(`Sharing ${job.title}`)}
             />
           ))
         ) : (
