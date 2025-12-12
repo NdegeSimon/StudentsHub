@@ -9,7 +9,7 @@ export default function JobsPage() {
   const [filterLocation, setFilterLocation] = useState("All");
   const [filterAgency, setFilterAgency] = useState("All");
 
-  // Sample jobs (replace with API from Flask later)
+  // Sample jobs (replace later with API from Flask)
   const jobs = [
     {
       id: 1,
@@ -64,7 +64,7 @@ export default function JobsPage() {
     },
   ];
 
-  // Filtered jobs logic
+  // Filtered jobs
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -75,16 +75,9 @@ export default function JobsPage() {
     return matchesSearch && matchesType && matchesLocation && matchesAgency;
   });
 
-  // Stats
-  const totalJobs = jobs.length;
-  const governmentJobs = jobs.filter((job) => job.tags.includes("Government Opportunity")).length;
-  const closingSoon = jobs.filter(
-    (job) => new Date(job.deadline) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  ).length;
-
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8">
-      {/* Header */}
+      {/* Header & Search */}
       <div className="max-w-5xl mx-auto text-center mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Available Opportunities</h1>
         <p className="text-green-700 mt-1 text-lg">
@@ -121,73 +114,83 @@ export default function JobsPage() {
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Stats Bar */}
-        <div className="flex justify-center gap-6 mt-6 text-gray-700 font-medium">
-          <div>Total Jobs: {totalJobs}</div>
-          <div>Government: {governmentJobs}</div>
-          <div>Closing Soon: {closingSoon}</div>
+      {/* Main content: Sidebar + Job Grid */}
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+        {/* Sidebar */}
+        <aside className="w-full lg:w-64 bg-white p-4 rounded-xl shadow-sm">
+          <h3 className="font-semibold text-gray-700 mb-3">Filters</h3>
+          {/* Type */}
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full mb-3 border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option>All</option>
+            <option>Internship</option>
+            <option>Government Placement</option>
+            <option>Contract</option>
+            <option>Part-Time</option>
+            <option>Full-Time</option>
+          </select>
+
+          {/* Location */}
+          <select
+            value={filterLocation}
+            onChange={(e) => setFilterLocation(e.target.value)}
+            className="w-full mb-3 border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option>All</option>
+            <option>Nairobi</option>
+            <option>Mombasa</option>
+            <option>Kisumu</option>
+            <option>Remote</option>
+          </select>
+
+          {/* Agency */}
+          <select
+            value={filterAgency}
+            onChange={(e) => setFilterAgency(e.target.value)}
+            className="w-full mb-3 border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option>All</option>
+            <option>KRA</option>
+            <option>NTSA</option>
+            <option>Huduma</option>
+            <option>ICT Authority</option>
+          </select>
+
+          <h3 className="font-semibold text-gray-700 mt-6 mb-2">Categories</h3>
+          <div className="flex flex-col gap-2">
+            {["ICT & Tech", "HR & Admin", "Engineering", "Procurement", "Internships Only", "Government Only"].map((cat) => (
+              <button
+                key={cat}
+                className="text-left px-2 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                onClick={() => setSearchText(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Job Cards Grid */}
+        <div className="flex-1 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+          {filteredJobs.length > 0 ? (
+            filteredJobs.map((job) => (
+              <JobCardFull
+                key={job.id}
+                {...job}
+                onApply={() => alert(`Applying for ${job.title}`)}
+                onSave={() => alert(`Saved ${job.title}`)}
+                onShare={() => alert(`Sharing ${job.title}`)}
+              />
+            ))
+          ) : (
+            <p className="text-center text-gray-500 col-span-full">No jobs found.</p>
+          )}
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="max-w-5xl mx-auto flex flex-wrap gap-4 mb-6 justify-center">
-        {/* Type */}
-        <select
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        >
-          <option>All</option>
-          <option>Internship</option>
-          <option>Government Placement</option>
-          <option>Contract</option>
-          <option>Part-Time</option>
-          <option>Full-Time</option>
-        </select>
-
-        {/* Location */}
-        <select
-          value={filterLocation}
-          onChange={(e) => setFilterLocation(e.target.value)}
-          className="border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        >
-          <option>All</option>
-          <option>Nairobi</option>
-          <option>Mombasa</option>
-          <option>Kisumu</option>
-          <option>Remote</option>
-        </select>
-
-        {/* Agency */}
-        <select
-          value={filterAgency}
-          onChange={(e) => setFilterAgency(e.target.value)}
-          className="border border-green-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        >
-          <option>All</option>
-          <option>KRA</option>
-          <option>NTSA</option>
-          <option>Huduma</option>
-          <option>ICT Authority</option>
-        </select>
-      </div>
-
-      {/* Job Listings Grid */}
-      <div className="max-w-5xl mx-auto grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredJobs.length > 0 ? (
-          filteredJobs.map((job) => (
-            <JobCardFull
-              key={job.id}
-              {...job}
-              onApply={() => alert(`Applying for ${job.title}`)}
-              onSave={() => alert(`Saved ${job.title}`)}
-              onShare={() => alert(`Sharing ${job.title}`)}
-            />
-          ))
-        ) : (
-          <p className="text-center text-gray-500">No jobs found.</p>
-        )}
       </div>
 
       {/* Footer */}
