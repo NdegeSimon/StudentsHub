@@ -1,8 +1,8 @@
 // src/pages/JobsPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Navbar from "../components/Navbar";
 import { Search, X } from "lucide-react";
 import JobCardFull from "../components/JobCard";
-import Navbar from "../components/Navbar.jsx";
 
 export default function JobsPage() {
   const [searchText, setSearchText] = useState("");
@@ -85,38 +85,12 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* NAVBAR */}
-      <header className="w-full bg-[#064e3b] shadow-lg shadow-black/10 border-b border-[#053a2f]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between py-5 px-6">
-          {/* Logo */}
-          <h1 className="text-2xl font-bold text-white tracking-wide">
-            Kazzi<span className="text-orange-400">Konnect</span>
-          </h1>
-
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-10">
-            <a href="/" className="text-white hover:text-orange-300 transition">Home</a>
-            <a href="/jobs" className="text-white hover:text-orange-300 transition">Jobs</a>
-            <a href="/categories" className="text-white hover:text-orange-300 transition">Categories</a>
-            <a href="/profile" className="text-white hover:text-orange-300 transition">Profile</a>
-          </nav>
-
-          {/* CTA Button */}
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg">
-            Log In
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* HERO HEADER */}
       <section className="w-full bg-gradient-to-b from-[#064e3b] to-[#075740] text-white py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Main Header */}
-          <h2 className="text-4xl font-bold">Latest Job Opportunities</h2>
 
-          {/* Tagline */}
-          <p className="text-lg text-green-200 mt-2">
-            Government • Internships • NGOs • Private Sector
-          </p>
 
           {/* Search Bar */}
           <div className="relative mt-8">
