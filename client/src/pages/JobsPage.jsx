@@ -100,7 +100,7 @@ export default function JobsPage() {
       <Navbar />
 
       {/* HERO HEADER */}
-      <section className="w-full bg-gradient-to-b from-[#064e3b] to-[#075740] text-white py-12 px-6">
+      <section className="w-full bg-gradient-to-b from-[#064e3b] to-[#075740] text-white py-12 px-6 mt-6">
         <div className="max-w-7xl mx-auto">
           {/* Page Title */}
           <div className="text-center mb-8">
