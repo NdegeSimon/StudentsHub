@@ -93,32 +93,34 @@ export default function JobsPage() {
 
 
           {/* Search Bar */}
-          <div className="relative mt-8">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-green-300 w-6 h-6" />
+          <div className="flex justify-end mt-8">
+            <div className="relative w-full max-w-xl">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-green-300 w-5 h-5" />
 
-            <input
-              type="text"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Search jobs, companies or skills..."
-              className="w-full bg-white text-gray-900 rounded-xl pl-14 pr-28 py-4 shadow-md border border-green-400 
-                       focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-
-            {/* Search button */}
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-orange-500 hover:bg-orange-600 
-                           text-white px-5 py-2 rounded-lg shadow">
-              Search
-            </button>
-
-            {/* Clear icon */}
-            {searchText && (
-              <X
-                onClick={() => setSearchText("")}
-                className="absolute right-24 top-1/2 -translate-y-1/2 cursor-pointer 
-                           text-orange-500 hover:text-orange-600 w-5 h-5"
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search jobs, companies or skills..."
+                className="w-full bg-white text-gray-900 rounded-xl pl-12 pr-28 py-3 shadow-md border border-green-400 
+                         focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
-            )}
+
+              {/* Clear icon */}
+              {searchText && (
+                <X
+                  onClick={() => setSearchText("")}
+                  className="absolute right-24 top-1/2 -translate-y-1/2 cursor-pointer 
+                             text-orange-500 hover:text-orange-600 w-5 h-5"
+                />
+              )}
+
+              {/* Search button */}
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 hover:bg-orange-600 
+                             text-white px-4 py-1.5 rounded-lg shadow text-sm">
+                Search
+              </button>
+            </div>
           </div>
 
           {/* Quick Categories */}
@@ -239,6 +241,7 @@ export default function JobsPage() {
           <div>About</div>
           <p></p> 
           <div>FAQ</div>
+          <div>Partners</div>
           <div>Contact</div>
           <div>Terms</div>
           <div>Privacy</div>
