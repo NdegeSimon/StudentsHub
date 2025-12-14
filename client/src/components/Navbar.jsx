@@ -7,7 +7,7 @@ export default function Navbar() {
 
     {/* LOGO */}
     <div className="flex items-center gap-2">
-      <span className="text-[22px] font-extrabold text-[#e60000]">
+      <span className="text-[22px] font-extrabold text-[#f97316]">
         studex
       </span>
     </div>
@@ -59,7 +59,7 @@ export default function Navbar() {
 
     {/* RIGHT ACTIONS */}
     <div className="flex items-center gap-3 text-[14px]">
-      <button className="px-5 py-1.5 bg-gradient-to-r from-[#ff444f] to-[#ff6b6b] text-white rounded-full hover:opacity-90 font-medium transition-all transform hover:scale-105 flex items-center gap-1.5 shadow-lg">
+      <button className="px-5 py-1.5 bg-gradient-to-r from-[#f97316] to-[#ff6b6b] text-white rounded-full hover:opacity-90 font-medium transition-all transform hover:scale-105 flex items-center gap-1.5 shadow-lg">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
         </svg>
