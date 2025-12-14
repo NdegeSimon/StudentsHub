@@ -3,6 +3,7 @@ import Login from "./pages/Login.jsx";
 import SignUp from "./pages/Signup.jsx";
 import JobCard from "./components/JobCard.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/job" element={<JobCard />} />
         <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         
       </Routes>
     </BrowserRouter>

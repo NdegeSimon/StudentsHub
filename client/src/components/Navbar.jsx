@@ -7,7 +7,7 @@ export default function Navbar() {
 
     {/* LOGO */}
     <div className="flex items-center gap-2">
-      <span className="text-[22px] font-extrabold text-[#f97316]">
+      <span className="text-[22px] font-extrabold text-purple-600">
         studex
       </span>
     </div>
