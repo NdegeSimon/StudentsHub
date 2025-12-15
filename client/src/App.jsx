@@ -21,7 +21,7 @@ export default function App() {
         <Route path="/job" element={<JobCard />} />
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/my-applications" element={<MyApplications />} />
+        <Route path="/myapplications" element={<MyApplications />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

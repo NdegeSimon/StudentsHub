@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Bell, Settings, HelpCircle, User, BookOpen, Briefcase, Clock, Star } from 'lucide-react';
 import JobCard from '../components/JobCard';
+import MyApplications from './MyApplications';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 
@@ -20,7 +21,7 @@ const navigate = useNavigate();
               <nav className="hidden md:ml-10 md:flex space-x-8">
                 <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
                 <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
-                <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
+                <Link to="/myapplications" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
                 <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
               </nav>
             </div>
