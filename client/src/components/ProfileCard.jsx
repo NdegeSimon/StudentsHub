@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Camera, User } from 'lucide-react';
+import { useProfile } from '../context/ProfileContext';
+import { useState } from 'react';
 
-export default function ProfileCard() {
+export default function ProfileCard({ isDashboard = false }) {
+  const { profile, updateProfile } = useProfile();
+  const [editing, setEditing] = React.useState(false);
+  const [tempName, setTempName] = React.useState(profile.name);
+  const [tempBio, setTempBio] = React.useState(profile.bio || 'Web Developer | Tech Enthusiast');
   const [profileImage, setProfileImage] = useState(null);
   const [name, setName] = useState('John Doe');
   const [bio, setBio] = useState('Web Developer | Tech Enthusiast');
@@ -16,6 +22,28 @@ export default function ProfileCard() {
       reader.readAsDataURL(file);
     }
   };
+
+  if (isDashboard) {
+    return (
+      <div className="flex flex-col items-center text-center">
+        <div className="relative w-24 h-24 mb-4">
+          {profileImage ? (
+            <img 
+              src={profileImage} 
+              alt="Profile" 
+              className="w-full h-full rounded-full object-cover border-4 border-white shadow-md"
+            />
+          ) : (
+            <div className="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center">
+              <User className="h-10 w-10 text-indigo-600" />
+            </div>
+          )}
+        </div>
+        <h3 className="text-lg font-medium text-gray-900">{name.split(' ')[0]}</h3>
+        <p className="text-sm text-gray-500">{bio.split('|')[0].trim()}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex items-center justify-center">

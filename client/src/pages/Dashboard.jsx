@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Bell, Settings, HelpCircle, User, BookOpen, Briefcase, Clock, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import JobCard from '../components/JobCard';
-import ProfileCard from '../components/ProfileCard';
+import { Link, useNavigate } from 'react-router-dom';
+import { useProfile } from '../context/ProfileContext';
+
+
+
 const Dashboard = () => {
+const navigate = useNavigate();
+  const { profile } = useProfile();
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -41,11 +46,14 @@ const Dashboard = () => {
               <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
                 <Settings className="h-6 w-6" />
               </button>
-              <div className="ml-2">
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <User className="h-5 w-5 text-purple-600" />
-                </div>
-              </div>
+              <div className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
+              onClick={() => navigate('/profile')}
+              title="View Profile"
+              >
+  <           div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+    <User className="h-5 w-5 text-purple-600" />
+  </div>
+</div>
             </div>
           </div>
         </div>
@@ -55,20 +63,20 @@ const Dashboard = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Profile */}
           <div className="lg:w-1/4 space-y-6">
-            {/* Profile Card */}
+            {/* Profile Info */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center space-x-4">
                 <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
                   <User className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">John D.</h3>
-                  <p className="text-sm text-gray-500">Web Developer</p>
+                  <h3 className="font-medium text-gray-900">
+                    {profile.name.split(' ')[0]}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {profile.role || 'Web Developer'}
+                  </p>
                 </div>
-              </div>
-              <div className="mt-4">
-                
-               
               </div>
             </div>
 
