@@ -1,71 +1,76 @@
-// src/pages/JobsPage.jsx
-import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import { Search, X } from "lucide-react";
-import JobCardFull from "../components/JobCard";
-import ProfileCard from "../components/ProfileCard";
+import React, { useState } from "react";
+import { Search } from "lucide-react";
+import JobCard from "../components/JobCard";
 
 export default function JobsPage() {
   const [searchText, setSearchText] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [filterType, setFilterType] = useState("All");
   const [filterLocation, setFilterLocation] = useState("All");
   const [filterAgency, setFilterAgency] = useState("All");
 
-  // -------------------------
-  // SAMPLE JOB DATA
-  // -------------------------
+  // Job listings data
   const jobs = [
     {
       id: 1,
-      title: "ICT Support Intern",
-      company: "KRA",
-      location: "Nairobi",
-      type: "Internship",
-      deadline: "2025-12-31",
-      stipend: "KSh 15,000/month",
-      summary: "Assist with IT support and troubleshooting duties.",
-      requirements: ["Diploma in IT", "No experience required", "Be a final-year student"],
-      tags: ["Government Opportunity", "Urgent"],
-      postedDate: "2025-12-01",
-      verified: true,
-      logo: "https://upload.wikimedia.org/wikipedia/commons/5/57/KRA_Logo.png",
-      applicationMethod: "Apply via official KRA portal",
-      estimatedCompensation: "KSh 15,000 - 20,000",
+      title: 'Full Stack Developer',
+      company: 'Safaricom PLC',
+      salary: 'KSh 250,000 - 400,000/mo',
+      postedDate: '2 days ago',
+      description: 'Join our technology team to develop and maintain enterprise applications for East Africa\'s leading telco.',
+      tags: ['React', 'Node.js', 'TypeScript']
     },
     {
       id: 2,
-      title: "Data Entry Clerk",
-      company: "Huduma",
-      location: "Nairobi",
-      type: "Full-Time",
-      deadline: "2025-12-15",
-      stipend: "KSh 20,000/month",
-      summary: "Input and validate official records for public services.",
-      requirements: ["KCSE Certificate", "Basic Excel knowledge"],
-      tags: ["Government Opportunity", "Trending"],
-      postedDate: "2025-12-05",
-      verified: true,
-      logo: "https://via.placeholder.com/50",
-      applicationMethod: "Submit CV through email",
-      estimatedCompensation: "KSh 18,000 - 22,000",
+      title: 'UI/UX Designer Intern',
+      company: 'Andela Kenya',
+      salary: 'KSh 50,000 - 80,000/mo',
+      postedDate: '1 day ago',
+      description: 'Internship opportunity for creative designers to work on global projects and build their portfolio.',
+      tags: ['Figma', 'UI/UX', 'Internship']
     },
     {
       id: 3,
+      title: 'Backend Engineer',
+      company: 'Twiga Foods',
+      salary: 'KSh 350,000 - 500,000/mo',
+      postedDate: '3 days ago',
+      description: 'Looking for a backend developer to work on our supply chain and logistics platform.',
+      tags: ['Python', 'Django', 'REST API']
+    },
+    {
+      id: 4,
+      title: 'Mobile App Developer',
+      company: 'M-KOPA Solar',
+      salary: 'KSh 300,000 - 450,000/mo',
+      postedDate: '5 days ago',
+      description: 'Develop and maintain our mobile applications used by thousands of customers across Africa.',
+      tags: ['React Native', 'Redux', 'Mobile']
+    },
+    {
+      id: 5,
+      title: 'Data Science Intern',
+      company: 'BasiGo',
+      salary: 'KSh 40,000 - 70,000/mo',
+      postedDate: '1 week ago',
+      description: 'Internship for data enthusiasts to work on electric vehicle data analytics.',
+      tags: ['Python', 'Data Analysis', 'Internship']
+    },
+    {
+      id: 6,
       title: "Data Entry Assistant",
       company: "NGO X",
       location: "Remote",
       type: "Contract",
       deadline: "2025-12-15",
-      stipend: "KSh 20,000/month",
-      summary: "Assist with data entry for field projects.",
+      salary: "KSh 20,000/month",
+      description: "Assist with data entry for field projects.",
       requirements: ["High school diploma", "Attention to detail"],
       tags: ["NGO", "Remote"],
-      postedDate: "2025-12-05",
+      postedDate: "5 days ago",
       verified: false,
-      logo: "https://via.placeholder.com/50",
-      applicationMethod: "Email CV",
-      estimatedCompensation: "KSh 18,000 - 22,000",
-    },
+      logo: "https://via.placeholder.com/50"
+    }
   ];
 
   // -------------------------
@@ -96,74 +101,54 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* NAVBAR */}
-      <Navbar />
-
-      {/* HERO HEADER */}
-      <section className="w-full bg-gradient-to-b from-[#064e3b] to-[#075740] text-white py-12 px-6 mt-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-3">Find Your Next Opportunity</h1>
-            <p className="text-green-100 max-w-2xl mx-auto">
-              Discover the best internships and job opportunities in Kenya. Apply now and kickstart your career.
-            </p>
-          </div>
-
+      <div className="container mx-auto px-4 py-8">
+        {/* NAVBAR */}
+        <div className="mb-8">
           {/* Search Bar */}
-          <div className="relative w-full max-w-2xl mx-auto">
+          <div className="relative mb-6">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
             <input
               type="text"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
               placeholder="Search for jobs, companies, or keywords..."
-              className="w-full pl-12 pr-10 py-4 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-base"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
-
-            {searchText && (
-              <div>
-                {/* Quick Categories */}
-                <div className="flex flex-wrap gap-3 mt-5">
-                  {["ICT Jobs", "HR & Admin", "Procurement", "Engineering", "Internship Only", "Government Only"].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSearchText(cat)}
-                      className="bg-[#0a5d46] text-white px-4 py-2 rounded-full text-sm shadow 
-                                 hover:bg-[#0c6a50] transition"
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-200" size={20} />
           </div>
-        </div>
-      </section>
 
-      {/* SMOOTH TRANSITION */}
-      <div className="h-6 bg-gradient-to-b from-[#075740] to-transparent w-full"></div>
-
-      {/* ========================================================== */}
-      {/* MAIN CONTENT (SIDEBAR + JOB GRID)                         */}
-      {/* ========================================================== */}
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 px-6 py-10">
-        {/* SIDEBAR */}
-        <div className="w-full lg:w-80">
-          <ProfileCard />
+          {/* Quick Filters */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {['All', 'Full-time', 'Part-time', 'Internship', 'Remote'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  activeFilter === filter
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* JOB CARDS GRID */}
         <div className="flex-1 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {jobs.length > 0 ? (
             jobs.map((job) => (
-              <JobCardFull
+              <JobCard
                 key={job.id}
-                {...job}
-                onApply={() => alert(`Applying for ${job.title}`)}
-                onSave={() => alert(`Saved ${job.title}`)}
-                onShare={() => alert(`Sharing ${job.title}`)}
+                title={job.title}
+                company={job.company}
+                salary={job.salary}
+                postedDate={job.postedDate}
+                description={job.description}
+                tags={job.tags}
+                onBookmark={() => console.log('Bookmarked', job.id)}
               />
             ))
           ) : (
@@ -178,7 +163,6 @@ export default function JobsPage() {
       <footer className="mt-12 bg-white py-6 shadow-inner">
         <div className="max-w-5xl mx-auto flex flex-wrap justify-between text-gray-600 text-sm px-6">
           <div>About</div>
-          <p></p> 
           <div>FAQ</div>
           <div>Partners</div>
           <div>Contact</div>
