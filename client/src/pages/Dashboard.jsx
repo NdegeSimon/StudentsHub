@@ -14,6 +14,7 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
+import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';
 import { Link, useNavigate } from 'react-router-dom';
@@ -67,7 +68,7 @@ const Dashboard = () => {
                   My Applications
                 </Link>
                 <Link 
-                  to="#" 
+                  to="/messages" 
                   className={`${
                     darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
                   } px-3 py-2 text-sm font-medium transition-colors`}
@@ -191,14 +192,25 @@ const Dashboard = () => {
                 Quick Actions
               </h3>
               <div className="space-y-3">
-                <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                  darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
-                }`}>
-                  <Briefcase className={`h-5 w-5 ${
-                    darkMode ? 'text-purple-400' : 'text-purple-600'
-                  }`} />
-                  <span>My Applications</span>
-                </button>
+                <NavLink
+  to="/myapplications"
+  className={({ isActive }) =>
+    `w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+      isActive
+        ? darkMode
+          ? 'bg-gray-700 text-white'
+          : 'bg-purple-50 text-purple-700'
+        : darkMode
+        ? 'hover:bg-gray-700/50 text-gray-200'
+        : 'hover:bg-gray-50 text-gray-700'
+    }`
+  }
+>
+  <Briefcase className={`h-5 w-5 ${
+    darkMode ? 'text-purple-400' : 'text-purple-600'
+  }`} />
+  <span>My Applications</span>
+</NavLink>
                 <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                   darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
                 }`}>
