@@ -199,9 +199,9 @@ export default function MessagingSystem() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {selectedChat.messages.map(msg => (
+                {selectedChat?.messages?.filter(msg => msg && msg.text).map((msg, index) => (
                   <div
-                    key={msg.id}
+                    key={msg.id || `msg-${index}`}
                     className={`flex ${msg.sender === userType ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-md px-4 py-3 rounded-2xl ${
@@ -211,11 +211,11 @@ export default function MessagingSystem() {
                           ? 'bg-gray-700 text-white rounded-bl-none'
                           : 'bg-gray-200 text-gray-900 rounded-bl-none'
                     }`}>
-                      <p className="text-sm">{msg.text}</p>
+                      <p className="text-sm">{msg.text || 'No message content'}</p>
                       <p className={`text-xs mt-1 ${
                         msg.sender === userType ? 'text-blue-100' : darkMode ? 'text-gray-400' : 'text-gray-600'
                       }`}>
-                        {msg.time}
+                        {msg.time || 'Just now'}
                       </p>
                     </div>
                   </div>

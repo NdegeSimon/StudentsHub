@@ -27,6 +27,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
+  const [activeTab, setActiveTab] = useState('recommended');
   
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
@@ -68,7 +69,7 @@ const Dashboard = () => {
                   My Applications
                 </Link>
                 <Link 
-                  to="/messages" 
+                  to="messages" 
                   className={`${
                     darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
                   } px-3 py-2 text-sm font-medium transition-colors`}
@@ -193,24 +194,24 @@ const Dashboard = () => {
               </h3>
               <div className="space-y-3">
                 <NavLink
-  to="/myapplications"
-  className={({ isActive }) =>
-    `w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-      isActive
-        ? darkMode
-          ? 'bg-gray-700 text-white'
-          : 'bg-purple-50 text-purple-700'
-        : darkMode
-        ? 'hover:bg-gray-700/50 text-gray-200'
-        : 'hover:bg-gray-50 text-gray-700'
-    }`
-  }
->
-  <Briefcase className={`h-5 w-5 ${
-    darkMode ? 'text-purple-400' : 'text-purple-600'
-  }`} />
-  <span>My Applications</span>
-</NavLink>
+                  to="/myapplications"
+                  className={({ isActive }) =>
+                    `w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                      isActive
+                        ? darkMode
+                          ? 'bg-gray-700 text-white'
+                          : 'bg-purple-50 text-purple-700'
+                        : darkMode
+                        ? 'hover:bg-gray-700/50 text-gray-200'
+                        : 'hover:bg-gray-50 text-gray-700'
+                    }`
+                  }
+                >
+                  <Briefcase className={`h-5 w-5 ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
+                  <span>My Applications</span>
+                </NavLink>
                 <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                   darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
                 }`}>
@@ -364,48 +365,53 @@ const Dashboard = () => {
             </div>
 
             {/* Job Listings */}
-            <div className={`rounded-2xl shadow-sm p-6 transition-colors ${
+            <div className={`rounded-2xl shadow-sm transition-colors ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             }`}>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-lg font-medium ${
-                  darkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Recommended Jobs
-                </h3>
-                <button className={`text-sm ${
-                  darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-800'
-                } transition-colors`}>
-                  View All
+              <nav className="flex -mb-px px-6 pt-6">
+                <button 
+                  onClick={() => setActiveTab('recommended')}
+                  className={`border-b-2 px-4 py-4 text-sm font-medium ${
+                    activeTab === 'recommended'
+                      ? darkMode 
+                        ? 'border-indigo-400 text-white' 
+                        : 'border-indigo-500 text-indigo-600'
+                      : darkMode
+                        ? 'text-gray-400 hover:text-white hover:border-gray-400' 
+                        : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Recommended
                 </button>
-              </div>
-              <div className={`border-b ${
-                darkMode ? 'border-gray-700' : 'border-gray-200'
-              }`}>
-                <nav className="flex -mb-px">
-                  <button className={`border-b-2 px-4 py-4 text-sm font-medium ${
-                    darkMode 
-                      ? 'border-indigo-400 text-white' 
-                      : 'border-indigo-500 text-indigo-600'
-                  }`}>
-                    Recommended
-                  </button>
-                  <button className={`border-b-2 border-transparent px-4 py-4 text-sm font-medium ${
-                    darkMode
-                      ? 'text-gray-400 hover:text-white hover:border-gray-400' 
-                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}>
-                    Recent
-                  </button>
-                  <button className={`border-b-2 border-transparent px-4 py-4 text-sm font-medium ${
-                    darkMode
-                      ? 'text-gray-400 hover:text-white hover:border-gray-400' 
-                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}>
-                    Saved
-                  </button>
-                </nav>
-              </div>
+                <button 
+                  onClick={() => setActiveTab('recent')}
+                  className={`border-b-2 px-4 py-4 text-sm font-medium ${
+                    activeTab === 'recent'
+                      ? darkMode 
+                        ? 'border-indigo-400 text-white' 
+                        : 'border-indigo-500 text-indigo-600'
+                      : darkMode
+                        ? 'text-gray-400 hover:text-white hover:border-gray-400' 
+                        : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Recent
+                </button>
+                <button 
+                  onClick={() => setActiveTab('saved')}
+                  className={`border-b-2 px-4 py-4 text-sm font-medium ${
+                    activeTab === 'saved'
+                      ? darkMode 
+                        ? 'border-indigo-400 text-white' 
+                        : 'border-indigo-500 text-indigo-600'
+                      : darkMode
+                        ? 'text-gray-400 hover:text-white hover:border-gray-400' 
+                        : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Saved
+                </button>
+              </nav>
               
               <div className="p-6">
                 <p className={`text-sm mb-4 ${
@@ -434,24 +440,6 @@ const Dashboard = () => {
                       postedDate: '1 day ago',
                       description: 'Internship opportunity for creative designers to work on global projects and build their portfolio.',
                       tags: ['Figma', 'UI/UX', 'Internship']
-                    },
-                    {
-                      id: 3,
-                      title: 'Backend Engineer',
-                      company: 'Twiga Foods',
-                      salary: 'KSh 350,000 - 500,000/mo',
-                      postedDate: '3 days ago',
-                      description: 'Looking for a backend developer to work on our supply chain and logistics platform.',
-                      tags: ['Python', 'Django', 'REST API']
-                    },
-                    {
-                      id: 4,
-                      title: 'Mobile App Developer',
-                      company: 'M-KOPA Solar',
-                      salary: 'KSh 300,000 - 450,000/mo',
-                      postedDate: '5 days ago',
-                      description: 'Develop and maintain our mobile applications used by thousands of customers across Africa.',
-                      tags: ['React Native', 'Redux', 'Mobile']
                     },
                     {
                       id: 5,

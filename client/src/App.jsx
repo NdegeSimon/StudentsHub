@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
-import SignUp from "./pages/Signup.jsx";
+import Signup from "./pages/Signup.jsx";
 import JobCard from "./components/JobCard.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -22,7 +22,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
        
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/job" element={<JobCard />} />
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/dashboard" element={<Dashboard />} />

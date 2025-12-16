@@ -114,7 +114,7 @@ export default function SettingsPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark' : ''} bg-gray-50 dark:bg-gray-900`}>
-      <style jsx global>{`
+      <style>{`
         body {
           background-color: ${darkMode ? '#111827' : '#f9fafb'};
           transition: background-color 0.3s ease;
