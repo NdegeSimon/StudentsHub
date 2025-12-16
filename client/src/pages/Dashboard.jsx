@@ -68,14 +68,22 @@ const Dashboard = () => {
                 >
                   My Applications
                 </Link>
-                <Link 
-                  to="messages" 
-                  className={`${
-                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
-                  } px-3 py-2 text-sm font-medium transition-colors`}
-                >
-                  Messages
-                </Link>
+                <NavLink 
+                  to="/messages"
+                  className={({ isActive }) => 
+                    `px-3 py-2 rounded-lg transition-colors ${
+                      isActive 
+                        ? darkMode 
+          ? 'bg-blue-900 text-white' 
+          : 'bg-blue-100 text-blue-700'
+        : darkMode 
+          ? 'text-gray-300 hover:bg-gray-700' 
+          : 'text-gray-700 hover:bg-gray-100'
+    }`
+  }
+>
+  Messages
+</NavLink>
               </nav>
             </div>
             
@@ -415,7 +423,7 @@ const Dashboard = () => {
               
               <div className="p-6">
                 <p className={`text-sm mb-4 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                  darkMode ? 'text-white-400' : 'text-white-500'
                 }`}>
                   Find your next opportunity by browsing through our curated job listings.
                 </p>

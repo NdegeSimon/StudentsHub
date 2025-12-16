@@ -11,14 +11,14 @@ export default function JobCard({
   isBookmarked = false
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="border border-white-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start">
         <div>
-          <h4 className="font-medium text-gray-900">{title}</h4>
+          <h4 className="font-medium text-white-900">{title}</h4>
           <p className="text-sm text-gray-500 mt-1">
             {company} • {salary} • Posted {postedDate}
           </p>
-          <p className="text-sm text-gray-600 mt-2">{description}</p>
+          <p className="text-sm text-white-600 mt-2">{description}</p>
           <div className="flex flex-wrap gap-2 mt-3">
             {tags.map((tag, index) => (
               <span 

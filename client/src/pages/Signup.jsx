@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight } from "react-icons/fa";
+import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight, FaSun, FaMoon } from "react-icons/fa";
 import { FiUser, FiMail, FiLock, FiCopy, FiCheck, FiAlertCircle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { useTheme } from "../context/ThemeContext";
 
+// Replace the useTheme import and dark mode toggle with a simple darkMode constant
 const Signup = () => {
   const navigate = useNavigate();
+  const darkMode = true; // Force dark mode
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  // ... rest of your state and functions
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -161,22 +166,44 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-green-50 via-white to-orange-50 bg-opacity-50">
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+    } bg-opacity-50 m-0 relative overflow-hidden transition-colors duration-300`}>
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob ${
+          darkMode ? 'bg-blue-900' : 'bg-blue-100'
+        }`}></div>
+        <div className={`absolute -bottom-20 -left-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000 ${
+          darkMode ? 'bg-purple-900' : 'bg-purple-100'
+        }`}></div>
+      </div>
+
       <motion.div
-        className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/20 relative z-10"
+        className={`w-full max-w-md ${
+          darkMode ? 'bg-gray-800/90 text-gray-100' : 'bg-white/90 text-gray-900'
+        } backdrop-blur-sm p-8 rounded-2xl shadow-2xl border ${
+          darkMode ? 'border-gray-700/50' : 'border-white/20'
+        } relative z-10`}
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
+
+
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-orange-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-2xl font-bold text-white">SH</span>
           </div>
-          <motion.h1 className="text-3xl font-bold text-gray-900 mb-2" variants={itemVariants}>
+          <motion.h1 className={`text-3xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-900'
+          } mb-2`} variants={itemVariants}>
             Join Students Hub
           </motion.h1>
-          <motion.p className="text-gray-600" variants={itemVariants}>
+          <motion.p className={darkMode ? 'text-gray-300' : 'text-gray-600'} variants={itemVariants}>
             Start your journey to finding the perfect job
           </motion.p>
         </div>
@@ -200,50 +227,54 @@ const Signup = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Username */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type="text"
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 pr-4 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-3 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Username"
                 required
               />
-              <label
-                htmlFor="username"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Username
-              </label>
-              <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
             </div>
           </motion.div>
 
           {/* Email */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiMail className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 pr-10 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-10 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Email"
                 required
               />
-              <label
-                htmlFor="email"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Email
-              </label>
-              <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
               {formData.email && (
                 <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" />
               )}
@@ -253,28 +284,32 @@ const Signup = () => {
           {/* Password */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiLock className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 pr-10 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-10 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Password"
                 required
                 minLength={8}
               />
-              <label
-                htmlFor="password"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Password
-              </label>
-              <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                  darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                } transition-colors`}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -284,7 +319,9 @@ const Signup = () => {
             {/* Password Strength Indicator */}
             {formData.password && (
               <div className="mt-2 space-y-2">
-                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div className={`h-1.5 w-full ${
+                  darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                } rounded-full overflow-hidden`}>
                   <div
                     className={`h-full rounded-full ${
                       strengthCount === 1
@@ -295,16 +332,18 @@ const Signup = () => {
                         ? "bg-blue-500 w-3/4"
                         : strengthCount >= 4
                         ? "bg-green-500 w-full"
-                        : "bg-gray-200 w-0"
+                        : darkMode ? "bg-gray-600 w-0" : "bg-gray-200 w-0"
                     } transition-all duration-300`}
                   ></div>
                 </div>
-                <div className="grid grid-cols-2 gap-1 text-xs text-gray-500">
+                <div className={`grid grid-cols-2 gap-1 text-xs ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   <div className="flex items-center">
                     {strength.lowercase ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className="text-gray-300 mr-1" size={12} />
+                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
                     )}
                     <span>Lowercase</span>
                   </div>
@@ -312,7 +351,7 @@ const Signup = () => {
                     {strength.uppercase ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className="text-gray-300 mr-1" size={12} />
+                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
                     )}
                     <span>Uppercase</span>
                   </div>
@@ -320,7 +359,7 @@ const Signup = () => {
                     {strength.number ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className="text-gray-300 mr-1" size={12} />
+                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
                     )}
                     <span>Number</span>
                   </div>
@@ -328,7 +367,7 @@ const Signup = () => {
                     {strength.special ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className="text-gray-300 mr-1" size={12} />
+                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
                     )}
                     <span>Special char</span>
                   </div>
@@ -340,34 +379,36 @@ const Signup = () => {
           {/* Confirm Password */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiLock className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type={showConfirm ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`peer w-full px-4 py-3 pl-11 pr-10 rounded-lg border ${
+                className={`block w-full pl-10 pr-10 py-3 border ${
                   formData.password &&
                   formData.confirmPassword &&
                   formData.password !== formData.confirmPassword
-                    ? "border-red-400 focus:border-red-400 focus:ring-red-100"
-                    : "border-gray-200 focus:border-green-400 focus:ring-green-100"
-                } focus:ring-2 outline-none transition-all duration-200`}
-                placeholder=" "
+                    ? "border-red-400 focus:ring-red-100"
+                    : darkMode 
+                      ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
+                      : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Confirm Password"
                 required
                 minLength={8}
               />
-              <label
-                htmlFor="confirmPassword"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Confirm Password
-              </label>
-              <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                  darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                } transition-colors`}
                 aria-label={showConfirm ? "Hide password" : "Show password"}
               >
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
@@ -385,7 +426,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 px-4 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 transition-all duration-200 ${
+              className={`w-full py-3 px-4 rounded-xl font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 ${
                 loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -397,48 +438,65 @@ const Signup = () => {
         {/* Divider */}
         <motion.div className="relative my-6" variants={itemVariants}>
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
+            <div className={`w-full border-t ${
+              darkMode ? 'border-gray-700' : 'border-gray-200'
+            }`}></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className={`px-2 ${
+              darkMode ? 'bg-gray-800/90 text-gray-400' : 'bg-white text-gray-500'
+            }`}>Or continue with</span>
           </div>
         </motion.div>
 
         {/* Social Buttons */}
-        <motion.div className="grid grid-cols-3 gap-3" variants={itemVariants}>
+        <motion.div className="grid grid-cols-3 gap-3 mt-6" variants={itemVariants}>
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            className="flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            aria-label="Sign up with Google"
+            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
+              darkMode 
+                ? 'border-gray-700 hover:bg-gray-700/50' 
+                : 'border-gray-200 hover:bg-gray-50'
+            } transition-colors`}
           >
-            <FaGoogle className="text-red-500" />
+            <FaGoogle className={darkMode ? 'text-white' : 'text-red-500'} />
           </button>
           <button
             type="button"
             onClick={signInWithGitHub}
-            className="flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            aria-label="Continue with GitHub"
+            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
+              darkMode 
+                ? 'border-gray-700 hover:bg-gray-700/50' 
+                : 'border-gray-200 hover:bg-gray-50'
+            } transition-colors`}
           >
-            <FaGithub className="text-gray-800" />
+            <FaGithub className={darkMode ? 'text-white' : 'text-gray-800'} />
           </button>
           <button
             type="button"
             onClick={handleFacebookSignUp}
-            className="flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            aria-label="Continue with Facebook"
+            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
+              darkMode 
+                ? 'border-gray-700 hover:bg-gray-700/50' 
+                : 'border-gray-200 hover:bg-gray-50'
+            } transition-colors`}
           >
-            <FaFacebook className="text-blue-600" />
+            <FaFacebook className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
           </button>
         </motion.div>
 
         {/* Login Link */}
-        <motion.div className="text-center mt-6" variants={itemVariants}>
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
+        <motion.div className="mt-6 text-center text-sm" variants={itemVariants}>
+          <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+            Already have an account?{" "}
             <Link
               to="/login"
-              className="font-medium text-green-600 hover:text-green-500 transition-colors"
+              className={`font-medium ${
+                darkMode 
+                  ? 'text-blue-400 hover:text-blue-300' 
+                  : 'text-blue-600 hover:text-blue-500'
+              } transition-colors`}
             >
               Log in
             </Link>
