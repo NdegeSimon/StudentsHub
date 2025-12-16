@@ -11,6 +11,7 @@ import { ProfileProvider } from "./context/ProfileContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Settings from "./pages/Settings.jsx";
 import MessagingSystem from "./pages/messages.jsx";
+import JobPostings from "./pages/JobPosting.jsx";
 
 
 export default function App() {
@@ -30,7 +31,8 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/messages" element={<MessagingSystem />} />
-        https://www.tiktok.com/@iam_carren/video/7584086331802848568?is_from_webapp=1&sender_device=pc
+        <Route path="/jobpostings" element={<JobPostings />} />
+       
         <Route path="*" element={<NotFound />} />
         </Routes>
       </ProfileProvider>
