@@ -94,7 +94,7 @@ export default function JobPostings() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 text-center">Post a Job</h1>
-            <p className="">Post to Acquire Talent</p>
+            <p className="text-gray-600 text-center">Post to Acquire Talent</p>
           </div>
           <button 
             onClick={() => document.getElementById('jobForm').scrollIntoView({ behavior: 'smooth' })}
