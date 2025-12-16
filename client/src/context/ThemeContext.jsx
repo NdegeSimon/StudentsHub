@@ -18,11 +18,20 @@ export const ThemeProvider = ({ children }) => {
   // Save preference to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    // Add or remove dark class from document element
+    // Add or remove dark class from document element and body
+    const root = document.documentElement;
+    const body = document.body;
+    
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      body.classList.add('dark');
+      body.style.backgroundColor = '#111827';
+      body.style.color = '#f3f4f6';
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+      body.style.backgroundColor = '';
+      body.style.color = '';
     }
   }, [darkMode]);
 

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight } from "react-icons/fa";
+import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight, FaSun, FaMoon } from "react-icons/fa";
 import { FiUser, FiMail, FiLock, FiCopy, FiCheck, FiAlertCircle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { useTheme } from "../context/ThemeContext";
 
 const Signup = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
@@ -175,16 +177,30 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-green-50 via-white to-orange-50 bg-opacity-50 m-0 relative overflow-hidden">
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-green-50 via-white to-orange-50'
+    } bg-opacity-50 m-0 relative overflow-hidden transition-colors duration-300`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-4000"></div>
+        <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob ${
+          darkMode ? 'bg-green-900' : 'bg-green-100'
+        }`}></div>
+        <div className={`absolute -bottom-20 -left-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000 ${
+          darkMode ? 'bg-orange-900' : 'bg-orange-100'
+        }`}></div>
+        <div className={`absolute top-1/2 left-1/2 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-4000 ${
+          darkMode ? 'bg-yellow-900' : 'bg-yellow-100'
+        }`}></div>
       </div>
 
       <motion.div
-        className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/20 relative z-10"
+        className={`w-full max-w-md ${
+          darkMode ? 'bg-gray-800/90 text-gray-100' : 'bg-white/90 text-gray-900'
+        } backdrop-blur-sm p-8 rounded-2xl shadow-2xl border ${
+          darkMode ? 'border-gray-700/50' : 'border-white/20'
+        } relative z-10`}
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -193,10 +209,12 @@ const Signup = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-orange-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-2xl font-bold text-white">SH</span>
           </div>
-          <motion.h1 className="text-3xl font-bold text-gray-900 mb-2" variants={itemVariants}>
+          <motion.h1 className={`text-3xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-900'
+          } mb-2`} variants={itemVariants}>
             Join Students Hub
           </motion.h1>
-          <motion.p className="text-gray-600" variants={itemVariants}>
+          <motion.p className={darkMode ? 'text-gray-300' : 'text-gray-600'} variants={itemVariants}>
             Start your journey to finding the perfect job
           </motion.p>
         </div>
@@ -217,34 +235,58 @@ const Signup = () => {
         <motion.div className="space-y-4 mb-8" variants={itemVariants}>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className={`w-full border-t ${
+                darkMode ? 'border-gray-600' : 'border-gray-300'
+              }`}></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <div className={`relative flex justify-center text-sm ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <span className={`px-2 ${
+                darkMode ? 'text-gray-300' : 'text-gray-500'
+              }`}>Or continue with</span>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={handleGoogleSignUp}
-              className="w-full flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              aria-label="Sign up with Google"
+              className={`w-full flex items-center justify-center px-4 py-2.5 border ${
+                darkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 text-gray-200' : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+              } rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                darkMode ? 'focus:ring-green-400' : 'focus:ring-green-500'
+              } transition-colors duration-200`}
             >
-              <FaGoogle className="text-red-500" />
+              <FaGoogle className={`w-5 h-5 ${
+                darkMode ? 'text-red-400' : 'text-red-500'
+              } mr-2`} />
+              Google
             </button>
             <button
               onClick={signInWithGitHub}
-              className="w-full flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              aria-label="Continue with GitHub"
+              className={`w-full flex items-center justify-center px-4 py-2.5 border ${
+                darkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 text-gray-200' : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+              } rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                darkMode ? 'focus:ring-green-400' : 'focus:ring-green-500'
+              } transition-colors duration-200`}
             >
-              <FaGithub className="text-gray-800" />
+              <FaGithub className={`w-5 h-5 ${
+                darkMode ? 'text-gray-400' : 'text-gray-500'
+              } mr-2`} />
+              GitHub
             </button>
             <button
               onClick={handleFacebookSignUp}
-              className="w-full flex items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              aria-label="Continue with Facebook"
+              className={`w-full flex items-center justify-center px-4 py-2.5 border ${
+                darkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 text-gray-200' : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+              } rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                darkMode ? 'focus:ring-green-400' : 'focus:ring-green-500'
+              } transition-colors duration-200`}
             >
-              <FaFacebook className="text-blue-600" />
+              <FaFacebook className={`w-5 h-5 ${
+                darkMode ? 'text-blue-400' : 'text-blue-500'
+              } mr-2`} />
+              Facebook
             </button>
           </div>
         </motion.div>
@@ -257,74 +299,76 @@ const Signup = () => {
         <div className="space-y-5">
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type="text"
-                id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-3 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-green-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-green-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Username"
+                required
               />
-              <label
-                htmlFor="username"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Username
-              </label>
-              <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
-              {formData.username && (
-                <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" />
-              )}
             </div>
           </motion.div>
 
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiMail className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-3 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-green-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-green-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Email"
+                required
               />
-              <label
-                htmlFor="email"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Email address
-              </label>
-              <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
-              {formData.email && (
-                <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" />
-              )}
             </div>
           </motion.div>
 
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiLock className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
-                id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="peer w-full px-4 py-3 pl-11 pr-10 rounded-lg border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none transition-all duration-200"
-                placeholder=" "
+                className={`block w-full pl-10 pr-10 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-green-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-green-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Password"
+                required
               />
-              <label
-                htmlFor="password"
-                className="absolute left-3 -top-2.5 px-1 bg-white text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-green-600"
-              >
-                Password
-              </label>
-              <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-green-500 transition-colors" />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                } hover:text-gray-600 transition-colors`}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -388,57 +432,30 @@ const Signup = () => {
 
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiLock className={`h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+              </div>
               <input
                 type={showConfirm ? "text" : "password"}
-                id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`peer w-full px-4 py-3 pl-11 pr-10 rounded-lg border ${
-                  formData.password &&
-                  formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword
-                    ? "border-red-400 focus:border-red-400 focus:ring-red-100"
-                    : "border-gray-200 focus:border-green-400 focus:ring-green-100"
-                } focus:ring-2 outline-none transition-all duration-200`}
-                placeholder=" "
+                className={`block w-full pl-10 pr-10 py-3 border ${
+                  darkMode 
+                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-green-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-green-500'
+                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                placeholder="Confirm Password"
+                required
               />
-              <label
-                htmlFor="confirmPassword"
-                className={`absolute left-3 -top-2.5 px-1 bg-white text-xs transition-all duration-200 peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs ${
-                  formData.password &&
-                  formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword
-                    ? "text-red-500 peer-placeholder-shown:text-red-400 peer-focus:text-red-500"
-                    : "text-gray-500 peer-placeholder-shown:text-gray-400 peer-focus:text-green-600"
-                }`}
-              >
-                Confirm Password
-              </label>
-              <FiLock
-                className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                  formData.password &&
-                  formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword
-                    ? "text-red-400"
-                    : "text-gray-400 peer-focus:text-green-500"
-                } transition-colors`}
-              />
-
-              {formData.confirmPassword && (
-                <>
-                  {formData.password === formData.confirmPassword ? (
-                    <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" />
-                  ) : (
-                    <FiAlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500" />
-                  )}
-                </>
-              )}
-
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                } hover:text-gray-600 transition-colors`}
                 aria-label={showConfirm ? "Hide password" : "Show password"}
               >
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
@@ -462,13 +479,19 @@ const Signup = () => {
                 className="h-4 w-4 text-green-500 border-gray-300 rounded focus:ring-green-400 cursor-pointer"
               />
             </div>
-            <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
+            <label htmlFor="terms" className={`text-sm ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            } cursor-pointer`}>
               I agree to the{" "}
-              <a href="#" className="text-green-600 font-medium hover:underline">
+              <a href="#" className={`text-green-600 font-medium hover:underline ${
+                darkMode ? 'text-green-400' : 'text-green-500'
+              }`}>
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-green-600 font-medium hover:underline">
+              <a href="#" className={`text-green-600 font-medium hover:underline ${
+                darkMode ? 'text-green-400' : 'text-green-500'
+              }`}>
                 Privacy Policy
               </a>
             </label>
@@ -482,49 +505,42 @@ const Signup = () => {
             <button
               onClick={handleSignup}
               disabled={loading}
-              className="group w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-300 p-4 rounded-xl text-lg font-semibold text-white shadow-lg shadow-green-100 hover:shadow-green-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white ${
+                loading
+                  ? 'bg-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-orange-500 hover:from-green-600 hover:to-orange-600 shadow-lg hover:shadow-green-200/50 hover:scale-[1.02] transform transition-all duration-200'
+              }`}
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Creating account...
+                  Creating Account...
                 </>
               ) : (
                 <>
-                  <span>Create account</span>
+                  Create Account
+                  <FaArrowRight className="ml-2" />
                 </>
               )}
             </button>
           </motion.div>
         </div>
 
-        <motion.p
-          className="text-center text-gray-600 mt-6 text-sm"
+        <motion.p 
+          className={`mt-6 text-center text-sm ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}
           variants={itemVariants}
         >
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-green-600 font-medium hover:underline hover:text-green-700 transition-colors"
+          Already have an account?{' '}
+          <Link 
+            to="/login" 
+            className={`font-medium hover:underline transition-colors ${
+              darkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
+            }`}
           >
             Sign in
           </Link>

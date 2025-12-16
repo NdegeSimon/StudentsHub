@@ -1,66 +1,148 @@
 import React, { useState } from 'react';
-import { Search, Bell, Settings, HelpCircle, User, BookOpen, Briefcase, Clock, Star } from 'lucide-react';
+import { 
+  Search, 
+  Bell, 
+  Settings, 
+  HelpCircle, 
+  User, 
+  BookOpen, 
+  Briefcase, 
+  Clock, 
+  Star, 
+  Sun, 
+  Moon,
+  Menu, 
+  X 
+} from 'lucide-react';
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
+import { useTheme } from '../context/ThemeContext';
 
 
 
 const Dashboard = () => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const { profile } = useProfile();
+  const { darkMode, toggleDarkMode } = useTheme();
+  
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+    }`}>
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <Link to="/" className="text-xl font-bold text-purple-600 hover:text-purple-800">
+              <Link to="/" className={`text-xl font-bold ${
+                darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-800'
+              } transition-colors`}>
                 Studex
               </Link>
               <nav className="hidden md:ml-10 md:flex space-x-8">
-                <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
-                <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
-                <Link to="/myapplications" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
-                <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
+                <Link 
+                  to="/jobs" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  Jobs
+                </Link>
+                <Link 
+                  to="#" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  Internships
+                </Link>
+                <Link 
+                  to="/myapplications" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  My Applications
+                </Link>
+                <Link 
+                  to="#" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  Messages
+                </Link>
               </nav>
             </div>
             
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+                  <Search className={`h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  className={`block w-full pl-10 pr-3 py-2 border ${
+                    darkMode 
+                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500' 
+                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-purple-500 focus:border-purple-500'
+                  } rounded-md leading-5 focus:outline-none sm:text-sm transition-colors`}
                   placeholder="Search jobs..."
                 />
               </div>
               
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+              <button 
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+              >
                 <HelpCircle className="h-6 w-6" />
               </button>
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+              <button 
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+              >
                 <Bell className="h-6 w-6" />
               </button>
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-yellow-300 hover:text-yellow-200' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {darkMode ? (
+                  <Sun className="h-6 w-6" />
+                ) : (
+                  <Moon className="h-6 w-6" />
+                )}
+              </button>
               <div 
-                className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
+                className={`ml-1 cursor-pointer rounded-full p-1 transition-colors ${
+                  darkMode ? 'hover:bg-gray-700' : 'hover:bg-purple-50'
+                }`}
                 onClick={() => navigate('/settings')}
               >
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Settings className="h-5 w-5 text-purple-600" />
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                  darkMode ? 'bg-gray-700 text-purple-400' : 'bg-purple-100 text-purple-600'
+                }`}>
+                  <Settings className="h-5 w-5" />
                 </div>
               </div>
               <div 
-                className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
+                className={`ml-1 cursor-pointer rounded-full p-1 transition-colors ${
+                  darkMode ? 'hover:bg-gray-700' : 'hover:bg-purple-50'
+                }`}
                 onClick={() => navigate('/profile')}
                 title="View Profile"
               >
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <User className="h-5 w-5 text-purple-600" />
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                  darkMode ? 'bg-gray-700 text-purple-400' : 'bg-purple-100 text-purple-600'
+                }`}>
+                  <User className="h-5 w-5" />
                 </div>
               </div>
             </div>
@@ -72,47 +154,149 @@ const navigate = useNavigate();
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Profile */}
           <div className="lg:w-1/4 space-y-6">
-            {/* Profile Info */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            {/* Profile Section */}
+            <div className={`rounded-xl shadow-sm p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
               <div className="flex items-center space-x-4">
-                <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-indigo-600" />
+                <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                  darkMode ? 'bg-purple-900/30' : 'bg-purple-100'
+                }`}>
+                  <User className={`h-8 w-8 ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">
-                    {profile.name.split(' ')[0]}
+                  <h3 className={`text-lg font-medium ${
+                    darkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {profile.name}
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    {profile.role || 'Web Developer'}
+                  <p className={`text-sm ${
+                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Student
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="font-medium text-gray-900 mb-4">Quick Actions</h3>
+            <div className={`rounded-xl shadow-sm p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <h3 className={`font-medium mb-4 ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Quick Actions
+              </h3>
               <div className="space-y-3">
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
-                  <Briefcase className="h-5 w-5 text-purple-600" />
+                <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
+                }`}>
+                  <Briefcase className={`h-5 w-5 ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
                   <span>My Applications</span>
                 </button>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
-                  <Clock className="h-5 w-5 text-purple-600" />
+                <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
+                }`}>
+                  <Clock className={`h-5 w-5 ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
                   <span>Recent Jobs</span>
                 </button>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
-                  <Star className="h-5 w-5 text-purple-600" />
+                <button className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-gray-700/50 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
+                }`}>
+                  <Star className={`h-5 w-5 ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
                   <span>Saved Jobs</span>
                 </button>
               </div>
             </div>
 
+            {/* Upcoming Deadlines */}
+            <div className={`rounded-xl shadow-sm p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <h3 className={`font-medium mb-4 ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Upcoming Deadlines
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                    darkMode ? 'bg-red-900/30' : 'bg-red-100'
+                  }`}>
+                    <span className={`text-sm font-medium ${
+                      darkMode ? 'text-red-400' : 'text-red-600'
+                    }`}>
+                      15
+                    </span>
+                  </div>
+                  <div className="ml-3">
+                    <p className={`text-sm font-medium ${
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Safaricom Application
+                    </p>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
+                      Due in 2 days
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                    darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100'
+                  }`}>
+                    <span className={`text-sm font-medium ${
+                      darkMode ? 'text-yellow-400' : 'text-yellow-600'
+                    }`}>
+                      20
+                    </span>
+                  </div>
+                  <div className="ml-3">
+                    <p className={`text-sm font-medium ${
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Andela Technical Test
+                    </p>
+                    <p className={`text-sm ${
+                      darkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
+                      Due in 1 week
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
             {/* Resources */}
-            <div className="bg-purple-50 rounded-xl p-6">
-              <h3 className="font-medium text-purple-800 mb-3">Resources</h3>
-              <p className="text-sm text-purple-700 mb-4">Enhance your profile and job search with our resources.</p>
-              <button className="w-full bg-white text-purple-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-100 transition-colors">
+            <div className={`rounded-xl p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-purple-50'
+            }`}>
+              <h3 className={`font-medium mb-3 ${
+                darkMode ? 'text-white' : 'text-purple-800'
+              }`}>
+                Resources
+              </h3>
+              <p className={`text-sm mb-4 ${
+                darkMode ? 'text-gray-400' : 'text-purple-700'
+              }`}>
+                Enhance your profile and job search with our resources.
+              </p>
+              <button className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                darkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-white text-purple-600 hover:bg-purple-100'
+              }`}>
                 Explore Resources
               </button>
             </div>
@@ -120,40 +304,101 @@ const navigate = useNavigate();
 
           {/* Main Content */}
           <div className="flex-1 space-y-8">
+            {/* Welcome Card */}
+            <div className={`bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-sm p-6 text-white ${
+              darkMode ? 'shadow-lg shadow-purple-900/30' : ''
+            }`}>
+              <h2 className="text-2xl font-bold mb-2">Welcome back, {profile.name.split(' ')[0]}!</h2>
+              <p className="mb-4 opacity-90">You have 3 applications in progress. Keep it up!</p>
+              <button className={`px-4 py-2 ${
+                darkMode ? 'bg-white/90 text-purple-700 hover:bg-white' : 'bg-white text-purple-600 hover:bg-opacity-90'
+              } rounded-lg text-sm font-medium transition`}>
+                View Applications
+              </button>
+            </div>
+
             {/* Saved Searches */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Saved Searches</h3>
+            <div className={`rounded-2xl shadow-sm p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <h3 className={`text-lg font-medium mb-4 ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Saved Searches
+              </h3>
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  darkMode 
+                    ? 'bg-purple-900/30 text-purple-300' 
+                    : 'bg-purple-100 text-purple-800'
+                }`}>
                   Web Development
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  darkMode 
+                    ? 'bg-purple-900/30 text-purple-300' 
+                    : 'bg-purple-100 text-purple-800'
+                }`}>
                   Data Science
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  darkMode 
+                    ? 'bg-purple-900/30 text-purple-300' 
+                    : 'bg-purple-100 text-purple-800'
+                }`}>
                   UI/UX Design
                 </span>
               </div>
             </div>
 
             {/* Job Listings */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="border-b border-gray-200">
+            <div className={`rounded-2xl shadow-sm p-6 transition-colors ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className={`text-lg font-medium ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Recommended Jobs
+                </h3>
+                <button className={`text-sm ${
+                  darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-800'
+                } transition-colors`}>
+                  View All
+                </button>
+              </div>
+              <div className={`border-b ${
+                darkMode ? 'border-gray-700' : 'border-gray-200'
+              }`}>
                 <nav className="flex -mb-px">
-                  <button className="border-b-2 border-indigo-500 text-indigo-600 px-4 py-4 text-sm font-medium">
+                  <button className={`border-b-2 px-4 py-4 text-sm font-medium ${
+                    darkMode 
+                      ? 'border-indigo-400 text-white' 
+                      : 'border-indigo-500 text-indigo-600'
+                  }`}>
                     Recommended
                   </button>
-                  <button className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-4 py-4 text-sm font-medium">
+                  <button className={`border-b-2 border-transparent px-4 py-4 text-sm font-medium ${
+                    darkMode
+                      ? 'text-gray-400 hover:text-white hover:border-gray-400' 
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}>
                     Recent
                   </button>
-                  <button className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-4 py-4 text-sm font-medium">
+                  <button className={`border-b-2 border-transparent px-4 py-4 text-sm font-medium ${
+                    darkMode
+                      ? 'text-gray-400 hover:text-white hover:border-gray-400' 
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}>
                     Saved
                   </button>
                 </nav>
               </div>
               
               <div className="p-6">
-                <p className="text-sm text-gray-500 mb-4">
+                <p className={`text-sm mb-4 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   Find your next opportunity by browsing through our curated job listings.
                 </p>
                 
