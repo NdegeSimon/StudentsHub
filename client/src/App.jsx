@@ -8,11 +8,14 @@ import MyApplications from "./pages/MyApplications.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Profile from "./pages/Profile.jsx";
 import { ProfileProvider } from "./context/ProfileContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import Settings from "./pages/Settings.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ProfileProvider>
+      <ThemeProvider>
+        <ProfileProvider>
         <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
        
@@ -23,9 +26,11 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/myapplications" element={<MyApplications />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </ProfileProvider>
+        </Routes>
+      </ProfileProvider>
+    </ThemeProvider>
   </BrowserRouter>
   );
 }

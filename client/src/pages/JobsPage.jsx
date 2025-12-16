@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Bell, Settings, HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import JobCard from "../components/JobCard";
 
 export default function JobsPage() {
@@ -101,6 +102,46 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Navigation Bar */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-purple-600">Studex</h1>
+              <nav className="hidden md:ml-10 md:flex space-x-8">
+                <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
+                <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
+                <Link to="/myapplications" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
+                <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
+              </nav>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  placeholder="Search jobs..."
+                />
+              </div>
+              
+              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+                <HelpCircle className="h-6 w-6" />
+              </button>
+              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+                <Bell className="h-6 w-6" />
+              </button>
+              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+                <Settings className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
       <div className="container mx-auto px-4 py-8">
         {/* NAVBAR */}
         <div className="mb-8">

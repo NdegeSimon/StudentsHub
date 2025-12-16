@@ -17,7 +17,9 @@ const navigate = useNavigate();
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-purple-600">Studex</h1>
+              <Link to="/" className="text-xl font-bold text-purple-600 hover:text-purple-800">
+                Studex
+              </Link>
               <nav className="hidden md:ml-10 md:flex space-x-8">
                 <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
                 <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
@@ -44,17 +46,23 @@ const navigate = useNavigate();
               <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
                 <Bell className="h-6 w-6" />
               </button>
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
-                <Settings className="h-6 w-6" />
-              </button>
-              <div className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
-              onClick={() => navigate('/profile')}
-              title="View Profile"
+              <div 
+                className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
+                onClick={() => navigate('/settings')}
               >
-  <           div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-    <User className="h-5 w-5 text-purple-600" />
-  </div>
-</div>
+                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Settings className="h-5 w-5 text-purple-600" />
+                </div>
+              </div>
+              <div 
+                className="ml-2 cursor-pointer hover:bg-purple-50 rounded-full p-1 transition-colors"
+                onClick={() => navigate('/profile')}
+                title="View Profile"
+              >
+                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <User className="h-5 w-5 text-purple-600" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
