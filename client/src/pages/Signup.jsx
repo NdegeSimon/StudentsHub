@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight, FaSun, FaMoon } from "react-icons/fa";
+import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight } from "react-icons/fa";
 import { FiUser, FiMail, FiLock, FiCopy, FiCheck, FiAlertCircle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { googleProvider } from "./firebase.js";
@@ -310,8 +310,6 @@ const Signup = () => {
             </div>
           </motion.div>
 
-          {/* User Type */}
-          
           {/* Email */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">

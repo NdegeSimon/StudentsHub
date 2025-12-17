@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { FaSearch, FaBell, FaQuestionCircle, FaSun, FaMoon } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext';
 
 export default function MessagingSystem() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [selectedChat, setSelectedChat] = useState(null);
+  const navigate = useNavigate();
   const [messageInput, setMessageInput] = useState('');
   const [userType, setUserType] = useState('jobseeker'); // 'jobseeker' or 'employer'
 
@@ -77,61 +81,117 @@ export default function MessagingSystem() {
       return conv;
     });
 
-    setConversations(updatedConversations);
-    setSelectedChat(updatedConversations.find(c => c.id === selectedChat.id));
     setMessageInput('');
+
+    // Auto-scroll to bottom
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
   };
 
   return (
-    <div className={`h-screen flex flex-col transition-all duration-500 ${
-      darkMode 
-        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
-        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
-    }`}>
-      {/* Header */}
-      <div className={`p-4 border-b backdrop-blur-xl transition-all duration-500 ${
-        darkMode 
-          ? 'bg-gray-800 bg-opacity-50 border-gray-700' 
-          : 'bg-white bg-opacity-70 border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${
-              darkMode ? 'bg-purple-500' : 'bg-blue-500'
-            }`}></div>
-            <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Messages
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* User Type Selector */}
-            <select
-              value={userType}
-              onChange={(e) => setUserType(e.target.value)}
-              className={`px-4 py-2 rounded-lg border transition-all ${
-                darkMode 
-                  ? 'bg-gray-700 text-white border-gray-600' 
-                  : 'bg-white text-gray-900 border-gray-300'
-              }`}
-            >
-              <option value="jobseeker">Job Seeker</option>
-              <option value="employer">Employer</option>
-            </select>
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 rounded-lg transition-all ${
-                darkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
+    <div className="flex flex-col min-h-screen">
+      {/* Navigation Bar */}
+      <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center">
+              <Link to="/" className={`text-xl font-bold ${
+                darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-800'
+              } transition-colors`}>
+                Studex
+              </Link>
+              <nav className="hidden md:ml-10 md:flex space-x-8">
+                <Link 
+                  to="/jobs" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  Jobs
+                </Link>
+                <Link 
+                  to="#" 
+                  className={`${
+                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                  } px-3 py-2 text-sm font-medium transition-colors`}
+                >
+                  Internships
+                </Link>
+                <NavLink 
+                  to="/messages"
+                  className={({ isActive }) => 
+                    `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive 
+                        ? darkMode 
+                          ? 'bg-blue-900 text-white' 
+                          : 'bg-blue-100 text-blue-700'
+                        : darkMode 
+                          ? 'text-gray-300 hover:bg-gray-700' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  Messages
+                </NavLink>
+              </nav>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaSearch className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                </div>
+                <input
+                  type="text"
+                  className={`block w-full pl-10 pr-3 py-2 border ${
+                    darkMode 
+                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500' 
+                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-purple-500 focus:border-purple-500'
+                  } rounded-md leading-5 focus:outline-none sm:text-sm transition-colors`}
+                  placeholder="Search messages..."
+                />
+              </div>
+              
+              <button 
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+              >
+                <FaQuestionCircle className="h-5 w-5" />
+              </button>
+              <button 
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+              >
+                <FaBell className="h-5 w-5" />
+              </button>
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full ${
+                  darkMode ? 'text-yellow-300 hover:text-yellow-200' : 'text-gray-600 hover:text-gray-900'
+                } focus:outline-none transition-colors`}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {darkMode ? (
+                  <FaSun className="h-5 w-5" />
+                ) : (
+                  <FaMoon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex max-w-7xl mx-auto w-full overflow-hidden">
+      <div className="flex-1 flex max-w-7xl mx-auto w-full overflow-hidden bg-opacity-70 ${
+        darkMode ? 'bg-gray-900' : 'bg-white'
+      }">
         {/* Conversations List */}
         <div className={`w-80 border-r overflow-y-auto transition-all duration-500 ${
           darkMode ? 'border-gray-700' : 'border-gray-200'
@@ -141,23 +201,25 @@ export default function MessagingSystem() {
               key={conv.id}
               onClick={() => setSelectedChat(conv)}
               className={`w-full p-4 flex items-start gap-3 border-b transition-all hover:bg-opacity-50 ${
-                selectedChat?.id === conv.id
+                selectedChat && selectedChat.id === conv.id
                   ? darkMode 
                     ? 'bg-purple-900 bg-opacity-30' 
                     : 'bg-blue-50'
-                  : darkMode
-                    ? 'border-gray-700 hover:bg-gray-800'
-                    : 'border-gray-200 hover:bg-gray-50'
+                  : darkMode 
+                    ? 'border-gray-700 hover:bg-gray-800' 
+                    : 'border-gray-200 hover:bg-gray-100'
               }`}
             >
-              <div className="text-3xl">{conv.avatar}</div>
-              <div className="flex-1 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <div className="flex-shrink-0 text-2xl">
+                {conv.avatar}
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="flex justify-between items-center">
+                  <h3 className={`text-sm font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {conv.name}
                   </h3>
                   {conv.unread > 0 && (
-                    <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
+                    <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {conv.unread}
                     </span>
                   )}

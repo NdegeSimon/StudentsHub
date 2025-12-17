@@ -1,50 +1,32 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 
 const ThemeContext = createContext();
 
-export const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    // Check for saved theme preference or use system preference
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('darkMode');
-      if (savedTheme !== null) {
-        return JSON.parse(savedTheme);
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
+export function ThemeProvider({ children }) {
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("theme") === "dark"
+  );
 
-  // Save preference to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    // Add or remove dark class from document element and body
     const root = document.documentElement;
-    const body = document.body;
-    
+
     if (darkMode) {
-      root.classList.add('dark');
-      body.classList.add('dark');
-      body.style.backgroundColor = '#111827';
-      body.style.color = '#f3f4f6';
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     } else {
-      root.classList.remove('dark');
-      body.classList.remove('dark');
-      body.style.backgroundColor = '';
-      body.style.color = '';
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
     }
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkMode(prev => !prev);
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   return (
     <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-      <div className={darkMode ? 'dark' : ''}>
-        {children}
-      </div>
+      {children}
     </ThemeContext.Provider>
   );
-};
+}
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Search, Bell, Settings, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import JobCard from "../components/JobCard";
+import { useTheme } from "../context/ThemeContext";
 
 export default function JobsPage() {
+  const { darkMode } = useTheme();
   const [searchText, setSearchText] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [filterType, setFilterType] = useState("All");
@@ -101,13 +103,14 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Navigation Bar */}
-      <header className="bg-white shadow-sm">
+      <header className={`bg-${darkMode ? 'gray-800' : 'white'} shadow-sm`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-purple-600">Studex</h1>
+              <h1 className={`text-xl font-bold text-${darkMode ? 'purple-400' : 'purple-600'}`}>Studex</h1>
               <nav className="hidden md:ml-10 md:flex space-x-8">
                 <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
                 <Link to="#" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
@@ -212,6 +215,7 @@ export default function JobsPage() {
           <div>Career Tips / Blog</div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

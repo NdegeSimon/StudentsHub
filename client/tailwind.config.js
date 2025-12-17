@@ -1,21 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ['class'],
   darkMode: 'class',
-  variants: {
-    extend: {
-      backgroundColor: ['dark'],
-      textColor: ['dark'],
-      borderColor: ['dark'],
-      ringColor: ['dark'],
-      ringOffsetColor: ['dark'],
-      ringOffsetWidth: ['dark'],
-      ringOpacity: ['dark'],
-      ringWidth: ['dark'],
-      boxShadow: ['dark'],
-      opacity: ['dark'],
-    },
-  },
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -23,6 +8,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        // Add any custom colors here
+      },
       animation: {
         blob: "blob 7s infinite",
       },
