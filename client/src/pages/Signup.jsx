@@ -17,6 +17,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    userType: "student", // Default to student
   });
   // ... rest of your state and functions
 
@@ -228,6 +229,62 @@ const Signup = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <motion.div className="space-y-1" variants={itemVariants}>
+            <div className="relative">
+              <label className={`block text-sm font-medium mb-2 ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                I am signing up as:
+              </label>
+              <div className={`mt-1 grid grid-cols-2 gap-4 p-1 rounded-xl ${
+                darkMode ? 'bg-gray-700/50' : 'bg-gray-100'
+              }`}>
+                <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
+                  formData.userType === 'student' 
+                    ? darkMode 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'bg-white text-blue-600 shadow-md' 
+                    : darkMode 
+                      ? 'hover:bg-gray-600/50' 
+                      : 'hover:bg-gray-200'
+                }`}>
+                  <input
+                    type="radio"
+                    name="userType"
+                    value="student"
+                    checked={formData.userType === 'student'}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium"> Student</span>
+                  </div>
+                </label>
+                <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
+                  formData.userType === 'employer' 
+                    ? darkMode 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'bg-white text-blue-600 shadow-md' 
+                    : darkMode 
+                      ? 'hover:bg-gray-600/50' 
+                      : 'hover:bg-gray-200'
+                }`}>
+                  <input
+                    type="radio"
+                    name="userType"
+                    value="employer"
+                    checked={formData.userType === 'employer'}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium"> Employer</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Username */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
@@ -253,6 +310,8 @@ const Signup = () => {
             </div>
           </motion.div>
 
+          {/* User Type */}
+          
           {/* Email */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
@@ -422,16 +481,42 @@ const Signup = () => {
           </motion.div>
 
           {/* Submit Button */}
-          <motion.div variants={itemVariants}>
+          <motion.div 
+            className="mt-8" 
+            variants={itemVariants}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 px-4 rounded-xl font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`w-full py-4 px-6 rounded-xl font-semibold text-white text-lg 
+                bg-gradient-to-r from-blue-500 to-purple-500 
+                hover:from-blue-600 hover:to-purple-600 
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                transition-all duration-200 transform hover:shadow-lg
+                ${loading ? 'opacity-70 cursor-not-allowed' : 'shadow-md'}`}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating your account...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center">
+                  
+                       Signup
+                </span>
+              )}
             </button>
+            <p className={`mt-3 text-center text-sm ${
+              darkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              By signing up, you agree to our Terms of Service and Privacy Policy
+            </p>
           </motion.div>
         </form>
 

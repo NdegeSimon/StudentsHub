@@ -331,11 +331,14 @@ const Dashboard = () => {
             }`}>
               <h2 className="text-2xl font-bold mb-2">Welcome back, {profile.name.split(' ')[0]}!</h2>
               <p className="mb-4 opacity-90">You have 3 applications in progress. Keep it up!</p>
-              <button className={`px-4 py-2 ${
-                darkMode ? 'bg-white/90 text-purple-700 hover:bg-white' : 'bg-white text-purple-600 hover:bg-opacity-90'
-              } rounded-lg text-sm font-medium transition`}>
-                View Applications
-              </button>
+              <button 
+           onClick={() => navigate('/myapplications')}
+           className={`px-4 py-2 ${
+           darkMode ? 'bg-white/90 text-purple-700 hover:bg-white' : 'bg-white text-purple-600 hover:bg-opacity-90'
+          } rounded-lg text-sm font-medium transition`}
+>
+  View Applications
+</button>
             </div>
 
             {/* Saved Searches */}
