@@ -262,7 +262,7 @@ export default function Login() {
               ) : (
                 <>
                   Sign In
-                  <FaArrowRight className="ml-2" />
+                  
                 </>
               )}
             </button>

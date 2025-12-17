@@ -112,10 +112,10 @@ export default function JobsPage() {
             <div className="flex items-center">
               <h1 className={`text-xl font-bold text-${darkMode ? 'purple-400' : 'purple-600'}`}>Studex</h1>
               <nav className="hidden md:ml-10 md:flex space-x-8">
-                <Link to="/jobs" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
-                <Link to="/Internships" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
-                <Link to="/myapplications" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
-                <Link to="/messages" className="text-purple-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
+                <Link to="/jobs" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
+                <Link to="/Internships" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
+                <Link to="/myapplications" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
+                <Link to="/messages" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
               </nav>
             </div>
             
