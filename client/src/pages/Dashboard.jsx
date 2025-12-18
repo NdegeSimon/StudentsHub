@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Bell, 
@@ -20,14 +20,100 @@ import MyApplications from './MyApplications';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
-
-
+import { jobAPI, applicationAPI, userAPI } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { profile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('recommended');
+  
+  // State for dashboard data
+  const [dashboardData, setDashboardData] = useState({
+    recommendedJobs: [],
+    recentApplications: [],
+    stats: {
+      totalApplications: 0,
+      activeJobs: 0,
+      profileCompletion: 0
+    },
+    loading: true,
+    error: null
+  });
+
+  // Fetch dashboard data when component mounts
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setDashboardData(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Fetch recommended jobs
+        const jobsResponse = await jobAPI.getJobs({ limit: 4 });
+        
+        // Fetch user applications if user is logged in
+        let applicationsResponse = { data: [] };
+        if (profile?.id) {
+          try {
+            applicationsResponse = await applicationAPI.getMyApplications();
+          } catch (error) {
+            console.error('Error fetching applications:', error);
+          }
+          
+          // Update profile completion status
+          try {
+            const userProfile = await userAPI.getProfile();
+            updateProfile(userProfile.data);
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+          }
+        }
+
+        setDashboardData({
+          recommendedJobs: jobsResponse.data || [],
+          recentApplications: applicationsResponse.data?.slice(0, 3) || [],
+          stats: {
+            totalApplications: applicationsResponse.data?.length || 0,
+            activeJobs: jobsResponse.data?.length || 0,
+            profileCompletion: calculateProfileCompletion(profile)
+          },
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setDashboardData(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load dashboard data. Please try again later.'
+        }));
+      }
+    };
+
+    fetchDashboardData();
+  }, [profile?.id]); // Refetch when profile changes
+
+  // Helper function to calculate profile completion percentage
+  const calculateProfileCompletion = (userProfile) => {
+    if (!userProfile) return 0;
+    
+    const fields = [
+      userProfile.first_name,
+      userProfile.last_name,
+      userProfile.email,
+      userProfile.phone,
+      userProfile.bio,
+      userProfile.skills,
+      userProfile.experience,
+      userProfile.education
+    ];
+    
+    const filledFields = fields.filter(field => {
+      if (Array.isArray(field)) return field.length > 0;
+      return !!field;
+    }).length;
+    
+    return Math.round((filledFields / fields.length) * 100);
+  };
   
   return (
     <div className={`min-h-screen transition-colors duration-300 ${

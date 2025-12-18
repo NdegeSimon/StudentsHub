@@ -1,24 +1,107 @@
-import { Link } from 'react-router-dom';
-import { Search, Bell, Settings, HelpCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Bell, Settings, HelpCircle, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { applicationAPI } from '../services/api';
 
 export default function MyApplications() {
+  const navigate = useNavigate();
   const { darkMode } = useTheme();
-  
-  const applications = [
-    // ... your applications data ...
-  ];
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    sort: 'newest'
+  });
+
+  // Fetch applications when component mounts or filters change
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Build query params
+        const params = new URLSearchParams();
+        if (filters.status !== 'all') params.append('status', filters.status);
+        if (filters.sort) params.append('sort', filters.sort);
+        
+        const response = await applicationAPI.getMyApplications(params);
+        setApplications(response.data || []);
+      } catch (err) {
+        console.error('Error fetching applications:', err);
+        setError('Failed to load applications. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [filters]);
+
+  const handleStatusFilter = (status) => {
+    setFilters(prev => ({
+      ...prev,
+      status: prev.status === status ? 'all' : status
+    }));
+  };
+
+  const handleSortChange = (e) => {
+    setFilters(prev => ({
+      ...prev,
+      sort: e.target.value
+    }));
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return <Clock className="h-4 w-4 mr-1.5" />;
+      case 'accepted':
+      case 'hired':
+        return <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />;
+      case 'rejected':
+        return <XCircle className="h-4 w-4 mr-1.5 text-red-500" />;
+      case 'withdrawn':
+        return <AlertCircle className="h-4 w-4 mr-1.5 text-yellow-500" />;
+      default:
+        return <Clock className="h-4 w-4 mr-1.5" />;
+    }
+  };
 
   const statusStyles = {
-    "Under Review": darkMode 
-      ? "bg-blue-900 text-blue-100 border-blue-700" 
-      : "bg-purple-50 text-purple-700 border-purple-200",
-    "Shortlisted": darkMode 
-      ? "bg-green-900 text-green-100 border-green-700" 
-      : "bg-purple-100 text-purple-800 border-purple-300",
-    "Rejected": darkMode 
-      ? "bg-red-900 text-red-100 border-red-700" 
-      : "bg-red-50 text-red-700 border-red-200",
+    'pending': darkMode 
+      ? 'bg-blue-900 text-blue-100 border-blue-700' 
+      : 'bg-blue-50 text-blue-700 border-blue-200',
+    'under_review': darkMode 
+      ? 'bg-purple-900 text-purple-100 border-purple-700' 
+      : 'bg-purple-50 text-purple-700 border-purple-200',
+    'shortlisted': darkMode 
+      ? 'bg-green-900 text-green-100 border-green-700' 
+      : 'bg-green-50 text-green-700 border-green-200',
+    'interview': darkMode
+      ? 'bg-yellow-900 text-yellow-100 border-yellow-700'
+      : 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    'accepted': darkMode
+      ? 'bg-green-900 text-green-100 border-green-700'
+      : 'bg-green-100 text-green-800 border-green-300',
+    'rejected': darkMode 
+      ? 'bg-red-900 text-red-100 border-red-700' 
+      : 'bg-red-50 text-red-700 border-red-200',
+    'withdrawn': darkMode
+      ? 'bg-gray-700 text-gray-200 border-gray-600'
+      : 'bg-gray-100 text-gray-700 border-gray-300'
+  };
+
+  const statusLabels = {
+    'pending': 'Pending',
+    'under_review': 'Under Review',
+    'shortlisted': 'Shortlisted',
+    'interview': 'Interview',
+    'accepted': 'Accepted',
+    'rejected': 'Rejected',
+    'withdrawn': 'Withdrawn'
   };
 
   return (
