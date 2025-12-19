@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaArrowRight, FaSun, FaMoon } from "react-icons/fa";
 import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { useTheme } from "../context/ThemeContext";
@@ -22,10 +22,6 @@ export default function Login() {
   const navigate = useNavigate();
 
   const location = useLocation();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
 
   // Redirect if already logged in
   useEffect(() => {
@@ -35,14 +31,6 @@ export default function Login() {
     }
   }, [navigate, location]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -50,8 +38,8 @@ export default function Login() {
 
     try {
       const response = await authAPI.login({
-        email: formData.email,
-        password: formData.password,
+        email: email,
+        password: password,
       });
 
       // Store the token and user data
@@ -178,12 +166,6 @@ export default function Login() {
       console.error("Facebook Sign In Error:", error);
       toast.error(error.message || 'Facebook login failed');
     }
-    try {
-      const result = await signInWithPopup(auth, facebookProvider);
-      console.log("Facebook User:", result.user);
-    } catch (error) {
-      console.error("Facebook Sign In Error:", error);
-    }
   };
 
   return (
@@ -202,7 +184,7 @@ export default function Login() {
         }`}></div>
       </div>
 
-      <motion.div
+      <Motion.div
         className={`w-full max-w-md ${
           darkMode ? 'bg-gray-800/90 text-gray-100' : 'bg-white/90 text-gray-900'
         } backdrop-blur-sm p-8 rounded-2xl shadow-2xl border ${
@@ -216,14 +198,14 @@ export default function Login() {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-2xl font-bold text-white">SH</span>
           </div>
-          <motion.h1 className={`text-3xl font-bold ${
+          <Motion.h1 className={`text-3xl font-bold ${
             darkMode ? 'text-white' : 'text-gray-900'
           } mb-2`} variants={itemVariants}>
             Welcome Back
-          </motion.h1>
-          <motion.p className={darkMode ? 'text-gray-300' : 'text-gray-600'} variants={itemVariants}>
+          </Motion.h1>
+          <Motion.p className={darkMode ? 'text-gray-300' : 'text-gray-600'} variants={itemVariants}>
             Sign in to your account
-          </motion.p>
+          </Motion.p>
         </div>
 
         {error && (
@@ -232,8 +214,8 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          <motion.div className="space-y-1" variants={itemVariants}>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiMail className={`h-5 w-5 ${
@@ -254,9 +236,9 @@ export default function Login() {
                 required
               />
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div className="space-y-1" variants={itemVariants}>
+          <Motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className={`h-5 w-5 ${
@@ -287,7 +269,7 @@ export default function Login() {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-          </motion.div>
+          </Motion.div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -317,7 +299,7 @@ export default function Login() {
             </div>
           </div>
 
-          <motion.div
+          <Motion.div
             variants={itemVariants}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -346,7 +328,7 @@ export default function Login() {
                 </>
               )}
             </button>
-          </motion.div>
+          </Motion.div>
         </form>
 
         <div className="mt-6">
@@ -405,7 +387,7 @@ export default function Login() {
           </div>
         </div>
 
-        <motion.p 
+        <Motion.p 
           className={`mt-6 text-center text-sm ${
             darkMode ? 'text-gray-400' : 'text-gray-600'
           }`}
@@ -420,7 +402,7 @@ export default function Login() {
           >
             Sign up
           </Link>
-        </motion.p>
+        </Motion.p>
 
         <div className="absolute top-4 right-4">
           <button
@@ -436,8 +418,7 @@ export default function Login() {
             )}
           </button>
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 }
- 

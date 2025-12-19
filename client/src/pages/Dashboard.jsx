@@ -14,6 +14,7 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
+
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';
@@ -48,7 +49,7 @@ const Dashboard = () => {
         setDashboardData(prev => ({ ...prev, loading: true, error: null }));
         
         // Fetch recommended jobs
-        const jobsResponse = await jobAPI.getJobs({ limit: 4 });
+        const response = await jobAPI.getJobs({ limit: 4 });
         
         // Fetch user applications if user is logged in
         let applicationsResponse = { data: [] };

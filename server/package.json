@@ -1,0 +1,13 @@
+{
+  "name": "studentshub-server",
+  "version": "1.0.0",
+  "description": "StudentsHub Backend Server",
+  "main": "app.py",
+  "scripts": {
+    "dev": "flask run --debug",
+    "start": "gunicorn --bind 0.0.0.0:5000 wsgi:app"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

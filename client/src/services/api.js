@@ -1,151 +1,150 @@
-import axios from 'axios';
+import axios from "axios";
 
+/**
+ * IMPORTANT:
+ * Backend runs on http://localhost:5000
+ * All Flask routes are prefixed with /api
+ */
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-// Create axios instance with base URL
+/**
+ * Axios instance
+ */
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true, // REQUIRED for CORS + auth
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Add a request interceptor to include the auth token in requests
+/**
+ * Request interceptor – attach JWT token
+ */
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle common errors
+/**
+ * Response interceptor – handle auth errors globally
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
 );
 
-// Auth API
+/* ===================== AUTH ===================== */
+
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
+  register: (data) => api.post("/auth/register", data),
+  login: (data) => api.post("/auth/login", data),
+  logout: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  },
   getCurrentUser: () => {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
   },
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  },
+  isAuthenticated: () => !!localStorage.getItem("token"),
 };
 
-// User API
+/* ===================== USERS ===================== */
+
 export const userAPI = {
-  getProfile: () => api.get('/users/profile'),
-  updateProfile: (userData) => api.put('/users/profile', userData),
+  getProfile: () => api.get("/users/profile"),
+  updateProfile: (data) => api.put("/users/profile", data),
 };
 
-// Student API
+/* ===================== STUDENTS ===================== */
+
 export const studentAPI = {
-  getStudents: () => api.get('/students'),
+  getStudents: () => api.get("/students"),
   getStudent: (id) => api.get(`/students/${id}`),
-  updateStudentProfile: (profileData) => api.put('/students/profile', profileData),
+  updateProfile: (data) => api.put("/students/profile", data),
+
   uploadResume: (file) => {
     const formData = new FormData();
-    formData.append('resume', file);
-    return api.post('/upload/resume', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    formData.append("resume", file);
+
+    return api.post("/upload/resume", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 };
 
-// Company API
+/* ===================== COMPANIES ===================== */
+
 export const companyAPI = {
-  getCompanies: () => api.get('/companies'),
+  getCompanies: () => api.get("/companies"),
   getCompany: (id) => api.get(`/companies/${id}`),
-  updateCompanyProfile: (profileData) => api.put('/companies/profile', profileData),
-  getCompanyJobs: (companyId) => api.get(`/jobs?company_id=${companyId}`),
-  getJobApplicants: (jobId) => api.get(`/jobs/${jobId}/applications`),
+  updateProfile: (data) => api.put("/companies/profile", data),
+  getCompanyJobs: (companyId) =>
+    api.get("/jobs", { params: { company_id: companyId } }),
 };
 
-// Job API
+/* ===================== JOBS ===================== */
+
 export const jobAPI = {
-  getJobs: (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value);
-      }
-    });
-    return api.get(`/jobs?${params.toString()}`);
-  },
+  getJobs: (filters = {}) => api.get("/jobs", { params: filters }),
   getJob: (id) => api.get(`/jobs/${id}`),
-  createJob: (jobData) => api.post('/jobs', jobData),
-  updateJob: (id, jobData) => api.put(`/jobs/${id}`, jobData),
+  createJob: (data) => api.post("/jobs", data),
+  updateJob: (id, data) => api.put(`/jobs/${id}`, data),
   deleteJob: (id) => api.delete(`/jobs/${id}`),
-  getJobApplications: (jobId) => api.get(`/jobs/${jobId}/applications`),
+  getJobApplications: (jobId) =>
+    api.get(`/jobs/${jobId}/applications`),
 };
 
-// Application API
+/* ===================== APPLICATIONS ===================== */
+
 export const applicationAPI = {
-  applyForJob: (jobId, applicationData) => 
-    api.post('/applications', { ...applicationData, job_id: jobId }),
-  getMyApplications: () => api.get('/applications/student'),
-  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
-  updateApplicationStatus: (applicationId, status, notes = '') => 
-    api.put(`/applications/${applicationId}/status`, { status, notes }),
+  applyForJob: (jobId, data) =>
+    api.post("/applications", { ...data, job_id: jobId }),
+  getMyApplications: () => api.get("/applications/student"),
+  getApplication: (id) => api.get(`/applications/${id}`),
+  updateStatus: (id, status, notes = "") =>
+    api.put(`/applications/${id}/status`, { status, notes }),
 };
 
-// Search API
+/* ===================== SEARCH ===================== */
+
 export const searchAPI = {
-  searchJobs: (query, filters = {}) => {
-    const params = new URLSearchParams({ q: query, ...filters });
-    return api.get(`/search/jobs?${params.toString()}`);
-  },
-  searchStudents: (query, filters = {}) => {
-    const params = new URLSearchParams({ q: query, ...filters });
-    return api.get(`/search/students?${params.toString()}`);
-  },
+  searchJobs: (query, filters = {}) =>
+    api.get("/search/jobs", {
+      params: { q: query, ...filters },
+    }),
+  searchStudents: (query, filters = {}) =>
+    api.get("/search/students", {
+      params: { q: query, ...filters },
+    }),
 };
 
-// Upload API
+/* ===================== UPLOAD ===================== */
+
 export const uploadAPI = {
   uploadFile: (file, type) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
+
     return api.post(`/upload/${type}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 };
 
-export default {
-  auth: authAPI,
-  user: userAPI,
-  student: studentAPI,
-  company: companyAPI,
-  job: jobAPI,
-  application: applicationAPI,
-  search: searchAPI,
-  upload: uploadAPI,
-};
+export default api;

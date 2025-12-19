@@ -4,8 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from enum import Enum
 
-# Initialize SQLAlchemy
-db = SQLAlchemy()
+from app import db
 
 # Enums for status fields
 class ApplicationStatus(Enum):
@@ -134,6 +133,11 @@ class Government(db.Model):
     def __repr__(self):
         return f'<Government {self.department} - {self.user.email}>'
 
+class ApplicationStatus(Enum):
+    PENDING = 'pending'
+    REVIEWED = 'reviewed'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'
 
 class Job(db.Model):
     __tablename__ = 'jobs'

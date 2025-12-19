@@ -1,54 +1,66 @@
-# app.py
 from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy  # Add this import
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from datetime import timedelta
-import os
 from dotenv import load_dotenv
-from routes.routes import bp as api_bp
+import os
 
-
-# Load environment variables
-load_dotenv()
-
-# Initialize extensions
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
-    
-    # Configuration
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///studentshub.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # Initialize extensions
+
+    load_dotenv()
+
+    app.config.update(
+        SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret"),
+        JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY", "jwt-secret"),
+        JWT_ACCESS_TOKEN_EXPIRES=timedelta(days=7),
+        SQLALCHEMY_DATABASE_URI=os.getenv(
+            "DATABASE_URL", "sqlite:///studentshub.db"
+        ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
+
+    # Extensions
     db.init_app(app)
-    migrate.init_app(app, db)
     jwt.init_app(app)
-    CORS(app)
-    
-    # Register blueprints
-    from routes.routes import bp as api_bp
-    app.register_blueprint(api_bp)
-    
-    # Error handlers
+    migrate.init_app(app, db)
+
+    # CORS — ONE place, ONE rule
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": "http://localhost:5173"}},
+        supports_credentials=True,
+    )
+
+    # Import models AFTER db init
+    from models.models import User
+
+    # Blueprints
+    from routes.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix="/api")
+
+    # Errors
     @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({'error': 'Not found'}), 404
-    
+    def not_found(_):
+        return jsonify(error="Not found"), 404
+
+    @app.errorhandler(401)
+    def unauthorized(_):
+        return jsonify(error="Unauthorized"), 401
+
     @app.errorhandler(500)
-    def server_error(error):
-        return jsonify({'error': 'Internal server error'}), 500
-    
+    def server_error(_):
+        return jsonify(error="Server error"), 500
+
     return app
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

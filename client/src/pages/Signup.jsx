@@ -82,9 +82,13 @@ const Signup = () => {
     setError("");
     setSuccess("");
 
+    console.log('Form data:', formData); // Debug log
+
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      const errMsg = "Passwords do not match";
+      console.error('Validation error:', errMsg);
+      setError(errMsg);
       setLoading(false);
       return;
     }
@@ -98,15 +102,27 @@ const Signup = () => {
         userType: formData.userType,
       };
 
+      console.log('Sending registration request...'); // Debug log
+      
       // Call the register API
       const response = await authAPI.register(userData);
+      console.log('Registration response:', response); // Debug log
+      
+      if (!response) {
+        throw new Error('No response received from server');
+      }
       
       // Handle successful registration
-      setSuccess("Account created successfully! Redirecting to login...");
+      const successMsg = "Account created successfully! Redirecting to login...";
+      console.log(successMsg);
+      setSuccess(successMsg);
       
       // Store the token in localStorage
-      if (response.data.token) {
+      if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
+        console.log('Token stored successfully');
+      } else {
+        console.warn('No token received in response');
       }
       
       // Redirect to login page after 2 seconds
@@ -115,8 +131,35 @@ const Signup = () => {
       }, 2000);
       
     } catch (error) {
-      // Handle errors from the API
-      const errorMessage = error.response?.data?.message || "Signup failed. Please try again.";
+      // Enhanced error handling
+      console.error('Signup error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      
+      let errorMessage = "Signup failed. Please try again.";
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        if (error.response.data) {
+          errorMessage = error.response.data.message || 
+                        error.response.data.error || 
+                        JSON.stringify(error.response.data);
+        } else {
+          errorMessage = `Server error: ${error.response.status} ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        errorMessage = error.message || "An unknown error occurred";
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
