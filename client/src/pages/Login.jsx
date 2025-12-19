@@ -1,11 +1,13 @@
-import React, { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaArrowRight, FaSun, FaMoon } from "react-icons/fa";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { useTheme } from "../context/ThemeContext";
+import { authAPI } from "../utils/api";
+import { toast } from "react-toastify";
 
 export default function Login() {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -19,32 +21,54 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const location = useLocation();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate(location.state?.from || '/dashboard');
+    }
+  }, [navigate, location]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const response = await authAPI.login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("isAuthenticated", "true");
-
-        navigate("/main");
-      } else {
-        setError(data.msg || "Login failed");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Connection error. Ensure backend is running on port 5000.");
+      // Store the token and user data
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Show success message
+      toast.success('Login successful! Redirecting...');
+      
+      // Redirect to the intended page or dashboard
+      navigate(location.state?.from || '/dashboard');
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -78,26 +102,82 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("isAuthenticated", "true");
-      navigate("/dashboard");
+      const { user } = result;
+      
+      // Send Google auth data to your backend
+      const response = await authAPI.login({
+        email: user.email,
+        name: user.displayName,
+        provider: 'google',
+        providerId: user.uid,
+        profilePicture: user.photoURL
+      });
+
+      // Store the token and user data
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      toast.success('Google login successful!');
+      navigate(location.state?.from || '/dashboard');
+      
     } catch (error) {
       console.error("Google Sign In Error:", error);
+      toast.error(error.message || 'Google login failed');
     }
   };
 
   const handleGitHubSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-      console.log(user);
+      const { user } = result;
+      
+      // Send GitHub auth data to your backend
+      const response = await authAPI.login({
+        email: user.email || `${user.uid}@github.com`,
+        username: user.displayName || user.reloadUserInfo.screenName,
+        provider: 'github',
+        providerId: user.uid,
+        profilePicture: user.photoURL
+      });
+
+      // Store the token and user data
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      toast.success('GitHub login successful!');
+      navigate(location.state?.from || '/dashboard');
+      
     } catch (error) {
       console.error("GitHub Sign In Error:", error);
+      toast.error(error.message || 'GitHub login failed');
     }
   };
 
   const handleFacebookSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, facebookProvider);
+      const { user } = result;
+      
+      // Send Facebook auth data to your backend
+      const response = await authAPI.login({
+        email: user.email || `${user.uid}@facebook.com`,
+        name: user.displayName,
+        provider: 'facebook',
+        providerId: user.uid,
+        profilePicture: user.photoURL
+      });
+
+      // Store the token and user data
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      toast.success('Facebook login successful!');
+      navigate(location.state?.from || '/dashboard');
+      
+    } catch (error) {
+      console.error("Facebook Sign In Error:", error);
+      toast.error(error.message || 'Facebook login failed');
+    }
     try {
       const result = await signInWithPopup(auth, facebookProvider);
       console.log("Facebook User:", result.user);

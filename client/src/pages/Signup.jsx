@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { useTheme } from "../context/ThemeContext";
+import { authAPI } from "../utils/api";
 
 // Replace the useTheme import and dark mode toggle with a simple darkMode constant
 const Signup = () => {
@@ -89,15 +90,34 @@ const Signup = () => {
     }
 
     try {
-      // Your signup logic here
-      // Example:
-      // const response = await signUpUser(formData);
-      // handle successful signup
-      setSuccess("Account created successfully!");
-      // Redirect to login or dashboard
-      // navigate('/login');
+      // Prepare user data for registration
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        userType: formData.userType,
+      };
+
+      // Call the register API
+      const response = await authAPI.register(userData);
+      
+      // Handle successful registration
+      setSuccess("Account created successfully! Redirecting to login...");
+      
+      // Store the token in localStorage
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
     } catch (error) {
-      setError(error.message || "Signup failed. Please try again.");
+      // Handle errors from the API
+      const errorMessage = error.response?.data?.message || "Signup failed. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
