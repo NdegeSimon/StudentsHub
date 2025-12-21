@@ -43,55 +43,56 @@ const Dashboard = () => {
   });
 
   // Fetch dashboard data when component mounts
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setDashboardData(prev => ({ ...prev, loading: true, error: null }));
-        
-        // Fetch recommended jobs
-        const response = await jobAPI.getJobs({ limit: 4 });
-        
-        // Fetch user applications if user is logged in
-        let applicationsResponse = { data: [] };
-        if (profile?.id) {
-          try {
-            applicationsResponse = await applicationAPI.getMyApplications();
-          } catch (error) {
-            console.error('Error fetching applications:', error);
-          }
-          
-          // Update profile completion status
-          try {
-            const userProfile = await userAPI.getProfile();
-            updateProfile(userProfile.data);
-          } catch (error) {
-            console.error('Error fetching user profile:', error);
-          }
+  // Fetch dashboard data when component mounts
+useEffect(() => {
+  const fetchDashboardData = async () => {
+    try {
+      setDashboardData(prev => ({ ...prev, loading: true, error: null }));
+      
+      // Fetch recommended jobs
+      const jobsResponse = await jobAPI.getJobs({ limit: 4 }); // ✅ FIXED: renamed to jobsResponse
+      
+      // Fetch user applications if user is logged in
+      let applicationsResponse = { data: [] };
+      if (profile?.id) {
+        try {
+          applicationsResponse = await applicationAPI.getMyApplications();
+        } catch (error) {
+          console.error('Error fetching applications:', error);
         }
-
-        setDashboardData({
-          recommendedJobs: jobsResponse.data || [],
-          recentApplications: applicationsResponse.data?.slice(0, 3) || [],
-          stats: {
-            totalApplications: applicationsResponse.data?.length || 0,
-            activeJobs: jobsResponse.data?.length || 0,
-            profileCompletion: calculateProfileCompletion(profile)
-          },
-          loading: false,
-          error: null
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setDashboardData(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to load dashboard data. Please try again later.'
-        }));
+        
+        // Update profile completion status
+        try {
+          const userProfile = await userAPI.getProfile();
+          updateProfile(userProfile.data);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
       }
-    };
 
-    fetchDashboardData();
-  }, [profile?.id]); // Refetch when profile changes
+      setDashboardData({
+        recommendedJobs: jobsResponse.data || [], // ✅ FIXED: now uses jobsResponse
+        recentApplications: applicationsResponse.data?.slice(0, 3) || [],
+        stats: {
+          totalApplications: applicationsResponse.data?.length || 0,
+          activeJobs: jobsResponse.data?.length || 0, // ✅ FIXED
+          profileCompletion: calculateProfileCompletion(profile)
+        },
+        loading: false,
+        error: null
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setDashboardData(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load dashboard data. Please try again later.'
+      }));
+    }
+  };
+
+  fetchDashboardData();
+}, [profile?.id, updateProfile]); // ✅ ADDED: updateProfile to dependencies
 
   // Helper function to calculate profile completion percentage
   const calculateProfileCompletion = (userProfile) => {

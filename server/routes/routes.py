@@ -1,336 +1,328 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import (
-    jwt_required,
-    get_jwt_identity,
-    create_access_token
-)
-from datetime import timedelta, datetime
-from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
+from extensions import db
+
+from models.models import User, Student, Company, Government
 import re
 
-from models.models import (
-    db,
-    User,
-    Job,
-    Company,
-    Application,
-    Student,
-    JobType
-)
+bp = Blueprint('auth', __name__)
 
-bp = Blueprint("api", __name__, url_prefix="/api")
+# Email validation regex
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
-# =====================================================
-# HELPERS
-# =====================================================
+def validate_email(email):
+    """Validate email format"""
+    return EMAIL_REGEX.match(email) is not None
 
-EMAIL_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+def validate_password(password):
+    """Validate password strength"""
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r'[0-9]', password):
+        return False, "Password must contain at least one number"
+    if not re.search(r'[^A-Za-z0-9]', password):
+        return False, "Password must contain at least one special character"
+    return True, "Password is valid"
 
-def get_current_user():
-    user_id = get_jwt_identity()
-    if not user_id:
-        return None
-    return User.query.get(user_id)
-
-def error(msg, code=400):
-    return jsonify({"error": msg}), code
-
-# =====================================================
-# ROLE DECORATORS
-# =====================================================
-
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = get_current_user()
-        if not user or user.role != "admin":
-            return error("Admin access required", 403)
-        return fn(*args, **kwargs)
-    return wrapper
-
-def company_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = get_current_user()
-        if not user or user.role != "company":
-            return error("Company access required", 403)
-        return fn(*args, **kwargs)
-    return wrapper
-
-def student_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = get_current_user()
-        if not user or user.role != "student":
-            return error("Student access required", 403)
-        return fn(*args, **kwargs)
-    return wrapper
-
-# =====================================================
-# AUTH
-# =====================================================
-
-@bp.route("/auth/register", methods=["POST"])
+@bp.route('/register', methods=['POST', 'OPTIONS'])
 def register():
-    data = request.get_json() or {}
-
-    required = ["email", "password", "first_name", "last_name", "role"]
-    if not all(k in data for k in required):
-        return error("Missing required fields")
-
-    if not re.match(EMAIL_REGEX, data["email"]):
-        return error("Invalid email")
-
-    if len(data["password"]) < 8:
-        return error("Password must be at least 8 characters")
-
-    if data["role"] not in ["student", "company", "admin"]:
-        return error("Invalid role")
-
-    if User.query.filter_by(email=data["email"]).first():
-        return error("Email already exists", 409)
-
-    user = User(
-        email=data["email"],
-        first_name=data["first_name"],
-        last_name=data["last_name"],
-        phone=data.get("phone", ""),
-        role=data["role"],
-        is_active=True
-    )
-    user.set_password(data["password"])
-
-    db.session.add(user)
-    db.session.commit()
-
-    token = create_access_token(identity=user.id, expires_delta=timedelta(days=7))
-
-    return jsonify({
-        "access_token": token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role
-        }
-    }), 201
-
-
-@bp.route("/auth/login", methods=["POST"])
-def login():
-    data = request.get_json() or {}
-
-    if "email" not in data or "password" not in data:
-        return error("Email and password required")
-
-    user = User.query.filter_by(email=data["email"]).first()
-    if not user or not user.check_password(data["password"]):
-        return error("Invalid credentials", 401)
-
-    if not user.is_active:
-        return error("Account disabled", 403)
-
-    user.last_login = datetime.utcnow()
-    db.session.commit()
-
-    token = create_access_token(identity=user.id, expires_delta=timedelta(days=7))
-
-    return jsonify({
-        "access_token": token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role
-        }
-    })
-
-
-@bp.route("/auth/me", methods=["GET"])
-@jwt_required()
-def me():
-    user = get_current_user()
-    return jsonify({
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "phone": user.phone
-    })
-
-# =====================================================
-# JOBS
-# =====================================================
-
-@bp.route("/jobs", methods=["GET"])
-@jwt_required(optional=True)
-def list_jobs():
-    query = Job.query.filter_by(is_active=True)
-
-    search = request.args.get("search")
-    if search:
-        query = query.filter(Job.title.ilike(f"%{search}%"))
-
-    jobs = query.order_by(Job.created_at.desc()).all()
-
-    return jsonify([
-        {
-            "id": j.id,
-            "title": j.title,
-            "location": j.location,
-            "job_type": j.job_type.value,
-            "company_id": j.company_id
-        } for j in jobs
-    ])
-
-
-@bp.route("/jobs", methods=["POST"])
-@jwt_required()
-@company_required
-def create_job():
-    user = get_current_user()
-    data = request.get_json() or {}
-
-    required = ["title", "description", "location", "job_type"]
-    if not all(k in data for k in required):
-        return error("Missing job fields")
-
+    """Register a new user"""
+    
+    # Handle OPTIONS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
-        job_type = JobType(data["job_type"])
-    except ValueError:
-        return error("Invalid job type")
+        # Get JSON data
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        required_fields = ['email', 'password', 'first_name', 'role']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            return jsonify({
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
+        
+        # Extract and validate data
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        role = data.get('role', '').strip().lower()
+        
+        # Validate email format
+        if not validate_email(email):
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        # Validate password strength
+        is_valid, password_message = validate_password(password)
+        if not is_valid:
+            return jsonify({'error': password_message}), 400
+        
+        # Validate role
+        valid_roles = ['student', 'employer', 'company', 'government', 'admin']
+        if role not in valid_roles:
+            return jsonify({
+                'error': f'Invalid role. Must be one of: {", ".join(valid_roles)}'
+            }), 400
+        
+        # Map 'employer' to 'company' for consistency
+        if role == 'employer':
+            role = 'company'
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return jsonify({'error': 'Email already registered'}), 409
+        
+        # Create new user
+        new_user = User(
+            email=email,
+            password_hash=generate_password_hash(password),  # Use password_hash field
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            is_active=True
+        )
+        
+        # Add user to session
+        db.session.add(new_user)
+        db.session.flush()  # Flush to get user.id before creating related records
+        
+        # Create role-specific profile
+        try:
+            if role == 'student':
+                student_profile = Student(
+                    user_id=new_user.id,
+                    skills=[]  # Initialize empty skills array
+                )
+                db.session.add(student_profile)
+                
+            elif role == 'company':
+                company_profile = Company(
+                    user_id=new_user.id,
+                    company_name=data.get('company_name', f"{first_name}'s Company")
+                )
+                db.session.add(company_profile)
+                
+            elif role == 'government':
+                government_profile = Government(
+                    user_id=new_user.id,
+                    department=data.get('department', 'General')
+                )
+                db.session.add(government_profile)
+        
+        except Exception as profile_error:
+            db.session.rollback()
+            return jsonify({
+                'error': f'Failed to create user profile: {str(profile_error)}'
+            }), 500
+        
+        # Commit the transaction
+        db.session.commit()
+        
+        # Create access token
+        access_token = create_access_token(identity=new_user.id)
+        
+        # Return success response
+        return jsonify({
+            'message': 'User registered successfully',
+            'access_token': access_token,
+            'user': {
+                'id': new_user.id,
+                'email': new_user.email,
+                'first_name': new_user.first_name,
+                'last_name': new_user.last_name,
+                'role': new_user.role,
+                'created_at': new_user.created_at.isoformat()
+            }
+        }), 201
+        
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify({
+            'error': 'Database integrity error. Email may already be registered.'
+        }), 409
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Registration error: {str(e)}")  # Log for debugging
+        return jsonify({
+            'error': 'An unexpected error occurred during registration',
+            'details': str(e)
+        }), 500
 
-    company = Company.query.filter_by(user_id=user.id).first()
-    if not company:
-        return error("Company profile required", 400)
 
-    job = Job(
-        title=data["title"],
-        description=data["description"],
-        location=data["location"],
-        job_type=job_type,
-        company_id=company.id,
-        is_active=True
-    )
+@bp.route('/login', methods=['POST', 'OPTIONS'])
+def login():
+    """Login user"""
+    
+    # Handle OPTIONS preflight request
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        # Find user
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            return jsonify({'error': 'Invalid email or password'}), 401
+        
+        # Check if user is active
+        if not user.is_active:
+            return jsonify({'error': 'Account is disabled'}), 403
+        
+        # Verify password
+        if not check_password_hash(user.password_hash, password):
+            return jsonify({'error': 'Invalid email or password'}), 401
+        
+        # Update last login
+        user.update_last_login()
+        
+        # Create access token
+        access_token = create_access_token(identity=user.id)
+        
+        return jsonify({
+            'message': 'Login successful',
+            'access_token': access_token,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({
+            'error': 'An error occurred during login',
+            'details': str(e)
+        }), 500
 
-    db.session.add(job)
-    db.session.commit()
 
-    return jsonify({"message": "Job created", "job_id": job.id}), 201
-
-
-@bp.route("/jobs/<int:job_id>/close", methods=["PUT"])
+@bp.route('/me', methods=['GET'])
 @jwt_required()
-@company_required
-def close_job(job_id):
-    user = get_current_user()
-    company = Company.query.filter_by(user_id=user.id).first()
+def get_current_user():
+    """Get current authenticated user"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Build response with role-specific data
+        user_data = {
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'phone': user.phone,
+            'profile_image': user.profile_image,
+            'created_at': user.created_at.isoformat(),
+            'last_login': user.last_login.isoformat() if user.last_login else None
+        }
+        
+        # Add role-specific data
+        if user.role == 'student' and user.student:
+            user_data['student_profile'] = {
+                'bio': user.student.bio,
+                'institution': user.student.institution,
+                'field_of_study': user.student.field_of_study,
+                'skills': user.student.skills or []
+            }
+        elif user.role == 'company' and user.company:
+            user_data['company_profile'] = {
+                'company_name': user.company.company_name,
+                'industry': user.company.industry,
+                'website': user.company.website
+            }
+        
+        return jsonify(user_data), 200
+        
+    except Exception as e:
+        print(f"Get user error: {str(e)}")
+        return jsonify({'error': 'Failed to fetch user data'}), 500
 
-    job = Job.query.filter_by(id=job_id, company_id=company.id).first()
-    if not job:
-        return error("Job not found", 404)
 
-    job.is_active = False
-    db.session.commit()
-
-    return jsonify({"message": "Job closed"})
-
-# =====================================================
-# APPLICATIONS
-# =====================================================
-
-@bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
+@bp.route('/logout', methods=['POST'])
 @jwt_required()
-@student_required
-def apply_job(job_id):
-    user = get_current_user()
-    student = Student.query.filter_by(user_id=user.id).first()
-
-    if not student:
-        return error("Student profile required", 400)
-
-    if Application.query.filter_by(job_id=job_id, student_id=student.id).first():
-        return error("Already applied", 409)
-
-    app = Application(
-        job_id=job_id,
-        student_id=student.id,
-        applied_at=datetime.utcnow(),
-        status="pending"
-    )
-
-    db.session.add(app)
-    db.session.commit()
-
-    return jsonify({"message": "Application submitted"}), 201
+def logout():
+    """Logout user (client-side token removal)"""
+    return jsonify({'message': 'Logout successful'}), 200
 
 
-@bp.route("/students/applications", methods=["GET"])
+@bp.route('/change-password', methods=['POST'])
 @jwt_required()
-@student_required
-def my_applications():
-    user = get_current_user()
-    student = Student.query.filter_by(user_id=user.id).first()
+def change_password():
+    """Change user password"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        old_password = data.get('old_password', '')
+        new_password = data.get('new_password', '')
+        
+        if not old_password or not new_password:
+            return jsonify({'error': 'Both old and new passwords are required'}), 400
+        
+        # Verify old password
+        if not check_password_hash(user.password_hash, old_password):
+            return jsonify({'error': 'Current password is incorrect'}), 401
+        
+        # Validate new password
+        is_valid, password_message = validate_password(new_password)
+        if not is_valid:
+            return jsonify({'error': password_message}), 400
+        
+        # Update password
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        
+        return jsonify({'message': 'Password changed successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Change password error: {str(e)}")
+        return jsonify({'error': 'Failed to change password'}), 500
 
-    apps = Application.query.filter_by(student_id=student.id).all()
 
-    return jsonify([
-        {
-            "job_id": a.job.id,
-            "job_title": a.job.title,
-            "company": a.job.company.company_name,
-            "status": a.status,
-            "applied_at": a.applied_at
-        } for a in apps
-    ])
-
-# =====================================================
-# COMPANY
-# =====================================================
-
-@bp.route("/companies", methods=["POST"])
+@bp.route('/protected', methods=['GET'])
 @jwt_required()
-@company_required
-def create_company():
-    user = get_current_user()
-    data = request.get_json() or {}
-
-    if Company.query.filter_by(user_id=user.id).first():
-        return error("Company already exists", 409)
-
-    company = Company(
-        user_id=user.id,
-        company_name=data.get("company_name"),
-        industry=data.get("industry"),
-        website=data.get("website"),
-        logo_url=data.get("logo_url")
-    )
-
-    db.session.add(company)
-    db.session.commit()
-
-    return jsonify({"message": "Company profile created"}), 201
-
-
-@bp.route("/companies/<int:company_id>/applications", methods=["GET"])
-@jwt_required()
-@company_required
-def company_applications(company_id):
-    user = get_current_user()
-    company = Company.query.filter_by(user_id=user.id).first()
-
-    if company.id != company_id:
-        return error("Unauthorized", 403)
-
-    jobs = Job.query.filter_by(company_id=company.id).all()
-    job_ids = [j.id for j in jobs]
-
-    apps = Application.query.filter(Application.job_id.in_(job_ids)).all()
-
-    return jsonify([
-        {
-            "student": f"{a.student.user.first_name} {a.student.user.last_name}",
-            "job_title": a.job.title,
-            "status": a.status,
-            "applied_at": a.applied_at
-        } for a in apps
-    ])
+def protected():
+    """Test protected route"""
+    current_user_id = get_jwt_identity()
+    return jsonify({
+        'message': 'Access granted',
+        'user_id': current_user_id
+    }), 200

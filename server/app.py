@@ -5,11 +5,12 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from datetime import timedelta
 from dotenv import load_dotenv
+from extensions import db, jwt, migrate
 import os
 
-db = SQLAlchemy()
-jwt = JWTManager()
-migrate = Migrate()
+# db = SQLAlchemy()
+# jwt = JWTManager()
+# migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -31,10 +32,15 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # CORS — ONE place, ONE rule
+    # CORS — UPDATED with all necessary permissions
     CORS(
         app,
-        resources={r"/api/*": {"origins": "http://localhost:5173"}},
+        resources={r"/api/*": {
+            "origins": "http://localhost:5173",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["Content-Type", "Authorization"]
+        }},
         supports_credentials=True,
     )
 
@@ -42,8 +48,8 @@ def create_app():
     from models.models import User
 
     # Blueprints
-    from routes.auth import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix="/api")
+    from routes.routes import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")  # ← Add /auth)
 
     # Errors
     @app.errorhandler(404)

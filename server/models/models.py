@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from enum import Enum
 
-from app import db
+from extensions import db
 
 # Enums for status fields
 class ApplicationStatus(Enum):

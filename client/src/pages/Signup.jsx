@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaArrowRight } from "react-icons/fa";
-import { FiUser, FiMail, FiLock, FiCopy, FiCheck, FiAlertCircle } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FiUser, FiMail, FiLock, FiCheck } from "react-icons/fi";
+import { motion } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import { useTheme } from "../context/ThemeContext";
 import { authAPI } from "../utils/api";
 
-// Replace the useTheme import and dark mode toggle with a simple darkMode constant
 const Signup = () => {
   const navigate = useNavigate();
-  const darkMode = true; // Force dark mode
+  const darkMode = true;
 
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student", // Default to student
+    userType: "student",
   });
-  // ... rest of your state and functions
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -37,10 +34,9 @@ const Signup = () => {
   const [strengthCount, setStrengthCount] = useState(0);
 
   const auth = getAuth();
-  const provider = new GithubAuthProvider();
+  const githubProvider = new GithubAuthProvider();
   const facebookProvider = new FacebookAuthProvider();
 
-  // Check password strength
   const checkPasswordStrength = (password) => {
     if (!password) {
       return {
@@ -61,7 +57,6 @@ const Signup = () => {
     };
   };
 
-  // Update strength when password changes
   useEffect(() => {
     const newStrength = checkPasswordStrength(formData.password);
     setStrength(newStrength);
@@ -82,81 +77,63 @@ const Signup = () => {
     setError("");
     setSuccess("");
 
-    console.log('Form data:', formData); // Debug log
-
-    // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      const errMsg = "Passwords do not match";
-      console.error('Validation error:', errMsg);
-      setError(errMsg);
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (strengthCount < 4) {
+      setError("Password must meet all security requirements");
       setLoading(false);
       return;
     }
 
     try {
-      // Prepare user data for registration
+      // Map frontend fields to backend expected fields
       const userData = {
-        username: formData.username,
         email: formData.email,
         password: formData.password,
-        userType: formData.userType,
+        first_name: formData.username,
+        last_name: "",
+        role: formData.userType,
       };
 
-      console.log('Sending registration request...'); // Debug log
+      console.log('Sending registration request...', userData);
       
-      // Call the register API
       const response = await authAPI.register(userData);
-      console.log('Registration response:', response); // Debug log
+      console.log('Registration response:', response);
       
-      if (!response) {
+      if (!response || !response.data) {
         throw new Error('No response received from server');
       }
       
-      // Handle successful registration
-      const successMsg = "Account created successfully! Redirecting to login...";
-      console.log(successMsg);
-      setSuccess(successMsg);
+      setSuccess("Account created successfully! Redirecting to dashboard...");
       
-      // Store the token in localStorage
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('Token stored successfully');
-      } else {
-        console.warn('No token received in response');
+      // Store token and user data
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Token and user data stored successfully');
       }
       
-      // Redirect to login page after 2 seconds
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        navigate('/login');
+        navigate('/dashboard');
       }, 2000);
       
     } catch (error) {
-      // Enhanced error handling
       console.error('Signup error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        headers: error.response?.headers
-      });
       
       let errorMessage = "Signup failed. Please try again.";
       
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        if (error.response.data) {
-          errorMessage = error.response.data.message || 
-                        error.response.data.error || 
-                        JSON.stringify(error.response.data);
-        } else {
-          errorMessage = `Server error: ${error.response.status} ${error.response.statusText}`;
-        }
+      if (error.response?.data) {
+        errorMessage = error.response.data.error || 
+                      error.response.data.message || 
+                      JSON.stringify(error.response.data);
       } else if (error.request) {
-        // The request was made but no response was received
         errorMessage = "No response from server. Please check your connection.";
       } else {
-        // Something happened in setting up the request that triggered an Error
         errorMessage = error.message || "An unknown error occurred";
       }
       
@@ -168,10 +145,8 @@ const Signup = () => {
 
   const signInWithGitHub = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log(user);
-      // Handle successful GitHub signup
+      const result = await signInWithPopup(auth, githubProvider);
+      console.log('GitHub login success:', result.user);
       navigate('/dashboard');
     } catch (error) {
       console.error("GitHub SignIn Error:", error);
@@ -182,8 +157,7 @@ const Signup = () => {
   const handleGoogleSignUp = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      // Handle successful Google signup
+      console.log('Google login success:', result.user);
       navigate('/dashboard');
     } catch (error) {
       console.error("Google SignIn Error:", error);
@@ -194,8 +168,7 @@ const Signup = () => {
   const handleFacebookSignUp = async () => {
     try {
       const result = await signInWithPopup(auth, facebookProvider);
-      const user = result.user;
-      // Handle successful Facebook signup
+      console.log('Facebook login success:', result.user);
       navigate('/dashboard');
     } catch (error) {
       console.error("Facebook SignIn Error:", error);
@@ -203,7 +176,6 @@ const Signup = () => {
     }
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -230,52 +202,33 @@ const Signup = () => {
   };
 
   return (
-    <div className={`min-h-screen w-full flex items-center justify-center p-4 ${
-      darkMode 
-        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
-        : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
-    } bg-opacity-50 m-0 relative overflow-hidden transition-colors duration-300`}>
-      {/* Animated background elements */}
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 bg-opacity-50 m-0 relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 overflow-hidden">
-        <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob ${
-          darkMode ? 'bg-blue-900' : 'bg-blue-100'
-        }`}></div>
-        <div className={`absolute -bottom-20 -left-20 w-64 h-64 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000 ${
-          darkMode ? 'bg-purple-900' : 'bg-purple-100'
-        }`}></div>
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-900 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000"></div>
       </div>
 
       <motion.div
-        className={`w-full max-w-md ${
-          darkMode ? 'bg-gray-800/90 text-gray-100' : 'bg-white/90 text-gray-900'
-        } backdrop-blur-sm p-8 rounded-2xl shadow-2xl border ${
-          darkMode ? 'border-gray-700/50' : 'border-white/20'
-        } relative z-10`}
+        className="w-full max-w-md bg-gray-800/90 text-gray-100 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-700/50 relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-
-
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-2xl font-bold text-white">SH</span>
           </div>
-          <motion.h1 className={`text-3xl font-bold ${
-            darkMode ? 'text-white' : 'text-gray-900'
-          } mb-2`} variants={itemVariants}>
+          <motion.h1 className="text-3xl font-bold text-white mb-2" variants={itemVariants}>
             Join Students Hub
           </motion.h1>
-          <motion.p className={darkMode ? 'text-gray-300' : 'text-gray-600'} variants={itemVariants}>
+          <motion.p className="text-gray-300" variants={itemVariants}>
             Start your journey to finding the perfect job
           </motion.p>
         </div>
 
-        {/* Error and Success Messages */}
         {error && (
           <motion.div 
-            className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"
+            className="mb-4 p-3 bg-red-900/50 border border-red-500/50 text-red-200 rounded-lg text-sm"
             variants={itemVariants}
           >
             {error}
@@ -284,7 +237,7 @@ const Signup = () => {
 
         {success && (
           <motion.div 
-            className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm"
+            className="mb-4 p-3 bg-green-900/50 border border-green-500/50 text-green-200 rounded-lg text-sm"
             variants={itemVariants}
           >
             {success}
@@ -293,68 +246,47 @@ const Signup = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <motion.div className="space-y-1" variants={itemVariants}>
-            <div className="relative">
-              <label className={`block text-sm font-medium mb-2 ${
-                darkMode ? 'text-gray-300' : 'text-gray-700'
+            <label className="block text-sm font-medium mb-2 text-gray-300">
+              I am signing up as:
+            </label>
+            <div className="mt-1 grid grid-cols-2 gap-4 p-1 rounded-xl bg-gray-700/50">
+              <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
+                formData.userType === 'student' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'hover:bg-gray-600/50'
               }`}>
-                I am signing up as:
+                <input
+                  type="radio"
+                  name="userType"
+                  value="student"
+                  checked={formData.userType === 'student'}
+                  onChange={handleChange}
+                  className="sr-only"
+                />
+                <span className="text-sm font-medium">Student</span>
               </label>
-              <div className={`mt-1 grid grid-cols-2 gap-4 p-1 rounded-xl ${
-                darkMode ? 'bg-gray-700/50' : 'bg-gray-100'
+              <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
+                formData.userType === 'employer' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'hover:bg-gray-600/50'
               }`}>
-                <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
-                  formData.userType === 'student' 
-                    ? darkMode 
-                      ? 'bg-blue-600 text-white shadow-lg' 
-                      : 'bg-white text-blue-600 shadow-md' 
-                    : darkMode 
-                      ? 'hover:bg-gray-600/50' 
-                      : 'hover:bg-gray-200'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="student"
-                    checked={formData.userType === 'student'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium"> Student</span>
-                  </div>
-                </label>
-                <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
-                  formData.userType === 'employer' 
-                    ? darkMode 
-                      ? 'bg-blue-600 text-white shadow-lg' 
-                      : 'bg-white text-blue-600 shadow-md' 
-                    : darkMode 
-                      ? 'hover:bg-gray-600/50' 
-                      : 'hover:bg-gray-200'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="employer"
-                    checked={formData.userType === 'employer'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium"> Employer</span>
-                  </div>
-                </label>
-              </div>
+                <input
+                  type="radio"
+                  name="userType"
+                  value="employer"
+                  checked={formData.userType === 'employer'}
+                  onChange={handleChange}
+                  className="sr-only"
+                />
+                <span className="text-sm font-medium">Employer</span>
+              </label>
             </div>
           </motion.div>
 
-          {/* Username */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className={`h-5 w-5 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
+                <FiUser className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
@@ -362,24 +294,17 @@ const Signup = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className={`block w-full pl-10 pr-3 py-3 border ${
-                  darkMode 
-                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
-                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
-                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder="Username"
                 required
               />
             </div>
           </motion.div>
 
-          {/* Email */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className={`h-5 w-5 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
+                <FiMail className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="email"
@@ -387,11 +312,7 @@ const Signup = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`block w-full pl-10 pr-10 py-3 border ${
-                  darkMode 
-                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
-                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
-                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                className="block w-full pl-10 pr-10 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder="Email"
                 required
               />
@@ -401,13 +322,10 @@ const Signup = () => {
             </div>
           </motion.div>
 
-          {/* Password */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className={`h-5 w-5 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
+                <FiLock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type={showPassword ? "text" : "password"}
@@ -415,11 +333,7 @@ const Signup = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`block w-full pl-10 pr-10 py-3 border ${
-                  darkMode 
-                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
-                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
-                } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
+                className="block w-full pl-10 pr-10 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder="Password"
                 required
                 minLength={8}
@@ -427,21 +341,16 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
-                  darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
-                } transition-colors`}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
 
-            {/* Password Strength Indicator */}
             {formData.password && (
               <div className="mt-2 space-y-2">
-                <div className={`h-1.5 w-full ${
-                  darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                } rounded-full overflow-hidden`}>
+                <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
                       strengthCount === 1
@@ -452,18 +361,16 @@ const Signup = () => {
                         ? "bg-blue-500 w-3/4"
                         : strengthCount >= 4
                         ? "bg-green-500 w-full"
-                        : darkMode ? "bg-gray-600 w-0" : "bg-gray-200 w-0"
+                        : "bg-gray-600 w-0"
                     } transition-all duration-300`}
                   ></div>
                 </div>
-                <div className={`grid grid-cols-2 gap-1 text-xs ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <div className="grid grid-cols-2 gap-1 text-xs text-gray-400">
                   <div className="flex items-center">
                     {strength.lowercase ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
+                      <FaTimesCircle className="text-gray-600 mr-1" size={12} />
                     )}
                     <span>Lowercase</span>
                   </div>
@@ -471,7 +378,7 @@ const Signup = () => {
                     {strength.uppercase ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
+                      <FaTimesCircle className="text-gray-600 mr-1" size={12} />
                     )}
                     <span>Uppercase</span>
                   </div>
@@ -479,7 +386,7 @@ const Signup = () => {
                     {strength.number ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
+                      <FaTimesCircle className="text-gray-600 mr-1" size={12} />
                     )}
                     <span>Number</span>
                   </div>
@@ -487,7 +394,7 @@ const Signup = () => {
                     {strength.special ? (
                       <FaCheckCircle className="text-green-500 mr-1" size={12} />
                     ) : (
-                      <FaTimesCircle className={`${darkMode ? 'text-gray-600' : 'text-gray-300'} mr-1`} size={12} />
+                      <FaTimesCircle className="text-gray-600 mr-1" size={12} />
                     )}
                     <span>Special char</span>
                   </div>
@@ -496,13 +403,10 @@ const Signup = () => {
             )}
           </motion.div>
 
-          {/* Confirm Password */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className={`h-5 w-5 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
+                <FiLock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type={showConfirm ? "text" : "password"}
@@ -515,9 +419,7 @@ const Signup = () => {
                   formData.confirmPassword &&
                   formData.password !== formData.confirmPassword
                     ? "border-red-400 focus:ring-red-100"
-                    : darkMode 
-                      ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400' 
-                      : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                    : "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400"
                 } rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200`}
                 placeholder="Confirm Password"
                 required
@@ -526,9 +428,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 ${
-                  darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
-                } transition-colors`}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
                 aria-label={showConfirm ? "Hide password" : "Show password"}
               >
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
@@ -537,11 +437,10 @@ const Signup = () => {
             {formData.password &&
               formData.confirmPassword &&
               formData.password !== formData.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
               )}
           </motion.div>
 
-          {/* Submit Button */}
           <motion.div 
             className="mt-8" 
             variants={itemVariants}
@@ -567,82 +466,54 @@ const Signup = () => {
                   Creating your account...
                 </span>
               ) : (
-                <span className="flex items-center justify-center">
-                  
-                       Signup
-                </span>
+                "Sign Up"
               )}
             </button>
-            <p className={`mt-3 text-center text-sm ${
-              darkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            <p className="mt-3 text-center text-sm text-gray-400">
               By signing up, you agree to our Terms of Service and Privacy Policy
             </p>
           </motion.div>
         </form>
 
-        {/* Divider */}
         <motion.div className="relative my-6" variants={itemVariants}>
           <div className="absolute inset-0 flex items-center">
-            <div className={`w-full border-t ${
-              darkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}></div>
+            <div className="w-full border-t border-gray-700"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className={`px-2 ${
-              darkMode ? 'bg-gray-800/90 text-gray-400' : 'bg-white text-gray-500'
-            }`}>Or continue with</span>
+            <span className="px-2 bg-gray-800/90 text-gray-400">Or continue with</span>
           </div>
         </motion.div>
 
-        {/* Social Buttons */}
         <motion.div className="grid grid-cols-3 gap-3 mt-6" variants={itemVariants}>
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
-              darkMode 
-                ? 'border-gray-700 hover:bg-gray-700/50' 
-                : 'border-gray-200 hover:bg-gray-50'
-            } transition-colors`}
+            className="flex items-center justify-center py-2.5 px-4 rounded-xl border border-gray-700 hover:bg-gray-700/50 transition-colors"
           >
-            <FaGoogle className={darkMode ? 'text-white' : 'text-red-500'} />
+            <FaGoogle className="text-white" />
           </button>
           <button
             type="button"
             onClick={signInWithGitHub}
-            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
-              darkMode 
-                ? 'border-gray-700 hover:bg-gray-700/50' 
-                : 'border-gray-200 hover:bg-gray-50'
-            } transition-colors`}
+            className="flex items-center justify-center py-2.5 px-4 rounded-xl border border-gray-700 hover:bg-gray-700/50 transition-colors"
           >
-            <FaGithub className={darkMode ? 'text-white' : 'text-gray-800'} />
+            <FaGithub className="text-white" />
           </button>
           <button
             type="button"
             onClick={handleFacebookSignUp}
-            className={`flex items-center justify-center py-2.5 px-4 rounded-xl border ${
-              darkMode 
-                ? 'border-gray-700 hover:bg-gray-700/50' 
-                : 'border-gray-200 hover:bg-gray-50'
-            } transition-colors`}
+            className="flex items-center justify-center py-2.5 px-4 rounded-xl border border-gray-700 hover:bg-gray-700/50 transition-colors"
           >
-            <FaFacebook className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
+            <FaFacebook className="text-blue-400" />
           </button>
         </motion.div>
 
-        {/* Login Link */}
         <motion.div className="mt-6 text-center text-sm" variants={itemVariants}>
-          <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+          <p className="text-gray-400">
             Already have an account?{" "}
             <Link
               to="/login"
-              className={`font-medium ${
-                darkMode 
-                  ? 'text-blue-400 hover:text-blue-300' 
-                  : 'text-blue-600 hover:text-blue-500'
-              } transition-colors`}
+              className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
             >
               Log in
             </Link>

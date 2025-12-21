@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from './context/AuthContext';
 import { ProfileProvider } from "./context/ProfileContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider } from './context/AuthContext';
+
 
 // Pages & Components
 import Login from "./pages/Login.jsx";
@@ -47,9 +49,11 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
+     <AuthProvider>
+       <ThemeProvider>
         <ProfileProvider>
-          <Routes>
+         <Routes>
+
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -89,8 +93,9 @@ export default function App() {
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </ProfileProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+      </ProfileProvider>
+    </ThemeProvider>
+  </AuthProvider>
+</BrowserRouter>
   );
 }
