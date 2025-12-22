@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Search, Bell, Settings, HelpCircle, User, Loader2, Plus, Edit, Trash2, X, Check } from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext.jsx";
 import { jobAPI } from "../services/api";
 import { toast } from "react-toastify";
 

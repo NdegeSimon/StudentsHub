@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, HelpCircle, User, Settings as SettingsIcon, Moon, Sun } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from './context/ThemeContext.jsx';
 
 export default function SettingsPage() {
   const navigate = useNavigate();

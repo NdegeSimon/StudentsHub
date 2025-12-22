@@ -1,32 +1,60 @@
-import React, { createContext, useState, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
+import { userAPI } from "../utils/api";
+import { useAuth } from "./AuthContext";
 
-const ProfileContext = createContext();
+const ProfileContext = createContext(null);
 
 export const ProfileProvider = ({ children }) => {
-  const [profile, setProfile] = useState({
-    name: 'John Doe',
-    role: 'Web Developer',
-    image: null
-  });
+  const { isAuthenticated } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const updateProfile = (updates) => {
-    setProfile(prev => ({
-      ...prev,
-      ...updates
-    }));
+  const fetchProfile = async () => {
+    if (!isAuthenticated) {
+      setProfile(null);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await userAPI.getProfile();
+      setProfile(res.data);
+    } catch (err) {
+      console.error("Failed to load profile", err);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const updateProfile = async (data) => {
+    const res = await userAPI.updateProfile(data);
+    setProfile(res.data);
+    return res.data;
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [isAuthenticated]);
+
   return (
-    <ProfileContext.Provider value={{ profile, updateProfile }}>
+    <ProfileContext.Provider
+      value={{
+        profile,
+        loading,
+        refreshProfile: fetchProfile,
+        updateProfile,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
 };
 
 export const useProfile = () => {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider');
+  const ctx = useContext(ProfileContext);
+  if (!ctx) {
+    throw new Error("useProfile must be used inside ProfileProvider");
   }
-  return context;
+  return ctx;
 };
