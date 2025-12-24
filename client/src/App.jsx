@@ -1,52 +1,54 @@
-import React from 'react';
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
-import { ProfileProvider } from "./context/ProfileContext";
+// Context Providers
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { AuthProvider } from './context/AuthContext';
+import { ProfileProvider } from "./context/ProfileContext";
 
-
-// Pages & Components
+// Pages
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import JobCard from "./components/JobCard.jsx";
-import JobsPage from "./pages/JobsPage.jsx";
-import Dashboard from './pages/Dashboard.jsx';
-import MyApplications from "./pages/MyApplications.jsx";
-import NotFound from "./pages/NotFound.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
-import MessagingSystem from "./pages/messages.jsx";
+import JobsPage from "./pages/JobsPage.jsx";
+import MyApplications from "./pages/MyApplications.jsx";
 import JobPostings from "./pages/JobPosting.jsx";
+import MessagingSystem from "./pages/messages.jsx";
+import NotFound from "./pages/NotFound.jsx";
+
+// Components
+import JobCard from "./components/JobCard.jsx";
+
 
 // ------------------- Protected Route -------------------
-// ------------------- Protected Route -------------------
 const ProtectedRoute = ({ children, roles = [] }) => {
-  44
-  
+  const { isAuthenticated, loading, user } = useAuth();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
-    toast.info('Please log in to access this page');
+    toast.info("Please log in to continue");
     return <Navigate to="/login" replace />;
   }
-  
-  // Check roles if specified
+
+  // Role-based access control
   if (roles.length > 0 && user) {
-    const userRole = user.role || user.user_type;
-    if (!roles.includes(userRole)) {
-      toast.error('You do not have permission to access this page');
+    const role = user.role || user.user_type;
+    if (!roles.includes(role)) {
+      toast.error("Access denied");
       return <Navigate to="/dashboard" replace />;
     }
   }
-  
+
   return children;
 };
 
@@ -54,53 +56,76 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 export default function App() {
   return (
     <BrowserRouter>
-     <AuthProvider>
-       <ThemeProvider>
-        <ProfileProvider>
-         <Routes>
+      <AuthProvider>
+        <ThemeProvider>
+          <ProfileProvider>
+            <Routes>
 
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+              {/* Redirect root */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Protected Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/myapplications" element={
-              <ProtectedRoute roles={['student']}>
-                <MyApplications />
-              </ProtectedRoute>
-            } />
-            <Route path="/jobpostings" element={
-              <ProtectedRoute roles={['company']}>
-                <JobPostings />
-              </ProtectedRoute>
-            } />
+              {/* Auth */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            {/* Public Routes */}
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/job" element={<JobCard />} />
-            <Route path="/messages" element={<MessagingSystem />} />
+              {/* Protected */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-      </ProfileProvider>
-    </ThemeProvider>
-  </AuthProvider>
-</BrowserRouter>
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/myapplications"
+                element={
+                  <ProtectedRoute roles={["student"]}>
+                    <MyApplications />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/jobpostings"
+                element={
+                  <ProtectedRoute roles={["company"]}>
+                    <JobPostings />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Public */}
+              <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/job" element={<JobCard />} />
+              <Route path="/messages" element={<MessagingSystem />} />
+
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+
+            </Routes>
+          </ProfileProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
