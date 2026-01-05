@@ -1,3 +1,4 @@
+# app.py
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -7,8 +8,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-# Initialize extensions without the app
-# These will be initialized with the app in create_app()
+# Initialize extensions without app
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
@@ -17,7 +17,9 @@ def create_app():
     app = Flask(__name__)
     load_dotenv()
 
+    # =======================
     # Configuration
+    # =======================
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"),
         JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY", "jwt-secret-key-change-in-production"),
@@ -31,27 +33,30 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # Configure CORS - permissive settings for development
-    CORS(app, resources={
-    r"/api/*": {
-        "origins": "http://localhost:5173",
-        "supports_credentials": True,
-        "allow_headers": ["Content-Type", "Authorization"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    }
-})
-   
+    # =======================
+    # Configure CORS
+    # =======================
+    CORS(app, origins="http://localhost:5173", supports_credentials=True)
 
+    # =======================
     # Test route
-    @app.route('/api/test')
+    # =======================
+    @app.route('/api/test', methods=['GET'])
     def test():
         return jsonify({"status": "success", "message": "Backend is working!"})
 
+    # =======================
     # Register blueprints
-    from routes.routes import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/api')
+    # =======================
+    try:
+        from routes.routes import bp as auth_bp
+        app.register_blueprint(auth_bp, url_prefix='/api')
+    except Exception as e:
+        print("⚠️ Could not register blueprint:", e)
 
+    # =======================
     # Error handlers
+    # =======================
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"error": "Not found", "message": str(error)}), 404
@@ -62,6 +67,20 @@ def create_app():
 
     return app
 
+# =======================
+# Run server
+# =======================
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+
+    # Ensure database is initialized before starting
+    with app.app_context():
+        try:
+            db.create_all()
+            print("📊 Database tables created successfully!")
+        except Exception as e:
+            print("⚠️ Error creating database tables:", e)
+
+    print("🚀 Students Hub API starting...")
+    print("🔗 Available at: http://localhost:5000")
+    app.run(host="0.0.0.0", port=5000, debug=True)
