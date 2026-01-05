@@ -12,7 +12,7 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
-import { jobAPI, userAPI } from '../services/api';
+import { jobAPI, userAPI } from "../utils/api";
 
 
 const Dashboard = () => {

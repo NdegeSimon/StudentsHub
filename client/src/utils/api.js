@@ -41,5 +41,34 @@ export const courseAPI = {
   updateCourse: (courseId, courseData) => api.put(`/courses/${courseId}`, courseData),
   deleteCourse: (courseId) => api.delete(`/courses/${courseId}`),
 };
+// Add this with the other APIs
+export const jobAPI = {
+  getAllJobs: () => api.get('/jobs'),
+  getJob: (jobId) => api.get(`/jobs/${jobId}`),
+  createJob: (jobData) => api.post('/jobs', jobData),
+  updateJob: (jobId, jobData) => api.put(`/jobs/${jobId}`, jobData),
+  deleteJob: (jobId) => api.delete(`/jobs/${jobId}`),
+  applyToJob: (jobId) => api.post(`/jobs/${jobId}/apply`),
+  // Add more endpoints as needed
+};
+export const uploadAPI = {
+  uploadProfilePicture: (file) => {
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    return api.post('/auth/upload-profile-picture', formData);
+  },
 
+  uploadResume: (file) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    return api.post('/auth/upload-resume', formData);
+  },
+};
+export const applicationAPI = {
+  getMyApplications: () => api.get('/applications/my'),
+  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
+  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
+  withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
+  updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
+};
 export default api;

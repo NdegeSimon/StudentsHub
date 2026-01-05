@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, User, Edit, Save, X, Loader2 } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
-import { userAPI, uploadAPI } from '../services/api';
+import { userAPI, uploadAPI } from "../utils/api";
 import { toast } from 'react-toastify';
 
 export default function ProfileCard({ isDashboard = false }) {

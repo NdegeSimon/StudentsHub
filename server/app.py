@@ -1,17 +1,12 @@
 # app.py
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-# Initialize extensions (NO early model imports!)
-db = SQLAlchemy()
-jwt = JWTManager()
-migrate = Migrate()
+# Import extensions from extensions.py
+from extensions import db, jwt, migrate
 
 def create_app():
     app = Flask(__name__)
@@ -31,12 +26,13 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # CRITICAL FIX: Import models ONLY here, inside app context
+    # Initialize database
     with app.app_context():
-        from models import User  # ← Now 100% safe
-        # Import other models if you have them: Course, Job, etc.
-        db.create_all()  # Create tables if they don't exist
-        print("📊 Models loaded and database tables ensured.")
+        # Import models inside app context to avoid circular imports
+        from models import User, Student, Company, Job, Application
+        # This will create all database tables if they don't exist
+        db.create_all()
+        print("📊 Database tables ensured.")
 
     # CORS
     CORS(app, origins="http://localhost:5173", supports_credentials=True)

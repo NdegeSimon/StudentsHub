@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, HelpCircle, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { applicationAPI } from '../services/api';
+import { applicationAPI } from "../utils/api";
 
 export default function MyApplications() {
   const navigate = useNavigate();
