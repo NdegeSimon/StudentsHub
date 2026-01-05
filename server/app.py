@@ -32,14 +32,15 @@ def create_app():
     migrate.init_app(app, db)
 
     # Configure CORS - permissive settings for development
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
-    
-    @app.after_request
-    def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response
+    CORS(app, resources={
+    r"/api/*": {
+        "origins": "http://localhost:5173",
+        "supports_credentials": True,
+        "allow_headers": ["Content-Type", "Authorization"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    }
+})
+   
 
     # Test route
     @app.route('/api/test')
