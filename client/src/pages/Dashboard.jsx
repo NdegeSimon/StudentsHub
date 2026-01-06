@@ -22,7 +22,33 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
 import { jobAPI, applicationAPI, userAPI } from '../utils/api';
-import ErrorBoundary from '../components/ErrorBoundary';
+
+
+// Helper function to calculate profile completion percentage
+const calculateProfileCompletion = (userProfile) => {
+  if (!userProfile) return 0;
+  
+  // Define required fields and their weights
+  const fields = [
+    { key: 'first_name', weight: 20 },
+    { key: 'last_name', weight: 15 },
+    { key: 'email', weight: 15 },
+    { key: 'phone', weight: 10 },
+    { key: 'bio', weight: 10 },
+    { key: 'skills', weight: 15, isArray: true },
+    { key: 'experience', weight: 10, isArray: true },
+    { key: 'education', weight: 5, isArray: true }
+  ];
+  
+  // Calculate completion based on filled fields and their weights
+  return fields.reduce((total, field) => {
+    const value = userProfile[field.key];
+    const isFilled = field.isArray 
+      ? Array.isArray(value) && value.length > 0 
+      : !!value;
+    return total + (isFilled ? field.weight : 0);
+  }, 0);
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -49,6 +75,9 @@ const Dashboard = () => {
       try {
         setDashboardData(prev => ({ ...prev, loading: true, error: null }));
         
+        // Calculate profile completion first
+        const profileCompletion = calculateProfileCompletion(profile);
+        
         // Fetch jobs and applications in parallel
         const [jobsResponse, appsResponse] = await Promise.allSettled([
           jobAPI.getAllJobs({ limit: 4 }),
@@ -71,7 +100,7 @@ const Dashboard = () => {
           stats: {
             totalApplications,
             activeJobs,
-            profileCompletion: calculateProfileCompletion(profile)
+            profileCompletion
           },
           loading: false,
           error: null
@@ -108,28 +137,6 @@ const Dashboard = () => {
     );
   }
 
-  // Helper function to calculate profile completion percentage
-  const calculateProfileCompletion = (userProfile) => {
-    if (!userProfile) return 0;
-    
-    const fields = [
-      userProfile.first_name,
-      userProfile.last_name,
-      userProfile.email,
-      userProfile.phone,
-      userProfile.bio,
-      userProfile.skills,
-      userProfile.experience,
-      userProfile.education
-    ];
-    
-    const filledFields = fields.filter(field => {
-      if (Array.isArray(field)) return field.length > 0;
-      return !!field;
-    }).length;
-    
-    return Math.round((filledFields / fields.length) * 100);
-  };
   
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
@@ -431,7 +438,9 @@ const Dashboard = () => {
             <div className={`bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-sm p-6 text-white ${
               darkMode ? 'shadow-lg shadow-purple-900/30' : ''
             }`}>
-              <h2 className="text-2xl font-bold mb-2">Welcome back, {profile.name.split(' ')[0]}!</h2>
+              <h2 className="text-2xl font-bold mb-2">
+                Welcome back, {profile?.name?.split(' ')[0] || 'there'}!
+              </h2>
               <p className="mb-4 opacity-90">
                 {dashboardData.stats.totalApplications > 0 
                   ? `You have ${dashboardData.stats.activeJobs} active applications. ${dashboardData.stats.totalApplications} total applications.`
