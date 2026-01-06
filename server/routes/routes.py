@@ -32,86 +32,92 @@ def is_valid_email(email):
 @bp.route('/auth/register', methods=['POST'])
 def register():
     from models import db, User, Student, Company  # Lazy import - safe
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    required = ['email', 'password', 'first_name', 'role']
-    if not all(field in data for field in required):
-        return jsonify({"error": "Missing required fields"}), 400
-
-    email = data['email'].strip().lower()
-    password = data['password']
-    first_name = data['first_name'].strip()
-    last_name = data.get('last_name', '').strip() or None
-    role = data['role']
-
-    if not is_valid_email(email):
-        return jsonify({"error": "Invalid email format"}), 400
-
-    if len(password) < 8:
-        return jsonify({"error": "Password must be at least 8 characters"}), 400
-
-    if role not in ['student', 'employer']:
-        return jsonify({"error": "Role must be 'student' or 'employer'"}), 400
-
-    # Check if user already exists
-    if User.query.filter_by(email=email).first():
-        return jsonify({"error": "Email already registered"}), 409
+    from sqlalchemy.exc import SQLAlchemyError
 
     try:
-        # Direct hash - no reliance on set_password method
-        password_hash = generate_password_hash(password)
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
 
-        # Create user - ONLY basic fields
-        user = User(
-            email=email,
-            password_hash=password_hash,
-            first_name=first_name,
-            last_name=last_name,
-            role=role
-        )
+        required = ['email', 'password', 'first_name', 'role']
+        if not all(field in data for field in required):
+            return jsonify({"error": f"Missing required fields. Required: {', '.join(required)}"}), 400
 
-        db.session.add(user)
-        db.session.flush()  # Gets user.id
+        email = data['email'].strip().lower()
+        password = data['password']
+        first_name = data['first_name'].strip()
+        last_name = data.get('last_name', '').strip() or None
+        role = data['role'].lower()  # Ensure lowercase
 
-        # Create profile - minimal, no required fields
-        if role == 'student':
-            student = Student(user_id=user.id)
-            db.session.add(student)
-        elif role == 'employer':
-            company_name = data.get('company_name', '').strip() or "My Company"
-            company = Company(user_id=user.id, company_name=company_name)
-            db.session.add(company)
+        # Validate email format
+        if not is_valid_email(email):
+            return jsonify({"error": "Invalid email format"}), 400
 
-        db.session.commit()
+        # Validate password length
+        if len(password) < 8:
+            return jsonify({"error": "Password must be at least 8 characters"}), 400
 
-        # Generate tokens
-        access_token = create_access_token(identity=str(user.id))
-        refresh_token = create_refresh_token(identity=str(user.id))
+        # Validate role
+        if role not in ['student', 'employer']:
+            return jsonify({"error": "Role must be 'student' or 'employer'"}), 400
 
-        return jsonify({
-            "message": "Account created successfully!",
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "role": user.role
-            }
-        }), 201
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            return jsonify({"error": "Email already registered"}), 409
+
+        # Start transaction
+        db.session.begin()
+
+        try:
+            # Create user
+            user = User(
+                email=email,
+                password_hash=generate_password_hash(password),
+                first_name=first_name,
+                last_name=last_name,
+                role=role
+            )
+            db.session.add(user)
+            db.session.flush()  # Get the user ID
+
+            # Create profile based on role
+            if role == 'student':
+                student = Student(user_id=user.id)
+                db.session.add(student)
+            else:  # employer
+                company_name = data.get('company_name', '').strip() or f"{first_name}'s Company"
+                company = Company(user_id=user.id, company_name=company_name)
+                db.session.add(company)
+
+            # Commit the transaction
+            db.session.commit()
+
+            # Generate tokens
+            access_token = create_access_token(identity={"id": user.id, "role": user.role})
+            refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
+
+            return jsonify({
+                "message": "Account created successfully!",
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "role": user.role
+                }
+            }), 201
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error(f"Database error during registration: {str(e)}")
+            return jsonify({"error": "Database error during registration"}), 500
 
     except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Registration failed: {str(e)}")
-        return jsonify({
-            "error": "Registration failed",
-            "details": str(e)  # This will show the real error in response
-        }), 500
+        current_app.logger.error(f"Unexpected error in registration: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
         
 @bp.route('/auth/login', methods=['POST'])
 def login():

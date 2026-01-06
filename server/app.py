@@ -34,8 +34,15 @@ def create_app():
         db.create_all()
         print("📊 Database tables ensured.")
 
-    # CORS
-    CORS(app, origins="http://localhost:5173", supports_credentials=True)
+    # CORS - Allow all origins in development
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:3000", "http://localhost:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
 
     # Test route
     @app.route('/api/test', methods=['GET'])
