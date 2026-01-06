@@ -22,14 +22,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
 import { jobAPI, applicationAPI, userAPI } from '../utils/api';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile, loading: profileLoading } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('recommended');
-  
-  // State for dashboard data
   const [dashboardData, setDashboardData] = useState({
     recommendedJobs: [],
     recentApplications: [],
@@ -43,54 +42,113 @@ const Dashboard = () => {
   });
 
   // Fetch dashboard data when component mounts
-  // Fetch dashboard data when component mounts
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!profile) return;
+      
+      try {
+        setDashboardData(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Fetch recent applications
+        const appsResponse = await applicationAPI.getMyApplications();
+        const recentApplications = appsResponse.data || [];
+        
+        // Calculate stats
+        const totalApplications = recentApplications.length;
+        const activeJobs = recentApplications.filter(app => 
+          ['applied', 'interview', 'offer'].includes(app.status)
+        ).length;
+        
+        // Calculate profile completion
+        let completionScore = 0;
+        if (profile?.name) completionScore += 20;
+        if (profile?.email) completionScore += 15;
+        if (profile?.phone) completionScore += 15;
+        if (profile?.skills?.length > 0) completionScore += 25;
+        if (profile?.experience?.length > 0) completionScore += 15;
+        if (profile?.education?.length > 0) completionScore += 10;
+        
+        // Update dashboard data
+        setDashboardData({
+          recommendedJobs: [],
+          recentApplications: recentApplications.slice(0, 3),
+          stats: {
+            totalApplications,
+            activeJobs,
+            profileCompletion: completionScore
+          },
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setDashboardData(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load dashboard data'
+        }));
+      }
+    };
+    
+    if (!profileLoading) {
+      fetchDashboardData();
+    }
+  }, [profile, profileLoading]);
+  
+  // Show loading state while data is being fetched
+  if (profileLoading || dashboardData.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+  
+  // Dashboard data is already declared at the top of the component
+  // No need to declare it again here
 useEffect(() => {
   const fetchDashboardData = async () => {
-    try {
-      setDashboardData(prev => ({ ...prev, loading: true, error: null }));
-      
-      // Fetch recommended jobs
-      const jobsResponse = await jobAPI.getJobs({ limit: 4 }); // ✅ FIXED: renamed to jobsResponse
-      
-      // Fetch user applications if user is logged in
-      let applicationsResponse = { data: [] };
-      if (profile?.id) {
-        try {
-          applicationsResponse = await applicationAPI.getMyApplications();
-        } catch (error) {
-          console.error('Error fetching applications:', error);
-        }
+  try {
+    setDashboardData(prev => ({ ...prev, loading: true, error: null }));
+
+    // Fetch jobs
+    const jobsResponse = await jobAPI.getAllJobs({ limit: 4 });
+    let applicationsResponse = { data: [] };
+    
+    if (profile?.id) {
+      try {
+        // Fetch applications if user is logged in
+        const appsResponse = await applicationAPI.getMyApplications();
+        applicationsResponse = { data: appsResponse.data || [] };
         
-        // Update profile completion status
-        try {
-          const userProfile = await userAPI.getProfile();
-          updateProfile(userProfile.data);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
+        // Update user profile
+        const userProfile = await userAPI.getProfile();
+        updateProfile(userProfile.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
-
-      setDashboardData({
-        recommendedJobs: jobsResponse.data || [], // ✅ FIXED: now uses jobsResponse
-        recentApplications: applicationsResponse.data?.slice(0, 3) || [],
-        stats: {
-          totalApplications: applicationsResponse.data?.length || 0,
-          activeJobs: jobsResponse.data?.length || 0, // ✅ FIXED
-          profileCompletion: calculateProfileCompletion(profile)
-        },
-        loading: false,
-        error: null
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setDashboardData(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to load dashboard data. Please try again later.'
-      }));
     }
-  };
 
+    setDashboardData({
+      recommendedJobs: jobsResponse.data || [],
+      recentApplications: applicationsResponse.data?.slice(0, 3) || [],
+      stats: {
+        totalApplications: applicationsResponse.data?.length || 0,
+        activeJobs: jobsResponse.data?.length || 0,
+        profileCompletion: calculateProfileCompletion(profile)
+      },
+      loading: false,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    setDashboardData(prev => ({
+      ...prev,
+      loading: false,
+      error: 'Failed to load dashboard data. Please try again later.'
+    }));
+  }
+};
   fetchDashboardData();
 }, [profile?.id, updateProfile]); // ✅ ADDED: updateProfile to dependencies
 
@@ -268,7 +326,7 @@ useEffect(() => {
                   <h3 className={`text-lg font-medium ${
                     darkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    {profile.name}
+                    {profile?.name || 'Guest User'}
                   </h3>
                   <p className={`text-sm ${
                     darkMode ? 'text-gray-400' : 'text-gray-500'
@@ -418,7 +476,30 @@ useEffect(() => {
               darkMode ? 'shadow-lg shadow-purple-900/30' : ''
             }`}>
               <h2 className="text-2xl font-bold mb-2">Welcome back, {profile.name.split(' ')[0]}!</h2>
-              <p className="mb-4 opacity-90">You have 3 applications in progress. Keep it up!</p>
+              <p className="mb-4 opacity-90">
+                {dashboardData.stats.totalApplications > 0 
+                  ? `You have ${dashboardData.stats.activeJobs} active applications. ${dashboardData.stats.totalApplications} total applications.`
+                  : "You don't have any applications yet. Start applying to jobs!"}
+              </p>
+              {dashboardData.stats.profileCompletion < 80 && (
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Profile Completion</span>
+                    <span>{dashboardData.stats.profileCompletion}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-yellow-500 h-2.5 rounded-full" 
+                      style={{ width: `${dashboardData.stats.profileCompletion}%` }}
+                    ></div>
+                  </div>
+                  {dashboardData.stats.profileCompletion < 80 && (
+                    <p className="text-xs mt-1 text-yellow-200">
+                      Complete your profile to increase your chances of getting hired!
+                    </p>
+                  )}
+                </div>
+              )}
               <button 
            onClick={() => navigate('/myapplications')}
            className={`px-4 py-2 ${
@@ -572,6 +653,3 @@ useEffect(() => {
 };
 
 export default Dashboard;
-
-
-

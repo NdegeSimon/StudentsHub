@@ -66,7 +66,7 @@ export const uploadAPI = {
   },
 };
 export const applicationAPI = {
-  getMyApplications: () => api.get('/applications/my'),
+  getMyApplications: () => api.get('/applications/me'),
   getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
   applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
