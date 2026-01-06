@@ -4,10 +4,14 @@ const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "light";
+    const saved = localStorage.getItem('theme');
+    return saved !== null ? saved : "dark"; // Default to dark mode
   });
 
   useEffect(() => {
+    // Set data-theme attribute on html element for Tailwind dark mode
+    document.documentElement.setAttribute('data-theme', theme);
+    // Also set class for any components that might be using it
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
