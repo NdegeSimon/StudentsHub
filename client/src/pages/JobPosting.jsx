@@ -53,7 +53,7 @@ export default function JobPostings() {
         if (filters.type) params.append('type', filters.type);
         if (filters.location) params.append('location', filters.location);
         
-        const response = await jobAPI.getJobs(params);
+        const response = await jobAPI.getAllJobs(params);
         setJobs(response.data || []);
       } catch (err) {
         console.error('Error fetching jobs:', err);

@@ -163,6 +163,7 @@ def get_me():
 @bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
+    """Get the current user's profile"""
     from models import User  # Lazy import
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
@@ -195,6 +196,13 @@ def get_profile():
         })
 
     return jsonify(profile), 200
+
+
+@bp.route('/auth/profile', methods=['GET'])
+@jwt_required()
+def get_auth_profile():
+    """Alias for /profile to maintain API consistency"""
+    return get_profile()
 
 
 @bp.route('/profile', methods=['PUT'])

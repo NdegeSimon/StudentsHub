@@ -37,7 +37,7 @@ const Jobs = () => {
         setSearchParams(params);
         
         // Make API call
-        const response = await jobAPI.getJobs(params);
+        const response = await jobAPI.getAllJobs(params);
         
         setJobs(response.data || []);
         
