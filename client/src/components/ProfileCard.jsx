@@ -143,7 +143,7 @@ export default function ProfileCard({ isDashboard = false }) {
               <img 
                 src={profile.avatar} 
                 alt={profile.name || 'Profile'} 
-                className="w-full h-full rounded-full object-cover border-4 border-white shadow-md"
+                className="w-full h-full rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 shadow-lg"
               />
             ) : (
               <div className="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center">
@@ -189,7 +189,7 @@ export default function ProfileCard({ isDashboard = false }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
+      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
         {editing ? (
           <form onSubmit={handleSubmit}>
             <div className="p-6">
@@ -229,7 +229,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 <div className="md:col-span-1">
                   <div className="flex flex-col items-center">
                     <div className="relative group mb-4">
-                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-lg">
+                      <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-600 shadow-lg">
                         {profile.avatar ? (
                           <img 
                             src={profile.avatar} 
@@ -392,7 +392,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 <div className="md:col-span-1">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-4">
-                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-lg">
+                      <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-600 shadow-lg">
                         {profile.avatar ? (
                           <img 
                             src={profile.avatar} 
@@ -447,7 +447,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 </div>
                 
                 <div className="md:col-span-2">
-                  <div className="bg-gray-50 dark:bg-gray-700/30 shadow overflow-hidden sm:rounded-lg">
+                  <div className="bg-gray-50 dark:bg-gray-700/30 shadow overflow-hidden sm:rounded-lg border-0">
                     <div className="px-4 py-5 sm:px-6">
                       <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
                         About
@@ -456,7 +456,7 @@ export default function ProfileCard({ isDashboard = false }) {
                         Personal details and information.
                       </p>
                     </div>
-                    <div className="border-t border-gray-200 dark:border-gray-600 px-4 py-5 sm:p-0">
+                    <div className="border-t-0 border-gray-200 dark:border-gray-600 px-4 py-5 sm:p-0">
                       <dl className="sm:divide-y sm:divide-gray-200 dark:sm:divide-gray-600">
                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Bio</dt>
@@ -653,75 +653,6 @@ export default function ProfileCard({ isDashboard = false }) {
             </div>
           </div>
         )}
-        {/* Profile Header with Gradient */}
-        <div className="h-32 bg-gradient-to-r from-orange-500 to-orange-600 relative">
-          <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
-            <div className="relative w-36 h-36">
-              {profileImage ? (
-                <img 
-                  src={profileImage} 
-                  alt="Profile" 
-                  className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full bg-gray-100 border-4 border-white shadow-lg flex items-center justify-center">
-                  <User className="w-16 h-16 text-gray-400" />
-                </div>
-              )}
-              
-              {/* Camera Button */}
-              <label 
-                htmlFor="profileUpload" 
-                className="absolute -bottom-1 -right-1 bg-white text-orange-500 p-2 rounded-full hover:bg-orange-50 cursor-pointer shadow-md transition-all duration-200 hover:scale-105"
-              >
-                <Camera className="w-5 h-5" />
-                <input 
-                  type="file" 
-                  id="profileUpload" 
-                  className="hidden" 
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        {/* Profile Content */}
-        <div className="pt-20 pb-8 px-8">
-          <p className="text-center text-sm text-gray-500 mb-1">Click camera icon to update photo</p>
-
-          {/* Profile Info */}
-          <div className="space-y-6 mt-8">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <input 
-                type="text" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 focus:shadow-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bio
-              </label>
-              <textarea 
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows="3"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none transition-all duration-200 focus:shadow-sm"
-              />
-            </div>
-
-            <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl hover:shadow-lg font-medium transition-all duration-200 transform hover:-translate-y-0.5">
-              Save Profile
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

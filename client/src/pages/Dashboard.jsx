@@ -18,6 +18,7 @@ import {
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';
+import Profile from './Profile';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
@@ -200,7 +201,7 @@ const Dashboard = () => {
               <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <Bell className="h-6 w-6" />
               </button>
-              <button
+              {/* <button
                 onClick={toggleDarkMode}
                 className="p-2 rounded-full text-yellow-300 hover:text-yellow-200 focus:outline-none transition-colors"
                 aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -210,7 +211,7 @@ const Dashboard = () => {
                 ) : (
                   <Moon className="h-6 w-6" />
                 )}
-              </button>
+              </button> */}
               <div 
                 className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
                 onClick={() => navigate('/settings')}
