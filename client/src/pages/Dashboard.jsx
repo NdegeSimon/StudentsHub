@@ -235,12 +235,7 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Welcome back, {profile?.first_name || 'Simon'}!
-          </h1>
-          <p className="text-gray-400">Here's what's happening with your job search</p>
-        </div>
+       
         
         {/* Dashboard Layout - Sidebar + Main Content */}
         <div className="flex flex-col lg:flex-row gap-6">

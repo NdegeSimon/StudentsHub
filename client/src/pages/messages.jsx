@@ -63,17 +63,19 @@ export default function MessagingSystem() {
 
     const updatedConversations = conversations.map(conv => {
       if (conv.id === selectedChat.id) {
+        const newMessages = [
+          ...conv.messages,
+          {
+            id: conv.messages.length + 1,
+            sender: userType,
+            text: messageInput,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ];
+        
         return {
           ...conv,
-          messages: [
-            ...conv.messages,
-            {
-              id: conv.messages.length + 1,
-              sender: userType,
-              text: messageInput,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-          ],
+          messages: newMessages,
           lastMessage: messageInput,
           time: 'Just now'
         };
@@ -81,6 +83,12 @@ export default function MessagingSystem() {
       return conv;
     });
 
+    setConversations(updatedConversations);
+    
+    // Update selectedChat with new messages
+    const updatedSelectedChat = updatedConversations.find(c => c.id === selectedChat.id);
+    setSelectedChat(updatedSelectedChat);
+    
     setMessageInput('');
 
     // Auto-scroll to bottom
@@ -93,31 +101,25 @@ export default function MessagingSystem() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-900">
       {/* Navigation Bar */}
-      <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <Link to="/" className={`text-xl font-bold ${
-                darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-800'
-              } transition-colors`}>
+              <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
                 Studex
               </Link>
               <nav className="hidden md:ml-10 md:flex space-x-8">
                 <Link 
                   to="/jobs" 
-                  className={`${
-                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
-                  } px-3 py-2 text-sm font-medium transition-colors`}
+                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
                 >
                   Jobs
                 </Link>
                 <Link 
                   to="#" 
-                  className={`${
-                    darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
-                  } px-3 py-2 text-sm font-medium transition-colors`}
+                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
                 >
                   Internships
                 </Link>
@@ -126,12 +128,8 @@ export default function MessagingSystem() {
                   className={({ isActive }) => 
                     `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive 
-                        ? darkMode 
-                          ? 'bg-blue-900 text-white' 
-                          : 'bg-blue-100 text-blue-700'
-                        : darkMode 
-                          ? 'text-gray-300 hover:bg-gray-700' 
-                          : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-blue-900 text-white' 
+                        : 'text-gray-300 hover:bg-gray-700'
                     }`
                   }
                 >
@@ -143,38 +141,24 @@ export default function MessagingSystem() {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <FaSearch className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    darkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500' 
-                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-purple-500 focus:border-purple-500'
-                  } rounded-md leading-5 focus:outline-none sm:text-sm transition-colors`}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
                   placeholder="Search messages..."
                 />
               </div>
               
-              <button 
-                className={`p-2 rounded-full ${
-                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                } focus:outline-none transition-colors`}
-              >
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <FaQuestionCircle className="h-5 w-5" />
               </button>
-              <button 
-                className={`p-2 rounded-full ${
-                  darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                } focus:outline-none transition-colors`}
-              >
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <FaBell className="h-5 w-5" />
               </button>
               <button
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-full ${
-                  darkMode ? 'text-yellow-300 hover:text-yellow-200' : 'text-gray-600 hover:text-gray-900'
-                } focus:outline-none transition-colors`}
+                className="p-2 rounded-full text-yellow-300 hover:text-yellow-200 focus:outline-none transition-colors"
                 aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {darkMode ? (
@@ -189,25 +173,20 @@ export default function MessagingSystem() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex max-w-7xl mx-auto w-full overflow-hidden bg-opacity-70 ${
-        darkMode ? 'bg-gray-900' : 'bg-white'
-      }">
+      <div className="flex-1 flex max-w-7xl mx-auto w-full overflow-hidden">
         {/* Conversations List */}
-        <div className={`w-80 border-r overflow-y-auto transition-all duration-500 ${
-          darkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
+        <div className="w-80 border-r border-gray-700 overflow-y-auto bg-gray-800">
+          <div className="p-4 border-b border-gray-700">
+            <h2 className="text-lg font-semibold text-white">Messages</h2>
+          </div>
           {conversations.map(conv => (
             <button
               key={conv.id}
               onClick={() => setSelectedChat(conv)}
-              className={`w-full p-4 flex items-start gap-3 border-b transition-all hover:bg-opacity-50 ${
+              className={`w-full p-4 flex items-start gap-3 border-b border-gray-700 transition-all hover:bg-gray-700 ${
                 selectedChat && selectedChat.id === conv.id
-                  ? darkMode 
-                    ? 'bg-purple-900 bg-opacity-30' 
-                    : 'bg-blue-50'
-                  : darkMode 
-                    ? 'border-gray-700 hover:bg-gray-800' 
-                    : 'border-gray-200 hover:bg-gray-100'
+                  ? 'bg-purple-900/30' 
+                  : ''
               }`}
             >
               <div className="flex-shrink-0 text-2xl">
@@ -215,22 +194,22 @@ export default function MessagingSystem() {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="flex justify-between items-center">
-                  <h3 className={`text-sm font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h3 className="text-sm font-medium truncate text-white">
                     {conv.name}
                   </h3>
                   {conv.unread > 0 && (
-                    <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">
                       {conv.unread}
                     </span>
                   )}
                 </div>
-                <p className={`text-xs mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-xs mb-1 text-gray-400">
                   {conv.role}
                 </p>
-                <p className={`text-sm truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-sm truncate text-gray-400">
                   {conv.lastMessage}
                 </p>
-                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                <p className="text-xs mt-1 text-gray-500">
                   {conv.time}
                 </p>
               </div>
@@ -239,28 +218,24 @@ export default function MessagingSystem() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-gray-900">
           {selectedChat ? (
             <>
               {/* Chat Header */}
-              <div className={`p-4 border-b flex items-center gap-3 transition-all duration-500 ${
-                darkMode 
-                  ? 'bg-gray-800 bg-opacity-30 border-gray-700' 
-                  : 'bg-white bg-opacity-50 border-gray-200'
-              }`}>
+              <div className="p-4 border-b border-gray-700 flex items-center gap-3 bg-gray-800">
                 <div className="text-3xl">{selectedChat.avatar}</div>
                 <div>
-                  <h2 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <h2 className="font-semibold text-white">
                     {selectedChat.name}
                   </h2>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className="text-sm text-gray-400">
                     {selectedChat.role}
                   </p>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="messages-container flex-1 overflow-y-auto p-4 space-y-4">
                 {selectedChat.messages.map(msg => (
                   <div
                     key={msg.id}
@@ -269,13 +244,11 @@ export default function MessagingSystem() {
                     <div className={`max-w-md px-4 py-3 rounded-2xl ${
                       msg.sender === userType
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-none'
-                        : darkMode
-                          ? 'bg-gray-700 text-white rounded-bl-none'
-                          : 'bg-gray-200 text-gray-900 rounded-bl-none'
+                        : 'bg-gray-700 text-white rounded-bl-none'
                     }`}>
                       <p className="text-sm">{msg.text}</p>
                       <p className={`text-xs mt-1 ${
-                        msg.sender === userType ? 'text-blue-100' : darkMode ? 'text-gray-400' : 'text-gray-600'
+                        msg.sender === userType ? 'text-blue-100' : 'text-gray-400'
                       }`}>
                         {msg.time}
                       </p>
@@ -285,11 +258,7 @@ export default function MessagingSystem() {
               </div>
 
               {/* Message Input */}
-              <div className={`p-4 border-t transition-all duration-500 ${
-                darkMode 
-                  ? 'bg-gray-800 bg-opacity-30 border-gray-700' 
-                  : 'bg-white bg-opacity-50 border-gray-200'
-              }`}>
+              <div className="p-4 border-t border-gray-700 bg-gray-800">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -297,11 +266,7 @@ export default function MessagingSystem() {
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Type your message..."
-                    className={`flex-1 px-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                      darkMode 
-                        ? 'bg-gray-700 text-white border-gray-600 placeholder-gray-400' 
-                        : 'bg-white text-gray-900 border-gray-300 placeholder-gray-500'
-                    }`}
+                    className="flex-1 px-4 py-3 rounded-xl border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                   />
                   <button
                     onClick={handleSendMessage}
@@ -316,10 +281,10 @@ export default function MessagingSystem() {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-4">💬</div>
-                <h3 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className="text-xl font-semibold mb-2 text-white">
                   Select a conversation
                 </h3>
-                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-gray-400">
                   Choose a chat from the list to start messaging
                 </p>
               </div>

@@ -103,19 +103,26 @@ export default function JobsPage() {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+    <div className="min-h-screen bg-gray-900">
       {/* Navigation Bar */}
-      <header className={`bg-${darkMode ? 'gray-800' : 'white'} shadow-sm`}>
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <h1 className={`text-xl font-bold text-${darkMode ? 'purple-400' : 'purple-600'}`}>Studex</h1>
+              <h1 className="text-xl font-bold text-purple-400">Studex</h1>
               <nav className="hidden md:ml-10 md:flex space-x-8">
-                <Link to="/jobs" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Jobs</Link>
-                <Link to="/Internships" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Internships</Link>
-                <Link to="/myapplications" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">My Applications</Link>
-                <Link to="/messages" className="text-white-900 hover:text-purple-700 px-3 py-2 text-sm font-medium">Messages</Link>
+                <Link to="/jobs" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                  Jobs
+                </Link>
+                <Link to="/Internships" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                  Internships
+                </Link>
+                <Link to="/myapplications" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                  My Applications
+                </Link>
+                <Link to="/messages" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                  Messages
+                </Link>
               </nav>
             </div>
             
@@ -126,18 +133,18 @@ export default function JobsPage() {
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded-md leading-5 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition-colors"
                   placeholder="Search jobs..."
                 />
               </div>
               
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <HelpCircle className="h-6 w-6" />
               </button>
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <Bell className="h-6 w-6" />
               </button>
-              <button className="p-2 rounded-full text-purple-600 hover:text-purple-800 focus:outline-none">
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <Settings className="h-6 w-6" />
               </button>
             </div>
@@ -155,7 +162,7 @@ export default function JobsPage() {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded-lg leading-5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm transition-colors"
               placeholder="Search for jobs, companies, or keywords..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -168,10 +175,10 @@ export default function JobsPage() {
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeFilter === filter
                     ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                    : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
                 }`}
               >
                 {filter}
@@ -196,26 +203,23 @@ export default function JobsPage() {
               />
             ))
           ) : (
-            <p className="text-center text-gray-500 col-span-full">No jobs found.</p>
+            <p className="text-center text-gray-400 col-span-full">No jobs found.</p>
           )}
         </div>
       </div>
 
-      {/* ========================================================== */}
       {/* FOOTER */}
-      {/* ========================================================== */}
-      <footer className="mt-12 bg-white py-6 shadow-inner">
-        <div className="max-w-5xl mx-auto flex flex-wrap justify-between text-gray-600 text-sm px-6">
-          <div>About</div>
-          <div>FAQ</div>
-          <div>Partners</div>
-          <div>Contact</div>
-          <div>Terms</div>
-          <div>Privacy</div>
-          <div>Career Tips / Blog</div>
+      <footer className="mt-12 bg-gray-800 py-6 shadow-inner border-t border-gray-700">
+        <div className="max-w-5xl mx-auto flex flex-wrap justify-between text-gray-400 text-sm px-6">
+          <a href="#" className="hover:text-white transition-colors">About</a>
+          <a href="#" className="hover:text-white transition-colors">FAQ</a>
+          <a href="#" className="hover:text-white transition-colors">Partners</a>
+          <a href="#" className="hover:text-white transition-colors">Contact</a>
+          <a href="#" className="hover:text-white transition-colors">Terms</a>
+          <a href="#" className="hover:text-white transition-colors">Privacy</a>
+          <a href="#" className="hover:text-white transition-colors">Career Tips / Blog</a>
         </div>
       </footer>
-      </div>
     </div>
   );
 }
