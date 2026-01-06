@@ -29,8 +29,9 @@ export const authAPI = {
   getCurrentUser: () => api.get('/auth/me'),
 };
 
+// In client/src/utils/api.js
 export const userAPI = {
-  getProfile: () => api.get('/auth/profile'),
+  getProfile: () => api.get('/auth/me'),  // Changed from '/auth/profile' to '/auth/me'
   updateProfile: (data) => api.put('/auth/profile', data),
 };
 
