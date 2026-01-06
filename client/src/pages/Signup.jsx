@@ -16,7 +16,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student",
+    userType: "student", // This will be mapped to 'student' or 'employer'
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -91,12 +91,15 @@ const Signup = () => {
 
     try {
       // Map frontend fields to backend expected fields
+      // Map frontend userType to backend role
+      const role = formData.userType === 'company' ? 'employer' : formData.userType;
+      
       const userData = {
         email: formData.email,
         password: formData.password,
         first_name: formData.username,
         last_name: "",
-        role: formData.userType,
+        role: role,
       };
 
       console.log('Sending registration request...', userData);

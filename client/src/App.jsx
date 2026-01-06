@@ -23,7 +23,6 @@ import NotFound from "./pages/NotFound.jsx";
 // Components
 import JobCard from "./components/JobCard.jsx";
 
-
 // ------------------- Protected Route -------------------
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { isAuthenticated, loading, user } = useAuth();
@@ -54,81 +53,95 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 };
 
 // ------------------- App -------------------
-export default function App() {
+const App = () => {
+  // Apply dark mode to the root HTML element
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
           <ProfileProvider>
-            <Routes>
+            <ErrorBoundary>
+              <div className="min-h-screen bg-gray-900 text-gray-100">
+                <main className="container mx-auto px-4 py-8">
+                  <Routes>
 
-              {/* Redirect root */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+                    {/* Redirect root */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* Auth */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+                    {/* Auth */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
 
-              {/* Protected */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Dashboard />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
+                    {/* Protected */}
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Dashboard />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    />
 
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
 
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      }
+                    />
 
-              <Route
-                path="/myapplications"
-                element={
-                  <ProtectedRoute roles={["student"]}>
-                    <MyApplications />
-                  </ProtectedRoute>
-                }
-              />
+                    <Route
+                      path="/myapplications"
+                      element={
+                        <ProtectedRoute roles={["student"]}>
+                          <MyApplications />
+                        </ProtectedRoute>
+                      }
+                    />
 
-              <Route
-                path="/jobpostings"
-                element={
-                  <ProtectedRoute roles={["company"]}>
-                    <JobPostings />
-                  </ProtectedRoute>
-                }
-              />
+                    <Route
+                      path="/jobpostings"
+                      element={
+                        <ProtectedRoute roles={["company"]}>
+                          <JobPostings />
+                        </ProtectedRoute>
+                      }
+                    />
 
-              {/* Public */}
-              <Route path="/jobs" element={<JobsPage />} />
-              <Route path="/job" element={<JobCard />} />
-              <Route path="/messages" element={<MessagingSystem />} />
+                    {/* Public */}
+                    <Route path="/jobs" element={<JobsPage />} />
+                    <Route path="/job" element={<JobCard />} />
+                    <Route path="/messages" element={<MessagingSystem />} />
 
-              {/* Catch-all */}
-              <Route path="*" element={<NotFound />} />
+                    {/* Catch-all */}
+                    <Route path="*" element={<NotFound />} />
 
-            </Routes>
+                  </Routes>
+                </main>
+              </div>
+            </ErrorBoundary>
           </ProfileProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );
-}
+};
+
+export default App;
