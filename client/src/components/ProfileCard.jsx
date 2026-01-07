@@ -188,8 +188,7 @@ export default function ProfileCard({ isDashboard = false }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+    <div className="w-full max-w-4xl mx-auto bg-transparent">
         {editing ? (
           <form onSubmit={handleSubmit}>
             <div className="p-6">
@@ -653,7 +652,6 @@ export default function ProfileCard({ isDashboard = false }) {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
