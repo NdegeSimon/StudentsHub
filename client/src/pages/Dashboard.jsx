@@ -1,28 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, 
-  Bell, 
-  Settings, 
-  HelpCircle, 
+  ArrowLeft, 
+  FileText, 
+  Download, 
+  Plus, 
+  X, 
   User, 
-  BookOpen, 
   Briefcase, 
-  Clock, 
-  Star, 
-  Sun, 
-  Moon,
-  Menu, 
-  X,
-  FileText,
-  Mic,
-  Zap,
-  TrendingUp,
+  GraduationCap, 
   Award,
-  UserCheck,
-  FileQuestion,
-  ChevronRight
+  ChevronDown,
+  ChevronRight,
+  Edit2,
+  Trash2
 } from 'lucide-react';
-
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';

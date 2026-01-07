@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Download, Plus, X, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  FileText, 
+  Download, 
+  Plus, 
+  X, 
+  User, 
+  Briefcase, 
+  GraduationCap, 
+  Award,
+  ChevronDown,
+  ChevronRight,
+  Edit2,
+  Trash2 
+} from 'lucide-react';
 
 const ResumeBuilder = () => {
   const [activeTab, setActiveTab] = useState('personal');
