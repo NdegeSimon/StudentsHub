@@ -12,7 +12,15 @@ import {
   Sun, 
   Moon,
   Menu, 
-  X 
+  X,
+  FileText,
+  Mic,
+  Zap,
+  TrendingUp,
+  Award,
+  UserCheck,
+  FileQuestion,
+  ChevronRight
 } from 'lucide-react';
 
 import { NavLink } from "react-router-dom";
@@ -56,6 +64,7 @@ const Dashboard = () => {
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('recommended');
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [dashboardData, setDashboardData] = useState({
     recommendedJobs: [],
     recentApplications: [],
@@ -68,6 +77,20 @@ const Dashboard = () => {
     error: null
   });
 
+  // Function to fetch upcoming deadlines
+  const fetchUpcomingDeadlines = async () => {
+    try {
+      // Assuming you have an API endpoint to get upcoming deadlines
+      // This is a placeholder - replace with your actual API call
+      const response = await applicationAPI.getUpcomingDeadlines();
+      if (response.data) {
+        setUpcomingDeadlines(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching upcoming deadlines:', error);
+    }
+  };
+
   // Fetch dashboard data when component mounts or when profile changes
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -79,7 +102,7 @@ const Dashboard = () => {
         // Calculate profile completion first
         const profileCompletion = calculateProfileCompletion(profile);
         
-        // Fetch jobs and applications in parallel
+        // Fetch jobs, applications, and upcoming deadlines in parallel
         const [jobsResponse, appsResponse] = await Promise.allSettled([
           jobAPI.getAllJobs({ limit: 4 }),
           profile?.id ? applicationAPI.getMyApplications() : Promise.resolve({ data: [] })
@@ -106,6 +129,11 @@ const Dashboard = () => {
           loading: false,
           error: null
         });
+        
+        // Fetch upcoming deadlines after dashboard data is loaded
+        if (profile?.id) {
+          await fetchUpcomingDeadlines();
+        }
         
         // Update user profile if needed
         if (profile?.id) {
@@ -291,54 +319,127 @@ const Dashboard = () => {
 
             {/* Upcoming Deadlines */}
             <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <h3 className="font-medium mb-4 text-white">
-                Upcoming Deadlines
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-red-900/30">
-                    <span className="text-sm font-medium text-red-400">
-                      15
-                    </span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">
-                      Safaricom Application
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Due in 2 days
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-yellow-900/30">
-                    <span className="text-sm font-medium text-yellow-400">
-                      20
-                    </span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">
-                      Andela Technical Test
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Due in 1 week
-                    </p>
-                  </div>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-white">
+                  Upcoming Deadlines
+                </h3>
+                <button 
+                  onClick={fetchUpcomingDeadlines}
+                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                  disabled={dashboardData.loading}
+                >
+                  {dashboardData.loading ? 'Refreshing...' : 'Refresh'}
+                </button>
               </div>
+              {dashboardData.loading ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                </div>
+              ) : upcomingDeadlines.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingDeadlines.map((deadline, index) => {
+                    // Calculate days until deadline
+                    const dueDate = new Date(deadline.due_date);
+                    const today = new Date();
+                    const timeDiff = dueDate - today;
+                    const daysUntilDue = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                    
+                    // Determine color based on urgency
+                    const isUrgent = daysUntilDue <= 3;
+                    const isWarning = daysUntilDue <= 7 && daysUntilDue > 3;
+                    
+                    return (
+                      <div key={index} className="flex items-start group">
+                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                          isUrgent ? 'bg-red-900/30' : isWarning ? 'bg-yellow-900/30' : 'bg-blue-900/30'
+                        }`}>
+                          <span className={`text-sm font-medium ${
+                            isUrgent ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-blue-400'
+                          }`}>
+                            {daysUntilDue}
+                          </span>
+                        </div>
+                        <div className="ml-3 flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate" title={deadline.title}>
+                            {deadline.title}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {daysUntilDue === 0 
+                              ? 'Due today' 
+                              : daysUntilDue < 0 
+                                ? `${Math.abs(daysUntilDue)} days ago` 
+                                : `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 text-center py-2">
+                  No upcoming deadlines
+                </p>
+              )}
             </div>
 
             {/* Resources */}
             <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <h3 className="font-medium mb-3 text-white">
-                Resources
-              </h3>
-              <p className="text-sm mb-4 text-gray-400">
-                Enhance your profile and job search with our resources.
-              </p>
-              <button className="w-full px-4 py-2 rounded-md text-sm font-medium transition-colors bg-gray-700 text-white hover:bg-gray-600">
-                Explore Resources
-              </button>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-white">Resources</h3>
+                <Link 
+                  to="/resources" 
+                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  View All
+                </Link>
+              </div>
+              
+              <div className="space-y-3">
+                {/* Interview Prep Card - Now functional */}
+                <Link 
+                  to="/interview-prep"
+                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-900/30 flex items-center justify-center">
+                    <Mic className="h-5 w-5 text-purple-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Interview Prep</p>
+                    <p className="text-xs text-gray-400">Practice common questions</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
+                </Link>
+
+                {/* Resume Builder Card - Now a Link */}
+                <Link 
+                  to="/resume-builder"
+                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-900/30 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Resume Builder</p>
+                    <p className="text-xs text-gray-400">Create an ATS-friendly resume</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
+                </Link>
+
+                {/* Career Tips Card - Now a Link */}
+                <Link 
+                  to="/career-tips"
+                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-900/30 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-green-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Career Tips</p>
+                    <p className="text-xs text-gray-400">Boost your job search</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
+                </Link>
+              </div>
             </div>
           </div>
 

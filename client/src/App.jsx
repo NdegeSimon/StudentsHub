@@ -18,6 +18,9 @@ import JobsPage from "./pages/JobsPage.jsx";
 import MyApplications from "./pages/MyApplications.jsx";
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
+import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
+import Resources from "./pages/resources/Resources.jsx";
+import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // Components
@@ -129,6 +132,34 @@ const App = () => {
                     <Route path="/jobs" element={<JobsPage />} />
                     <Route path="/job" element={<JobCard />} />
                     <Route path="/messages" element={<MessagingSystem />} />
+
+                    {/* Resources */}
+                    <Route 
+                      path="/resources" 
+                      element={
+                        <ProtectedRoute>
+                          <Resources />
+                        </ProtectedRoute>
+                      } 
+                    />
+
+                    <Route 
+                      path="/resume-builder" 
+                      element={
+                        <ProtectedRoute>
+                          <ResumeBuilder />
+                        </ProtectedRoute>
+                      } 
+                    />
+
+                    <Route 
+                      path="/interview-prep" 
+                      element={
+                        <ProtectedRoute>
+                          <InterviewPrep />
+                        </ProtectedRoute>
+                      } 
+                    />
 
                     {/* Catch-all */}
                     <Route path="*" element={<NotFound />} />
