@@ -394,7 +394,7 @@ class Notification(db.Model):
     message = db.Column(db.Text)
     link_url = db.Column(db.String(500))  # Where to redirect when clicked
     is_read = db.Column(db.Boolean, default=False, index=True)
-    metadata = db.Column(db.JSON)  # Additional context data
+    notification_metadata = db.Column(db.JSON)  # Renamed from metadata to avoid conflict
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     read_at = db.Column(db.DateTime)
 
@@ -407,7 +407,7 @@ class Notification(db.Model):
             'message': self.message,
             'link_url': self.link_url,
             'is_read': self.is_read,
-            'metadata': self.metadata,
+            'metadata': self.notification_metadata,  # Map to original field name in API
             'created_at': self.created_at.isoformat(),
             'read_at': self.read_at.isoformat() if self.read_at else None
         }

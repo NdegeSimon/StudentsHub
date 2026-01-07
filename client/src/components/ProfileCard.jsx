@@ -128,530 +128,555 @@ export default function ProfileCard({ isDashboard = false }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gray-900">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+      <div style={{
+        backgroundColor: '#121212',
+        color: '#fff',
+        padding: 0,
+        margin: 0,
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+        </div>
       </div>
     );
   }
 
   if (isDashboard) {
     return (
-      <div className="flex flex-col items-center text-center bg-gray-900">
-        <div className="relative group">
-          <div className="relative w-24 h-24 mb-4">
-            {profile.avatar ? (
-              <img 
-                src={profile.avatar} 
-                alt={profile.name || 'Profile'} 
-                className="w-full h-full rounded-full object-cover ring-2 ring-gray-700 shadow-lg"
-              />
-            ) : (
-              <div className="w-full h-full rounded-full bg-indigo-900 flex items-center justify-center">
-                <User className="h-10 w-10 text-indigo-400" />
-              </div>
-            )}
-            <label 
-              className="absolute -bottom-2 -right-2 bg-blue-700 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-              title="Change photo"
-            >
-              <Camera className="h-4 w-4" />
-              <input 
-                type="file" 
-                className="hidden" 
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={saving}
-              />
-            </label>
-            {saving && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-              </div>
-            )}
+      <div style={{
+        backgroundColor: '#121212',
+        color: '#fff',
+        padding: 0,
+        margin: 0,
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}>
+        <div className="flex flex-col items-center text-center">
+          <div className="relative group">
+            <div className="relative w-24 h-24 mb-4">
+              {profile.avatar ? (
+                <img 
+                  src={profile.avatar} 
+                  alt={profile.name || 'Profile'} 
+                  className="w-full h-full rounded-full object-cover ring-2 ring-gray-700 shadow-lg"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-indigo-900 flex items-center justify-center">
+                  <User className="h-10 w-10 text-indigo-400" />
+                </div>
+              )}
+              <label 
+                className="absolute -bottom-2 -right-2 bg-blue-700 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                title="Change photo"
+              >
+                <Camera className="h-4 w-4" />
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={saving}
+                />
+              </label>
+              {saving && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </div>
+              )}
+            </div>
           </div>
+          <h3 className="text-lg font-medium text-white">
+            {profile.name || 'No name provided'}
+          </h3>
+          {profile.title && (
+            <p className="text-sm text-gray-300">
+              {profile.title}
+            </p>
+          )}
+          {profile.bio && (
+            <p className="text-sm text-gray-300 mt-1">
+              {profile.bio.length > 50 ? `${profile.bio.substring(0, 50)}...` : profile.bio}
+            </p>
+          )}
         </div>
-        <h3 className="text-lg font-medium text-white">
-          {profile.name || 'No name provided'}
-        </h3>
-        {profile.title && (
-          <p className="text-sm text-gray-300">
-            {profile.title}
-          </p>
-        )}
-        {profile.bio && (
-          <p className="text-sm text-gray-300 mt-1">
-            {profile.bio.length > 50 ? `${profile.bio.substring(0, 50)}...` : profile.bio}
-          </p>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-gray-900 min-h-screen">
-        {editing ? (
-          <form onSubmit={handleSubmit}>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors"
-                    disabled={saving}
-                  >
-                    <X className="h-4 w-4 inline-block mr-1" />
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-600 transition-colors flex items-center"
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 inline-block mr-1" />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
+    <div style={{
+      backgroundColor: '#121212',
+      color: '#fff',
+      padding: 0,
+      margin: 0,
+      minHeight: '100vh',
+      boxSizing: 'border-box'
+    }}>
+      {editing ? (
+        <form onSubmit={handleSubmit}>
+          <div style={{ padding: '20px', borderRadius: '8px', backgroundColor: '#1e1e1e' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-200 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors"
+                  disabled={saving}
+                >
+                  <X className="h-4 w-4 inline-block mr-1" />
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-600 transition-colors flex items-center"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 inline-block mr-1" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-1">
+                <div className="flex flex-col items-center">
+                  <div className="relative group mb-4">
+                    <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-700 shadow-lg">
+                      {profile.avatar ? (
+                        <img 
+                          src={profile.avatar} 
+                          alt={formData.name || 'Profile'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
+                          <User className="h-16 w-16 text-indigo-400" />
+                        </div>
+                      )}
+                      <label 
+                        className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
+                        title="Change photo"
+                      >
+                        <Camera className="h-8 w-8 text-white" />
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={saving}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium text-white text-center">
+                    {formData.name || 'No name provided'}
+                  </h3>
+                  <p className="text-sm text-gray-300">
+                    {profile.email}
+                  </p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1">
-                  <div className="flex flex-col items-center">
-                    <div className="relative group mb-4">
-                      <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-700 shadow-lg">
-                        {profile.avatar ? (
-                          <img 
-                            src={profile.avatar} 
-                            alt={formData.name || 'Profile'} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
-                            <User className="h-16 w-16 text-indigo-400" />
-                          </div>
-                        )}
-                        <label 
-                          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
-                          title="Change photo"
-                        >
-                          <Camera className="h-8 w-8 text-white" />
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={saving}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-medium text-white text-center">
-                      {formData.name || 'No name provided'}
-                    </h3>
-                    <p className="text-sm text-gray-300">
-                      {profile.email}
-                    </p>
-                  </div>
+              <div className="md:col-span-2 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                    placeholder="Enter your full name"
+                  />
                 </div>
                 
-                <div className="md:col-span-2 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Full Name
-                    </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-300 cursor-not-allowed"
+                    disabled
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    Contact support to change your email address
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio || ''}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Skills
+                  </label>
+                  <div className="flex">
                     <input
                       type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
-                      placeholder="Enter your full name"
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                      className="flex-1 px-3 py-2 border border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                      placeholder="Add a skill and press Enter"
                     />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-4 py-2 bg-blue-700 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                    >
+                      Add
+                    </button>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-300 cursor-not-allowed"
-                      disabled
-                    />
-                    <p className="mt-1 text-xs text-gray-400">
-                      Contact support to change your email address
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Bio
-                    </label>
-                    <textarea
-                      name="bio"
-                      value={formData.bio || ''}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
-                      placeholder="Tell us about yourself..."
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Skills
-                    </label>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={newSkill}
-                        onChange={(e) => setNewSkill(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                        className="flex-1 px-3 py-2 border border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
-                        placeholder="Add a skill and press Enter"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddSkill}
-                        className="px-4 py-2 bg-blue-700 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.skills?.map((skill, index) => (
+                      <span 
+                        key={index} 
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200"
                       >
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.skills?.map((skill, index) => (
-                        <span 
-                          key={index} 
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200"
+                        {skill}
+                        <button 
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-800 hover:text-blue-300 focus:outline-none"
                         >
-                          {skill}
-                          <button 
-                            type="button"
-                            onClick={() => removeSkill(skill)}
-                            className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-800 hover:text-blue-300 focus:outline-none"
-                          >
-                            <span className="sr-only">Remove skill</span>
-                            <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                              <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
-                            </svg>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
+                          <span className="sr-only">Remove skill</span>
+                          <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                            <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
-          </form>
-        ) : (
-          <div>
-            <div className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Profile</h2>
-                  <p className="text-gray-300">Manage your profile information</p>
-                </div>
-                <button
-                  onClick={() => setEditing(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Profile
-                </button>
+          </div>
+        </form>
+      ) : (
+        <div style={{ padding: '20px', borderRadius: '8px', backgroundColor: '#1e1e1e' }}>
+          <div className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Profile</h2>
+                <p className="text-gray-300">Manage your profile information</p>
               </div>
-              
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1">
-                  <div className="flex flex-col items-center">
-                    <div className="relative mb-4">
-                      <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-700 shadow-lg">
-                        {profile.avatar ? (
-                          <img 
-                            src={profile.avatar} 
-                            alt={profile.name || 'Profile'} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
-                            <User className="h-16 w-16 text-indigo-400" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white">
-                      {profile.name || 'No name provided'}
-                    </h3>
-                    {profile.title && (
-                      <p className="text-sm text-blue-400">
-                        {profile.title}
-                      </p>
-                    )}
-                    <div className="mt-4 flex space-x-4">
-                      <button
-                        onClick={() => setEditing(true)}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-200 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                      >
-                        <Edit className="h-3.5 w-3.5 mr-1.5" />
-                        Edit
-                      </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit Profile
+              </button>
+            </div>
+            
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-1">
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4">
+                    <div className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-700 shadow-lg">
+                      {profile.avatar ? (
+                        <img 
+                          src={profile.avatar} 
+                          alt={profile.name || 'Profile'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
+                          <User className="h-16 w-16 text-indigo-400" />
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="mt-8">
-                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                      Contact Information
-                    </h4>
-                    <dl className="mt-2 space-y-3">
-                      <div>
-                        <dt className="text-xs font-medium text-gray-400">Email</dt>
-                        <dd className="mt-1 text-sm text-gray-200 break-all">
-                          {profile.email || 'Not provided'}
+                  <h3 className="text-xl font-semibold text-white">
+                    {profile.name || 'No name provided'}
+                  </h3>
+                  {profile.title && (
+                    <p className="text-sm text-blue-400">
+                      {profile.title}
+                    </p>
+                  )}
+                  <div className="mt-4 flex space-x-4">
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-200 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+                    >
+                      <Edit className="h-3.5 w-3.5 mr-1.5" />
+                      Edit
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="mt-8">
+                  <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                    Contact Information
+                  </h4>
+                  <dl className="mt-2 space-y-3">
+                    <div>
+                      <dt className="text-xs font-medium text-gray-400">Email</dt>
+                      <dd className="mt-1 text-sm text-gray-200 break-all">
+                        {profile.email || 'Not provided'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium text-gray-400">Phone</dt>
+                      <dd className="mt-1 text-sm text-gray-200">
+                        {profile.phone || 'Not provided'}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              
+              <div className="md:col-span-2">
+                <div className="bg-gray-800 shadow overflow-hidden sm:rounded-lg border border-gray-700">
+                  <div className="px-4 py-5 sm:px-6">
+                    <h3 className="text-lg leading-6 font-medium text-white">
+                      About
+                    </h3>
+                    <p className="mt-1 max-w-2xl text-sm text-gray-400">
+                      Personal details and information.
+                    </p>
+                  </div>
+                  <div className="border-t border-gray-700 px-4 py-5 sm:p-0">
+                    <dl className="sm:divide-y sm:divide-gray-700">
+                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-400">Bio</dt>
+                        <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
+                          {profile.bio || 'No bio provided'}
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-xs font-medium text-gray-400">Phone</dt>
-                        <dd className="mt-1 text-sm text-gray-200">
-                          {profile.phone || 'Not provided'}
+                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-400">Skills</dt>
+                        <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
+                          {profile.skills?.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {profile.skills.map((skill, index) => (
+                                <span 
+                                  key={index}
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">No skills added</span>
+                          )}
+                        </dd>
+                      </div>
+                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-400">Member Since</dt>
+                        <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
+                          {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                        </dd>
+                      </div>
+                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-400">Last Updated</dt>
+                        <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
+                          {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : 'N/A'}
                         </dd>
                       </div>
                     </dl>
                   </div>
                 </div>
                 
-                <div className="md:col-span-2">
-                  <div className="bg-gray-800 shadow overflow-hidden sm:rounded-lg border border-gray-700">
-                    <div className="px-4 py-5 sm:px-6">
-                      <h3 className="text-lg leading-6 font-medium text-white">
-                        About
-                      </h3>
-                      <p className="mt-1 max-w-2xl text-sm text-gray-400">
-                        Personal details and information.
-                      </p>
-                    </div>
-                    <div className="border-t border-gray-700 px-4 py-5 sm:p-0">
-                      <dl className="sm:divide-y sm:divide-gray-700">
-                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                          <dt className="text-sm font-medium text-gray-400">Bio</dt>
-                          <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
-                            {profile.bio || 'No bio provided'}
-                          </dd>
-                        </div>
-                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                          <dt className="text-sm font-medium text-gray-400">Skills</dt>
-                          <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
-                            {profile.skills?.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {profile.skills.map((skill, index) => (
-                                  <span 
-                                    key={index}
-                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">No skills added</span>
-                            )}
-                          </dd>
-                        </div>
-                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                          <dt className="text-sm font-medium text-gray-400">Member Since</dt>
-                          <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
-                            {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
-                          </dd>
-                        </div>
-                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                          <dt className="text-sm font-medium text-gray-400">Last Updated</dt>
-                          <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2">
-                            {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : 'N/A'}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
+                {/* Experience Section */}
+                <div className="mt-8">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg leading-6 font-medium text-white">
+                      Experience
+                    </h3>
+                    <button
+                      onClick={() => {}}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+                    >
+                      Add Experience
+                    </button>
                   </div>
                   
-                  {/* Experience Section */}
-                  <div className="mt-8">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg leading-6 font-medium text-white">
-                        Experience
-                      </h3>
-                      <button
-                        onClick={() => {}}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                      >
-                        Add Experience
-                      </button>
-                    </div>
-                    
-                    <div className="mt-4 bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-700">
-                      <ul className="divide-y divide-gray-700">
-                        {profile.experience?.length > 0 ? (
-                          profile.experience.map((exp, index) => (
-                            <li key={index}>
-                              <div className="px-4 py-4 sm:px-6">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium text-blue-400 truncate">
-                                    {exp.title}
+                  <div className="mt-4 bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-700">
+                    <ul className="divide-y divide-gray-700">
+                      {profile.experience?.length > 0 ? (
+                        profile.experience.map((exp, index) => (
+                          <li key={index}>
+                            <div className="px-4 py-4 sm:px-6">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-blue-400 truncate">
+                                  {exp.title}
+                                </p>
+                                <div className="ml-2 flex-shrink-0 flex">
+                                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
+                                    {exp.company}
                                   </p>
-                                  <div className="ml-2 flex-shrink-0 flex">
-                                    <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
-                                      {exp.company}
-                                    </p>
-                                  </div>
                                 </div>
-                                <div className="mt-2 sm:flex sm:justify-between">
-                                  <div className="sm:flex">
-                                    <p className="flex items-center text-sm text-gray-400">
-                                      {exp.start_date} - {exp.current ? 'Present' : exp.end_date || 'Present'}
-                                    </p>
-                                    {exp.location && (
-                                      <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
-                                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                        </svg>
-                                        {exp.location}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                                {exp.description && (
-                                  <div className="mt-2">
-                                    <p className="text-sm text-gray-300">
-                                      {exp.description}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
-                            </li>
-                          ))
-                        ) : (
-                          <li className="px-4 py-6 text-center">
-                            <p className="text-sm text-gray-400">
-                              No experience added yet.
-                            </p>
-                            <div className="mt-2">
-                              <button
-                                type="button"
-                                onClick={() => {}}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                              >
-                                Add your first experience
-                              </button>
+                              <div className="mt-2 sm:flex sm:justify-between">
+                                <div className="sm:flex">
+                                  <p className="flex items-center text-sm text-gray-400">
+                                    {exp.start_date} - {exp.current ? 'Present' : exp.end_date || 'Present'}
+                                  </p>
+                                  {exp.location && (
+                                    <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
+                                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                      </svg>
+                                      {exp.location}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              {exp.description && (
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-300">
+                                    {exp.description}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </li>
-                        )}
-                      </ul>
-                    </div>
+                        ))
+                      ) : (
+                        <li className="px-4 py-6 text-center">
+                          <p className="text-sm text-gray-400">
+                            No experience added yet.
+                          </p>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => {}}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+                            >
+                              Add your first experience
+                            </button>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+                
+                {/* Education Section */}
+                <div className="mt-8">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg leading-6 font-medium text-white">
+                      Education
+                    </h3>
+                    <button
+                      onClick={() => {}}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+                    >
+                      Add Education
+                    </button>
                   </div>
                   
-                  {/* Education Section */}
-                  <div className="mt-8">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg leading-6 font-medium text-white">
-                        Education
-                      </h3>
-                      <button
-                        onClick={() => {}}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                      >
-                        Add Education
-                      </button>
-                    </div>
-                    
-                    <div className="mt-4 bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-700">
-                      <ul className="divide-y divide-gray-700">
-                        {profile.education?.length > 0 ? (
-                          profile.education.map((edu, index) => (
-                            <li key={index}>
-                              <div className="px-4 py-4 sm:px-6">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium text-blue-400 truncate">
-                                    {edu.degree} in {edu.field_of_study}
+                  <div className="mt-4 bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-700">
+                    <ul className="divide-y divide-gray-700">
+                      {profile.education?.length > 0 ? (
+                        profile.education.map((edu, index) => (
+                          <li key={index}>
+                            <div className="px-4 py-4 sm:px-6">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-blue-400 truncate">
+                                  {edu.degree} in {edu.field_of_study}
+                                </p>
+                                <div className="ml-2 flex-shrink-0 flex">
+                                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-900 text-purple-200">
+                                    {edu.school}
                                   </p>
-                                  <div className="ml-2 flex-shrink-0 flex">
-                                    <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-900 text-purple-200">
-                                      {edu.school}
-                                    </p>
-                                  </div>
                                 </div>
-                                <div className="mt-2 sm:flex sm:justify-between">
-                                  <div className="sm:flex">
-                                    <p className="flex items-center text-sm text-gray-400">
-                                      {edu.start_year} - {edu.current ? 'Present' : edu.end_year || 'N/A'}
-                                    </p>
-                                    {edu.grade && (
-                                      <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
-                                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                        </svg>
-                                        {edu.grade}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                                {edu.activities && (
-                                  <div className="mt-2">
-                                    <p className="text-sm text-gray-300">
-                                      {edu.activities}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
-                            </li>
-                          ))
-                        ) : (
-                          <li className="px-4 py-6 text-center">
-                            <p className="text-sm text-gray-400">
-                              No education information added yet.
-                            </p>
-                            <div className="mt-2">
-                              <button
-                                type="button"
-                                onClick={() => {}}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
-                              >
-                                Add your education
-                              </button>
+                              <div className="mt-2 sm:flex sm:justify-between">
+                                <div className="sm:flex">
+                                  <p className="flex items-center text-sm text-gray-400">
+                                    {edu.start_year} - {edu.current ? 'Present' : edu.end_year || 'N/A'}
+                                  </p>
+                                  {edu.grade && (
+                                    <p className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0 sm:ml-6">
+                                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                      </svg>
+                                      {edu.grade}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              {edu.activities && (
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-300">
+                                    {edu.activities}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </li>
-                        )}
-                      </ul>
-                    </div>
+                        ))
+                      ) : (
+                        <li className="px-4 py-6 text-center">
+                          <p className="text-sm text-gray-400">
+                            No education information added yet.
+                          </p>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => {}}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
+                            >
+                              Add your education
+                            </button>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        )} 
+        </div>
+      )} 
     </div>
   );
 }
