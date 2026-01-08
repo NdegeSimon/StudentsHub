@@ -8,6 +8,9 @@ import os
 # Import extensions from extensions.py
 from extensions import db, jwt, migrate
 
+# Import blueprints
+from routes.saved_jobs_routes import saved_jobs_bp
+
 def create_app():
     app = Flask(__name__)
     load_dotenv()
@@ -58,8 +61,12 @@ def create_app():
         from routes.routes import bp as auth_bp
         app.register_blueprint(auth_bp, url_prefix='/api')
         print("✅ Auth blueprint registered")
+        
+        # Register saved jobs blueprint
+        app.register_blueprint(saved_jobs_bp, url_prefix='/')
+        print("✅ Saved Jobs blueprint registered")
     except Exception as e:
-        print("⚠️ Could not register blueprint:", e)
+        print(f"❌ Error registering blueprints: {e}")
 
     # Error handlers
     @app.errorhandler(404)
