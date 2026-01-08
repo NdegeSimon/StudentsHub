@@ -24,6 +24,9 @@ import {
   X as XIcon,
 } from 'lucide-react';
 import { getSavedSearches, deleteSavedSearch } from '../services/searchService';
+import { useEffect, useState } from 'react';
+import { Bookmark, BookmarkCheck, BookOpenText } from 'lucide-react';
+import { getSavedJobs, toggleSaveJob } from '../services/savedJobsService';
 
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
@@ -62,7 +65,11 @@ const calculateProfileCompletion = (userProfile) => {
 };
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+const [savedJobs, setSavedJobs] = useState([]);
+const [savedJobIds, setSavedJobIds] = useState({});
+const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
+
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('recommended');
@@ -196,6 +203,31 @@ const Dashboard = () => {
     );
   }
 
+  const loadSavedJobs = async () => {
+  try {
+    setIsLoadingSavedJobs(true);
+    const jobs = await getSavedJobs();
+    setSavedJobs(jobs);
+    
+  const savedMap = {};
+    jobs.forEach(job => {
+      savedMap[job.job_id] = { 
+        isSaved: true, 
+        savedJobId: job.id 
+      };
+    });
+    setSavedJobIds(savedMap);
+  } catch (error) {
+    console.error('Error loading saved jobs:', error);
+  } finally {
+    setIsLoadingSavedJobs(false);
+  }
+};
+useEffect(() => {
+  if (activeTab === 'saved') {
+    loadSavedJobs();
+  }
+}, [activeTab]);
   
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -581,15 +613,75 @@ const Dashboard = () => {
                   Recent
                 </button>
                 <button 
-                  onClick={() => setActiveTab('saved')}
-                  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'saved'
-                      ? 'border-indigo-400 text-white' 
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
-                  }`}
-                >
-                  Saved
-                </button>
+  onClick={() => {
+    setActiveTab('saved');
+    loadSavedJobs();
+  }}
+  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
+    activeTab === 'saved'
+      ? 'border-indigo-400 text-white' 
+      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
+  }`}
+>
+  Saved
+</button>
+
+// Add this after your tab buttons to display the saved jobs
+{activeTab === 'saved' && (
+  <div className="p-6">
+    {isLoadingSavedJobs ? (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    ) : savedJobs.length > 0 ? (
+      <div className="space-y-4">
+        {savedJobs.map((job) => (
+          <div 
+            key={job.id} 
+            className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-purple-500/50 transition-colors"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-medium text-white">{job.job_title}</h4>
+                <p className="text-sm text-gray-400">{job.company_name}</p>
+                <p className="text-xs text-gray-500 mt-1">{job.location}</p>
+              </div>
+              <button
+                onClick={() => handleSaveJob(job.job_id)}
+                className="text-purple-400 hover:text-purple-300 transition-colors"
+                title={savedJobIds[job.job_id]?.isSaved ? "Remove from saved" : "Save job"}
+              >
+                {savedJobIds[job.job_id]?.isSaved ? (
+                  <BookmarkCheck className="h-5 w-5" />
+                ) : (
+                  <Bookmark className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            <div className="mt-2 flex justify-between items-center">
+              <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded-full">
+                {job.job_type || 'Full-time'}
+              </span>
+              <span className="text-xs text-gray-400">
+                {job.salary_min && job.salary_max ? 
+                  `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()} ${job.salary_currency || ''}`.trim() : 
+                  'Salary not specified'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-12">
+        <BookOpenText className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+        <p className="text-gray-400">No saved jobs yet</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Save jobs to view them here
+        </p>
+      </div>
+    )}
+  </div>
+)}
               </nav>
               
               <div className="p-6">
