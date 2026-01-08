@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Bell, 
@@ -24,10 +24,8 @@ import {
   X as XIcon,
 } from 'lucide-react';
 import { getSavedSearches, deleteSavedSearch } from '../services/searchService';
-import { useEffect, useState } from 'react';
 import { Bookmark, BookmarkCheck, BookOpenText } from 'lucide-react';
 import { getSavedJobs, toggleSaveJob } from '../services/savedJobsService';
-
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
 import MyApplications from './MyApplications';
@@ -37,12 +35,10 @@ import { useProfile } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
 import { jobAPI, applicationAPI, userAPI } from '../utils/api';
 
-
 // Helper function to calculate profile completion percentage
 const calculateProfileCompletion = (userProfile) => {
   if (!userProfile) return 0;
   
-  // Define required fields and their weights
   const fields = [
     { key: 'first_name', weight: 20 },
     { key: 'last_name', weight: 15 },
@@ -54,7 +50,6 @@ const calculateProfileCompletion = (userProfile) => {
     { key: 'education', weight: 5, isArray: true }
   ];
   
-  // Calculate completion based on filled fields and their weights
   return fields.reduce((total, field) => {
     const value = userProfile[field.key];
     const isFilled = field.isArray 
@@ -65,13 +60,14 @@ const calculateProfileCompletion = (userProfile) => {
 };
 
 const Dashboard = () => {
-const navigate = useNavigate();
-const [savedJobs, setSavedJobs] = useState([]);
-const [savedJobIds, setSavedJobIds] = useState({});
-const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
-
+  const navigate = useNavigate();
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
+  
+  // ALL State declarations at the top
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [savedJobIds, setSavedJobIds] = useState({});
+  const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
   const [activeTab, setActiveTab] = useState('recommended');
   const [savedSearches, setSavedSearches] = useState([]);
   const [loadingSearches, setLoadingSearches] = useState(true);
@@ -88,11 +84,30 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
     error: null
   });
 
-  // Function to fetch upcoming deadlines
-  const fetchUpcomingDeadlines = async () => {
+  // ALL useCallback functions
+  const loadSavedJobs = useCallback(async () => {
     try {
-      // Assuming you have an API endpoint to get upcoming deadlines
-      // This is a placeholder - replace with your actual API call
+      setIsLoadingSavedJobs(true);
+      const jobs = await getSavedJobs();
+      setSavedJobs(jobs);
+      
+      const savedMap = {};
+      jobs.forEach(job => {
+        savedMap[job.job_id] = { 
+          isSaved: true, 
+          savedJobId: job.id 
+        };
+      });
+      setSavedJobIds(savedMap);
+    } catch (error) {
+      console.error('Error loading saved jobs:', error);
+    } finally {
+      setIsLoadingSavedJobs(false);
+    }
+  }, []);
+
+  const fetchUpcomingDeadlines = useCallback(async () => {
+    try {
       const response = await applicationAPI.getUpcomingDeadlines();
       if (response.data) {
         setUpcomingDeadlines(response.data);
@@ -100,10 +115,9 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
     } catch (error) {
       console.error('Error fetching upcoming deadlines:', error);
     }
-  };
+  }, []);
 
-  // Fetch saved searches
-  const fetchSavedSearches = async () => {
+  const fetchSavedSearches = useCallback(async () => {
     try {
       setLoadingSearches(true);
       const searches = await getSavedSearches();
@@ -113,10 +127,9 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
     } finally {
       setLoadingSearches(false);
     }
-  };
+  }, []);
 
-  // Handle delete saved search
-  const handleDeleteSearch = async (searchId, e) => {
+  const handleDeleteSearch = useCallback(async (searchId, e) => {
     e.stopPropagation();
     try {
       await deleteSavedSearch(searchId);
@@ -124,9 +137,24 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
     } catch (error) {
       console.error('Error deleting saved search:', error);
     }
-  };
+  }, []);
 
-  // Fetch dashboard data when component mounts or when profile changes
+  const handleSaveJob = useCallback(async (jobId) => {
+    try {
+      await toggleSaveJob(jobId);
+      await loadSavedJobs();
+    } catch (error) {
+      console.error('Error toggling save job:', error);
+    }
+  }, [loadSavedJobs]);
+
+  // ALL useEffect hooks
+  useEffect(() => {
+    if (activeTab === 'saved') {
+      loadSavedJobs();
+    }
+  }, [activeTab, loadSavedJobs]);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (profileLoading) return;
@@ -134,10 +162,8 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
       try {
         setDashboardData(prev => ({ ...prev, loading: true, error: null }));
         
-        // Calculate profile completion first
         const profileCompletion = calculateProfileCompletion(profile);
         
-        // Fetch jobs, applications, and saved searches in parallel
         const [jobsResponse, appsResponse] = await Promise.allSettled([
           jobAPI.getAllJobs({ limit: 4 }),
           profile?.id ? applicationAPI.getMyApplications() : Promise.resolve({ data: [] })
@@ -146,13 +172,11 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
         const jobs = jobsResponse.status === 'fulfilled' ? jobsResponse.value.data : [];
         const applications = appsResponse.status === 'fulfilled' ? appsResponse.value.data : [];
         
-        // Calculate stats
         const totalApplications = applications.length;
         const activeJobs = applications.filter(app => 
           ['applied', 'interview', 'offer'].includes(app.status)
         ).length;
         
-        // Update dashboard data
         setDashboardData({
           recommendedJobs: Array.isArray(jobs) ? jobs : [],
           recentApplications: Array.isArray(applications) ? applications.slice(0, 3) : [],
@@ -165,17 +189,14 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
           error: null
         });
         
-        // Fetch upcoming deadlines after dashboard data is loaded
         if (profile?.id) {
           await fetchUpcomingDeadlines();
         }
         
-        // Update user profile if needed
         if (profile?.id) {
           try {
             const userProfile = await userAPI.getProfile();
             updateProfile(userProfile.data);
-            // Fetch saved searches after profile is loaded
             await fetchSavedSearches();
           } catch (error) {
             console.error('Error updating user profile:', error);
@@ -192,9 +213,9 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
     };
     
     fetchDashboardData();
-  }, [profile?.id, profileLoading, updateProfile]);
+  }, [profile?.id, profileLoading, updateProfile, fetchUpcomingDeadlines, fetchSavedSearches]);
   
-  // Show loading state while data is being fetched
+  // Loading state check AFTER all hooks
   if (profileLoading || dashboardData.loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
@@ -202,32 +223,6 @@ const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
       </div>
     );
   }
-
-  const loadSavedJobs = async () => {
-  try {
-    setIsLoadingSavedJobs(true);
-    const jobs = await getSavedJobs();
-    setSavedJobs(jobs);
-    
-  const savedMap = {};
-    jobs.forEach(job => {
-      savedMap[job.job_id] = { 
-        isSaved: true, 
-        savedJobId: job.id 
-      };
-    });
-    setSavedJobIds(savedMap);
-  } catch (error) {
-    console.error('Error loading saved jobs:', error);
-  } finally {
-    setIsLoadingSavedJobs(false);
-  }
-};
-useEffect(() => {
-  if (activeTab === 'saved') {
-    loadSavedJobs();
-  }
-}, [activeTab]);
   
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -291,17 +286,6 @@ useEffect(() => {
               <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
                 <Bell className="h-6 w-6" />
               </button>
-              {/* <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-full text-yellow-300 hover:text-yellow-200 focus:outline-none transition-colors"
-                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {darkMode ? (
-                  <Sun className="h-6 w-6" />
-                ) : (
-                  <Moon className="h-6 w-6" />
-                )}
-              </button> */}
               <div 
                 className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
                 onClick={() => navigate('/settings')}
@@ -325,12 +309,8 @@ useEffect(() => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-       
-        
-        {/* Dashboard Layout - Sidebar + Main Content */}
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Sidebar - Profile & Quick Actions */}
+          {/* Left Sidebar */}
           <div className="lg:w-80 space-y-6">
             {/* Profile Card */}
             <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
@@ -342,18 +322,14 @@ useEffect(() => {
                   <h3 className="text-lg font-medium text-white">
                     {profile?.first_name || 'Guest User'}
                   </h3>
-                  <p className="text-sm text-gray-400">
-                    Student
-                  </p>
+                  <p className="text-sm text-gray-400">Student</p>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
             <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <h3 className="font-medium mb-4 text-white">
-                Quick Actions
-              </h3>
+              <h3 className="font-medium mb-4 text-white">Quick Actions</h3>
               <div className="space-y-3">
                 <NavLink
                   to="/myapplications"
@@ -372,7 +348,10 @@ useEffect(() => {
                   <Clock className="h-5 w-5 text-purple-400" />
                   <span>Recent Jobs</span>
                 </button>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-700/50 text-gray-200">
+                <button 
+                  onClick={() => setActiveTab('saved')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-700/50 text-gray-200"
+                >
                   <Star className="h-5 w-5 text-purple-400" />
                   <span>Saved Jobs</span>
                 </button>
@@ -382,9 +361,7 @@ useEffect(() => {
             {/* Upcoming Deadlines */}
             <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-white">
-                  Upcoming Deadlines
-                </h3>
+                <h3 className="font-medium text-white">Upcoming Deadlines</h3>
                 <button 
                   onClick={fetchUpcomingDeadlines}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
@@ -400,13 +377,11 @@ useEffect(() => {
               ) : upcomingDeadlines.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingDeadlines.map((deadline, index) => {
-                    // Calculate days until deadline
                     const dueDate = new Date(deadline.due_date);
                     const today = new Date();
                     const timeDiff = dueDate - today;
                     const daysUntilDue = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
                     
-                    // Determine color based on urgency
                     const isUrgent = daysUntilDue <= 3;
                     const isWarning = daysUntilDue <= 7 && daysUntilDue > 3;
                     
@@ -438,9 +413,7 @@ useEffect(() => {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-2">
-                  No upcoming deadlines
-                </p>
+                <p className="text-sm text-gray-400 text-center py-2">No upcoming deadlines</p>
               )}
             </div>
 
@@ -457,7 +430,6 @@ useEffect(() => {
               </div>
               
               <div className="space-y-3">
-                {/* Interview Prep Card - Now functional */}
                 <Link 
                   to="/interview-prep"
                   className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
@@ -472,7 +444,6 @@ useEffect(() => {
                   <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
                 </Link>
 
-                {/* Resume Builder Card - Now a Link */}
                 <Link 
                   to="/resume-builder"
                   className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
@@ -487,7 +458,6 @@ useEffect(() => {
                   <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
                 </Link>
 
-                {/* Career Tips Card - Now a Link */}
                 <Link 
                   to="/career-tips"
                   className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
@@ -507,7 +477,7 @@ useEffect(() => {
 
           {/* Main Content Area */}
           <div className="flex-1 space-y-6">
-            {/* Welcome Card with Profile Completion */}
+            {/* Welcome Card */}
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-lg shadow-purple-900/30 p-6 text-white">
               <h2 className="text-2xl font-bold mb-2">
                 Welcome back, {profile?.first_name?.split(' ')[0] || 'there'}!
@@ -545,9 +515,7 @@ useEffect(() => {
             {/* Saved Searches */}
             <div className="rounded-2xl shadow-sm p-4 sm:p-6 bg-gray-800 border border-gray-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-white">
-                  Saved Searches
-                </h3>
+                <h3 className="text-lg font-medium text-white">Saved Searches</h3>
                 {savedSearches.length > 3 && (
                   <button 
                     onClick={() => {}}
@@ -568,10 +536,7 @@ useEffect(() => {
                     <div 
                       key={search.id} 
                       className="group relative inline-flex items-center px-3 py-1.5 pr-7 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 hover:bg-purple-900/50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        // Navigate to search results with the saved search query
-                        navigate(`/jobs?q=${encodeURIComponent(search.search_query)}`);
-                      }}
+                      onClick={() => navigate(`/jobs?q=${encodeURIComponent(search.search_query)}`)}
                     >
                       {search.search_query}
                       <button 
@@ -613,125 +578,116 @@ useEffect(() => {
                   Recent
                 </button>
                 <button 
-  onClick={() => {
-    setActiveTab('saved');
-    loadSavedJobs();
-  }}
-  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
-    activeTab === 'saved'
-      ? 'border-indigo-400 text-white' 
-      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
-  }`}
->
-  Saved
-</button>
-
-// Add this after your tab buttons to display the saved jobs
-{activeTab === 'saved' && (
-  <div className="p-6">
-    {isLoadingSavedJobs ? (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    ) : savedJobs.length > 0 ? (
-      <div className="space-y-4">
-        {savedJobs.map((job) => (
-          <div 
-            key={job.id} 
-            className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-purple-500/50 transition-colors"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-white">{job.job_title}</h4>
-                <p className="text-sm text-gray-400">{job.company_name}</p>
-                <p className="text-xs text-gray-500 mt-1">{job.location}</p>
-              </div>
-              <button
-                onClick={() => handleSaveJob(job.job_id)}
-                className="text-purple-400 hover:text-purple-300 transition-colors"
-                title={savedJobIds[job.job_id]?.isSaved ? "Remove from saved" : "Save job"}
-              >
-                {savedJobIds[job.job_id]?.isSaved ? (
-                  <BookmarkCheck className="h-5 w-5" />
-                ) : (
-                  <Bookmark className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            <div className="mt-2 flex justify-between items-center">
-              <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded-full">
-                {job.job_type || 'Full-time'}
-              </span>
-              <span className="text-xs text-gray-400">
-                {job.salary_min && job.salary_max ? 
-                  `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()} ${job.salary_currency || ''}`.trim() : 
-                  'Salary not specified'}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-12">
-        <BookOpenText className="h-12 w-12 mx-auto text-gray-600 mb-3" />
-        <p className="text-gray-400">No saved jobs yet</p>
-        <p className="text-sm text-gray-500 mt-1">
-          Save jobs to view them here
-        </p>
-      </div>
-    )}
-  </div>
-)}
+                  onClick={() => setActiveTab('saved')}
+                  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
+                    activeTab === 'saved'
+                      ? 'border-indigo-400 text-white' 
+                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
+                  }`}
+                >
+                  Saved
+                </button>
               </nav>
               
               <div className="p-6">
-                <p className="text-sm mb-4 text-gray-400">
-                  Find your next opportunity by browsing through our curated job listings.
-                </p>
-                
-                {/* Job Cards */}
-                <div className="space-y-4">
-                  {[
-                    {
-                      id: 1,
-                      title: 'Full Stack Developer',
-                      company: 'Safaricom PLC',
-                      salary: 'KSh 250,000 - 400,000/mo',
-                      postedDate: '2 days ago',
-                      description: 'Join our technology team to develop and maintain enterprise applications for East Africa\'s leading telco.',
-                      tags: ['React', 'Node.js', 'TypeScript']
-                    },
-                    {
-                      id: 2,
-                      title: 'UI/UX Designer Intern',
-                      company: 'Andela Kenya',
-                      salary: 'KSh 50,000 - 80,000/mo',
-                      postedDate: '1 day ago',
-                      description: 'Internship opportunity for creative designers to work on global projects and build their portfolio.',
-                      tags: ['Figma', 'UI/UX', 'Internship']
-                    },
-                    {
-                      id: 5,
-                      title: 'Data Science Intern',
-                      company: 'BasiGo',
-                      salary: 'KSh 40,000 - 70,000/mo',
-                      postedDate: '1 week ago',
-                      description: 'Internship for data enthusiasts to work on electric vehicle data analytics.',
-                      tags: ['Python', 'Data Analysis', 'Internship']
-                    }
-                  ].map((job) => (
-                    <JobCard
-                      key={job.id}
-                      title={job.title}
-                      company={job.company}
-                      salary={job.salary}
-                      postedDate={job.postedDate}
-                      description={job.description}
-                      tags={job.tags}
-                      onBookmark={() => console.log('Bookmarked:', job.id)}
-                    />
-                  ))}
-                </div>
+                {activeTab === 'saved' ? (
+                  isLoadingSavedJobs ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                    </div>
+                  ) : savedJobs.length > 0 ? (
+                    <div className="space-y-4">
+                      {savedJobs.map((job) => (
+                        <div 
+                          key={job.id} 
+                          className="p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-purple-500/50 transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium text-white">{job.job_title}</h4>
+                              <p className="text-sm text-gray-400">{job.company_name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{job.location}</p>
+                            </div>
+                            <button
+                              onClick={() => handleSaveJob(job.job_id)}
+                              className="text-purple-400 hover:text-purple-300 transition-colors"
+                              title="Remove from saved"
+                            >
+                              <BookmarkCheck className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="mt-2 flex justify-between items-center">
+                            <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded-full">
+                              {job.job_type || 'Full-time'}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {job.salary_min && job.salary_max ? 
+                                `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()} ${job.salary_currency || ''}`.trim() : 
+                                'Salary not specified'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <BookOpenText className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+                      <p className="text-gray-400">No saved jobs yet</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Save jobs to view them here
+                      </p>
+                    </div>
+                  )
+                ) : (
+                  <>
+                    <p className="text-sm mb-4 text-gray-400">
+                      Find your next opportunity by browsing through our curated job listings.
+                    </p>
+                    
+                    <div className="space-y-4">
+                      {[
+                        {
+                          id: 1,
+                          title: 'Full Stack Developer',
+                          company: 'Safaricom PLC',
+                          salary: 'KSh 250,000 - 400,000/mo',
+                          postedDate: '2 days ago',
+                          description: 'Join our technology team to develop and maintain enterprise applications for East Africa\'s leading telco.',
+                          tags: ['React', 'Node.js', 'TypeScript']
+                        },
+                        {
+                          id: 2,
+                          title: 'UI/UX Designer Intern',
+                          company: 'Andela Kenya',
+                          salary: 'KSh 50,000 - 80,000/mo',
+                          postedDate: '1 day ago',
+                          description: 'Internship opportunity for creative designers to work on global projects and build their portfolio.',
+                          tags: ['Figma', 'UI/UX', 'Internship']
+                        },
+                        {
+                          id: 5,
+                          title: 'Data Science Intern',
+                          company: 'BasiGo',
+                          salary: 'KSh 40,000 - 70,000/mo',
+                          postedDate: '1 week ago',
+                          description: 'Internship for data enthusiasts to work on electric vehicle data analytics.',
+                          tags: ['Python', 'Data Analysis', 'Internship']
+                        }
+                      ].map((job) => (
+                        <JobCard
+                          key={job.id}
+                          title={job.title}
+                          company={job.company}
+                          salary={job.salary}
+                          postedDate={job.postedDate}
+                          description={job.description}
+                          tags={job.tags}
+                          onBookmark={() => console.log('Bookmarked:', job.id)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

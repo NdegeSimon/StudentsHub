@@ -8,9 +8,6 @@ import os
 # Import extensions from extensions.py
 from extensions import db, jwt, migrate
 
-# Import blueprints
-from routes.saved_jobs_routes import saved_jobs_bp
-
 def create_app():
     app = Flask(__name__)
     load_dotenv()
@@ -47,26 +44,31 @@ def create_app():
         }
     })
 
-    # Import and register blueprints
-    from routes.search_routes import search_bp
-    app.register_blueprint(search_bp, url_prefix='/')
-    
-    # Test route
-    @app.route('/api/test', methods=['GET'])
-    def test():
-        return jsonify({"status": "success", "message": "Backend is working!"})
-
-    # Register blueprints (safe because imported after models)
+    # Register blueprints
     try:
+        # Import and register auth routes
         from routes.routes import bp as auth_bp
         app.register_blueprint(auth_bp, url_prefix='/api')
         print("✅ Auth blueprint registered")
         
-        # Register saved jobs blueprint
+        # Import and register search routes
+        from routes.search_routes import search_bp
+        app.register_blueprint(search_bp, url_prefix='/')
+        print("✅ Search blueprint registered")
+        
+        # Import and register saved jobs routes
+        from routes.saved_jobs_routes import saved_jobs_bp
         app.register_blueprint(saved_jobs_bp, url_prefix='/')
         print("✅ Saved Jobs blueprint registered")
+        
+        # Test route
+        @app.route('/api/test', methods=['GET'])
+        def test():
+            return jsonify({"status": "success", "message": "Backend is working!"})
+            
     except Exception as e:
         print(f"❌ Error registering blueprints: {e}")
+        raise  # Re-raise the exception to see the full traceback
 
     # Error handlers
     @app.errorhandler(404)
