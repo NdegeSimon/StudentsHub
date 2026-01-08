@@ -21,8 +21,9 @@ import {
   UserCheck,
   FileQuestion,
   ChevronRight,
-  
+  X as XIcon,
 } from 'lucide-react';
+import { getSavedSearches, deleteSavedSearch } from '../services/searchService';
 
 import { NavLink } from "react-router-dom";
 import JobCard from '../components/JobCard';
@@ -65,6 +66,8 @@ const Dashboard = () => {
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('recommended');
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [loadingSearches, setLoadingSearches] = useState(true);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [dashboardData, setDashboardData] = useState({
     recommendedJobs: [],
@@ -92,6 +95,30 @@ const Dashboard = () => {
     }
   };
 
+  // Fetch saved searches
+  const fetchSavedSearches = async () => {
+    try {
+      setLoadingSearches(true);
+      const searches = await getSavedSearches();
+      setSavedSearches(searches);
+    } catch (error) {
+      console.error('Error fetching saved searches:', error);
+    } finally {
+      setLoadingSearches(false);
+    }
+  };
+
+  // Handle delete saved search
+  const handleDeleteSearch = async (searchId, e) => {
+    e.stopPropagation();
+    try {
+      await deleteSavedSearch(searchId);
+      setSavedSearches(prev => prev.filter(search => search.id !== searchId));
+    } catch (error) {
+      console.error('Error deleting saved search:', error);
+    }
+  };
+
   // Fetch dashboard data when component mounts or when profile changes
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -103,7 +130,7 @@ const Dashboard = () => {
         // Calculate profile completion first
         const profileCompletion = calculateProfileCompletion(profile);
         
-        // Fetch jobs, applications, and upcoming deadlines in parallel
+        // Fetch jobs, applications, and saved searches in parallel
         const [jobsResponse, appsResponse] = await Promise.allSettled([
           jobAPI.getAllJobs({ limit: 4 }),
           profile?.id ? applicationAPI.getMyApplications() : Promise.resolve({ data: [] })
@@ -141,6 +168,8 @@ const Dashboard = () => {
           try {
             const userProfile = await userAPI.getProfile();
             updateProfile(userProfile.data);
+            // Fetch saved searches after profile is loaded
+            await fetchSavedSearches();
           } catch (error) {
             console.error('Error updating user profile:', error);
           }
@@ -482,21 +511,50 @@ const Dashboard = () => {
             </div>
 
             {/* Saved Searches */}
-            <div className="rounded-2xl shadow-sm p-6 bg-gray-800 border border-gray-700">
-              <h3 className="text-lg font-medium mb-4 text-white">
-                Saved Searches
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300">
-                  Web Development
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300">
-                  Data Science
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300">
-                  UI/UX Design
-                </span>
+            <div className="rounded-2xl shadow-sm p-4 sm:p-6 bg-gray-800 border border-gray-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-white">
+                  Saved Searches
+                </h3>
+                {savedSearches.length > 3 && (
+                  <button 
+                    onClick={() => {}}
+                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    View All
+                  </button>
+                )}
               </div>
+              
+              {loadingSearches ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
+                </div>
+              ) : savedSearches.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {savedSearches.slice(0, 5).map((search) => (
+                    <div 
+                      key={search.id} 
+                      className="group relative inline-flex items-center px-3 py-1.5 pr-7 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 hover:bg-purple-900/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        // Navigate to search results with the saved search query
+                        navigate(`/jobs?q=${encodeURIComponent(search.search_query)}`);
+                      }}
+                    >
+                      {search.search_query}
+                      <button 
+                        className="absolute right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-purple-800/50"
+                        onClick={(e) => handleDeleteSearch(search.id, e)}
+                        title="Remove saved search"
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Your saved searches will appear here</p>
+              )}
             </div>
 
             {/* Job Listings */}

@@ -459,6 +459,34 @@ class CompanyReview(db.Model):
         }
 
 
+class SavedSearch(db.Model):
+    __tablename__ = 'saved_searches'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    search_query = db.Column(db.String(255), nullable=False)
+    filters = db.Column(db.JSON)  # Store additional filters as JSON
+    search_count = db.Column(db.Integer, default=1)
+    last_searched = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='saved_searches')
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'search_query', name='unique_user_search'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'search_query': self.search_query,
+            'filters': self.filters or {},
+            'search_count': self.search_count,
+            'last_searched': self.last_searched.isoformat() if self.last_searched else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+
 class JobAnalytics(db.Model):
     __tablename__ = 'job_analytics'
     
@@ -469,11 +497,9 @@ class JobAnalytics(db.Model):
     applications = db.Column(db.Integer, default=0)
     clicks = db.Column(db.Integer, default=0)
     unique_visitors = db.Column(db.Integer, default=0)
-
-    # Relationships
+    
     job = db.relationship('Job', backref='analytics')
-
-    # Ensure one record per job per day
+    
     __table_args__ = (
         db.UniqueConstraint('job_id', 'date', name='unique_job_analytics_per_day'),
     )

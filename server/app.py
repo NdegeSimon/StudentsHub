@@ -44,6 +44,10 @@ def create_app():
         }
     })
 
+    # Import and register blueprints
+    from routes.search_routes import search_bp
+    app.register_blueprint(search_bp, url_prefix='/')
+    
     # Test route
     @app.route('/api/test', methods=['GET'])
     def test():

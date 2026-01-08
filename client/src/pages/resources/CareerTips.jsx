@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Lightbulb, BookOpen, TrendingUp, Users, FileText, Target, Award, Briefcase, Search, Filter, ChevronRight, Clock, Star, ThumbsUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Lightbulb, BookOpen, TrendingUp, Users, FileText, Target, Award, Briefcase, Search, Filter, ChevronRight, Clock, Star, ThumbsUp, ArrowLeft } from 'lucide-react';
 
 export default function CareerTipsPage() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -314,7 +315,14 @@ export default function CareerTipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-8">
+      <Link 
+        to="/resources" 
+        className="inline-flex items-center text-sm text-blue-400 hover:text-blue-300 mb-6 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4 mr-1" />
+        Back to Resources
+      </Link>
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-purple-900 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-6 py-12">

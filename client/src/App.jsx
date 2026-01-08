@@ -21,6 +21,7 @@ import MessagingSystem from "./pages/messages.jsx";
 import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
 import Resources from "./pages/resources/Resources.jsx";
 import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
+import CareerTips from "./pages/resources/CareerTips.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // Components
@@ -69,8 +70,8 @@ const App = () => {
         <ThemeProvider>
           <ProfileProvider>
             <ErrorBoundary>
-              <div className="min-h-screen bg-gray-900 text-gray-100">
-                <main className="container mx-auto px-4 py-8">
+              <div className="min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden">
+                <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[100vw]">
                   <Routes>
 
                     {/* Redirect root */}
@@ -157,6 +158,15 @@ const App = () => {
                       element={
                         <ProtectedRoute>
                           <InterviewPrep />
+                        </ProtectedRoute>
+                      } 
+                    />
+
+                    <Route 
+                      path="/career-tips" 
+                      element={
+                        <ProtectedRoute>
+                          <CareerTips />
                         </ProtectedRoute>
                       } 
                     />
