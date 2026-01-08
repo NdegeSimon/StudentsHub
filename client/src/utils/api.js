@@ -33,7 +33,12 @@ export const authAPI = {
 // In client/src/utils/api.js
 export const userAPI = {
   getProfile: () => api.get('/auth/me'),  // Changed from '/auth/profile' to '/auth/me'
-  updateProfile: (data) => api.put('/auth/profile', data),
+  updateProfile: (data) => api.put('/profile', data, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  }),
 };
 
 export const courseAPI = {
