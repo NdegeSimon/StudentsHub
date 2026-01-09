@@ -6,6 +6,11 @@ import { toast } from 'react-toastify';
 
 export default function ProfileCard({ isDashboard = false }) {
   const { profile: contextProfile, updateProfile } = useProfile();
+  
+  // Log when context profile changes
+  useEffect(() => {
+    console.log('Context profile updated:', contextProfile);
+  }, [contextProfile]);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,17 +28,30 @@ export default function ProfileCard({ isDashboard = false }) {
   const [formData, setFormData] = useState({});
   const [newSkill, setNewSkill] = useState('');
 
-  // Fetch user profile data
+  // Fetch user profile data - CONNECTED TO BACKEND
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
+        // Call backend API
         const response = await userAPI.getProfile();
         const userData = response.data;
         
-        setProfile(userData);
+        // Set profile with backend data
+        setProfile({
+          name: userData.name || userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+          email: userData.email || '',
+          phone: userData.phone || '',
+          bio: userData.bio || '',
+          avatar: userData.avatar || userData.profile_picture || null,
+          skills: userData.skills || [],
+          experience: userData.experience || [],
+          education: userData.education || []
+        });
+        
+        // Set form data
         setFormData({
-          name: userData.name || '',
+          name: userData.name || userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
           email: userData.email || '',
           phone: userData.phone || '',
           bio: userData.bio || '',
@@ -68,6 +86,7 @@ export default function ProfileCard({ isDashboard = false }) {
       formData.append('file', file);
       formData.append('type', 'avatar');
       
+      // Call backend upload API
       const response = await uploadAPI.uploadFile(formData);
       const avatarUrl = response.data.url;
       
@@ -109,18 +128,41 @@ export default function ProfileCard({ isDashboard = false }) {
     e.preventDefault();
     try {
       setSaving(true);
-      await userAPI.updateProfile(formData);
+      console.log('Submitting form data:', formData);
+      
+      // Send form data to backend
+      const response = await userAPI.updateProfile({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        bio: formData.bio,
+        skills: formData.skills
+      });
+      
+      console.log('Update response:', response.data);
       
       // Update local state and context
-      const updatedProfile = { ...profile, ...formData };
+      const updatedProfile = { 
+        ...profile, 
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        bio: formData.bio,
+        skills: formData.skills 
+      };
+      
+      console.log('Updating local profile state:', updatedProfile);
       setProfile(updatedProfile);
+      
+      console.log('Calling updateProfile with:', updatedProfile);
       updateProfile(updatedProfile);
       
       setEditing(false);
       toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      const errorMessage = error.response?.data?.message || 'Failed to update profile';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
