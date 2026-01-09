@@ -1,79 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, User, Edit, Save, X, Loader2 } from 'lucide-react';
+import { Camera, User, Edit, Save, X, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
 import { userAPI, uploadAPI } from "../utils/api";
 import { toast } from 'react-toastify';
 
 export default function ProfileCard({ isDashboard = false }) {
   const { profile: contextProfile, updateProfile } = useProfile();
-  
-  // Log when context profile changes
-  useEffect(() => {
-    console.log('Context profile updated:', contextProfile);
-  }, [contextProfile]);
   const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState({
+  const [loading, setLoading] = useState(true);
+  
+  // Form states
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     bio: '',
-    avatar: null,
     skills: [],
     experience: [],
     education: []
   });
   
-  const [formData, setFormData] = useState({});
   const [newSkill, setNewSkill] = useState('');
+  const [newExperience, setNewExperience] = useState({
+    title: '',
+    company: '',
+    startDate: '',
+    endDate: '',
+    current: false,
+    description: ''
+  });
+  
+  const [newEducation, setNewEducation] = useState({
+    school: '',
+    degree: '',
+    field: '',
+    startDate: '',
+    endDate: '',
+    current: false,
+    description: ''
+  });
 
-  // Fetch user profile data - CONNECTED TO BACKEND
+  // Initialize form data when contextProfile changes
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        // Call backend API
-        const response = await userAPI.getProfile();
-        const userData = response.data;
-        
-        // Set profile with backend data
-        setProfile({
-          name: userData.name || userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-          email: userData.email || '',
-          phone: userData.phone || '',
-          bio: userData.bio || '',
-          avatar: userData.avatar || userData.profile_picture || null,
-          skills: userData.skills || [],
-          experience: userData.experience || [],
-          education: userData.education || []
-        });
-        
-        // Set form data
-        setFormData({
-          name: userData.name || userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-          email: userData.email || '',
-          phone: userData.phone || '',
-          bio: userData.bio || '',
-          skills: userData.skills || []
-        });
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        toast.error('Failed to load profile data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    if (contextProfile) {
+      setFormData({
+        name: contextProfile.name || '',
+        email: contextProfile.email || '',
+        phone: contextProfile.phone || '',
+        bio: contextProfile.bio || '',
+        skills: contextProfile.skills || [],
+        experience: contextProfile.experience?.map(exp => ({
+          ...exp,
+          id: exp.id || Date.now() + Math.random()
+        })) || [],
+        education: contextProfile.education?.map(edu => ({
+          ...edu,
+          id: edu.id || Date.now() + Math.random()
+        })) || []
+      });
+      setLoading(false);
+    }
   }, [contextProfile]);
 
+  // Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageUpload = async (e) => {
@@ -86,16 +79,10 @@ export default function ProfileCard({ isDashboard = false }) {
       formData.append('file', file);
       formData.append('type', 'avatar');
       
-      // Call backend upload API
       const response = await uploadAPI.uploadFile(formData);
       const avatarUrl = response.data.url;
-      
-      // Update profile with new avatar
-      const updatedProfile = { ...profile, avatar: avatarUrl };
       await userAPI.updateProfile({ avatar: avatarUrl });
-      
-      setProfile(updatedProfile);
-      updateProfile(updatedProfile);
+      updateProfile({ ...contextProfile, avatar: avatarUrl });
       toast.success('Profile picture updated successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -105,64 +92,138 @@ export default function ProfileCard({ isDashboard = false }) {
     }
   };
 
-  const handleAddSkill = () => {
+  // Skills
+  const addSkill = () => {
     if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
-      const updatedSkills = [...formData.skills, newSkill.trim()];
       setFormData(prev => ({
         ...prev,
-        skills: updatedSkills
+        skills: [...prev.skills, newSkill.trim()]
       }));
       setNewSkill('');
     }
   };
 
   const removeSkill = (skillToRemove) => {
-    const updatedSkills = formData.skills.filter(skill => skill !== skillToRemove);
     setFormData(prev => ({
       ...prev,
-      skills: updatedSkills
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
     }));
   };
 
+  // Experience
+  const handleExperienceChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewExperience(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const addExperience = () => {
+    if (newExperience.title && newExperience.company) {
+      const updatedExperience = [...formData.experience, { 
+        ...newExperience, 
+        id: Date.now() + Math.random() 
+      }];
+      
+      setFormData(prev => ({
+        ...prev,
+        experience: updatedExperience
+      }));
+      
+      setNewExperience({
+        title: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        current: false,
+        description: ''
+      });
+    }
+  };
+
+  const removeExperience = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      experience: prev.experience.filter(exp => exp.id !== id)
+    }));
+  };
+
+  // Education
+  const handleEducationChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewEducation(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const addEducation = () => {
+    if (newEducation.school && newEducation.degree) {
+      const updatedEducation = [...formData.education, { 
+        ...newEducation, 
+        id: Date.now() + Math.random() 
+      }];
+      
+      setFormData(prev => ({
+        ...prev,
+        education: updatedEducation
+      }));
+      
+      setNewEducation({
+        school: '',
+        degree: '',
+        field: '',
+        startDate: '',
+        endDate: '',
+        current: false,
+        description: ''
+      });
+    }
+  };
+
+  const removeEducation = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.filter(edu => edu.id !== id)
+    }));
+  };
+
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSaving(true);
-      console.log('Submitting form data:', formData);
       
-      // Send form data to backend
-      const response = await userAPI.updateProfile({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        bio: formData.bio,
-        skills: formData.skills
-      });
-      
-      console.log('Update response:', response.data);
-      
-      // Update local state and context
-      const updatedProfile = { 
-        ...profile, 
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        bio: formData.bio,
-        skills: formData.skills 
+      // Prepare data for submission
+      const dataToSubmit = {
+        ...formData,
+        // Remove temporary IDs before sending to server
+        experience: formData.experience.map(({ id, ...rest }) => rest),
+        education: formData.education.map(({ id, ...rest }) => rest)
       };
-      
-      console.log('Updating local profile state:', updatedProfile);
-      setProfile(updatedProfile);
-      
-      console.log('Calling updateProfile with:', updatedProfile);
+
+      const response = await userAPI.updateProfile(dataToSubmit);
+      const updatedProfile = {
+        ...contextProfile,
+        ...response.data,
+        // Ensure we have IDs for local state management
+        experience: response.data.experience?.map(exp => ({
+          ...exp,
+          id: exp.id || Date.now() + Math.random()
+        })) || [],
+        education: response.data.education?.map(edu => ({
+          ...edu,
+          id: edu.id || Date.now() + Math.random()
+        })) || []
+      };
+
       updateProfile(updatedProfile);
-      
       setEditing(false);
       toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update profile';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -170,62 +231,47 @@ export default function ProfileCard({ isDashboard = false }) {
 
   if (loading) {
     return (
-      <div className="bg-blue-950 min-h-screen w-full flex items-center justify-center">
-        <div className="bg-blue-900 p-8 rounded-2xl border border-blue-800">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
       </div>
     );
   }
 
+  // Dashboard View
   if (isDashboard) {
     return (
-      <div className="bg-blue-950 w-full min-h-screen">
-        <div className="flex flex-col items-center text-center p-6">
-          <div className="relative group">
-            <div className="relative w-28 h-28 mb-4">
-              {profile.avatar ? (
+      <div className="bg-blue-900 rounded-xl p-6 shadow-lg">
+        <div className="flex flex-col items-center text-center">
+          <div className="relative group mb-4">
+            <div className="w-24 h-24 rounded-full bg-blue-800 flex items-center justify-center overflow-hidden">
+              {contextProfile.avatar ? (
                 <img 
-                  src={profile.avatar} 
-                  alt={profile.name || 'Profile'} 
-                  className="w-full h-full rounded-full object-cover ring-2 ring-blue-800 shadow-xl"
+                  src={contextProfile.avatar} 
+                  alt={contextProfile.name} 
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-blue-900 flex items-center justify-center border-2 border-blue-800">
-                  <User className="h-14 w-14 text-blue-300" />
-                </div>
+                <User className="h-12 w-12 text-blue-300" />
               )}
-              <label 
-                className="absolute -bottom-2 -right-2 bg-blue-700 text-blue-100 p-2.5 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg border border-blue-600"
-                title="Change photo"
-              >
-                <Camera className="h-5 w-5" />
+              <label className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <Camera className="h-6 w-6 text-white" />
                 <input 
                   type="file" 
                   className="hidden" 
                   accept="image/*"
                   onChange={handleImageUpload}
-                  disabled={saving}
                 />
               </label>
-              {saving && (
-                <div className="absolute inset-0 bg-blue-950/90 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Loader2 className="h-7 w-7 animate-spin text-blue-100" />
-                </div>
-              )}
             </div>
           </div>
-          <h3 className="text-xl font-semibold text-blue-100">
-            {profile.name || 'No name provided'}
-          </h3>
-          {profile.title && (
-            <p className="text-sm text-blue-300 mt-1">
-              {profile.title}
-            </p>
-          )}
-          {profile.bio && (
-            <p className="text-sm text-blue-200 mt-2 max-w-md">
-              {profile.bio.length > 50 ? `${profile.bio.substring(0, 50)}...` : profile.bio}
+          <h2 className="text-xl font-bold text-white">{contextProfile.name}</h2>
+          <p className="text-blue-200">{contextProfile.title || 'Member'}</p>
+          
+          {contextProfile.bio && (
+            <p className="mt-4 text-blue-100 text-sm">
+              {contextProfile.bio.length > 100 
+                ? `${contextProfile.bio.substring(0, 100)}...` 
+                : contextProfile.bio}
             </p>
           )}
         </div>
@@ -233,68 +279,62 @@ export default function ProfileCard({ isDashboard = false }) {
     );
   }
 
+  // Main Profile View
   return (
-    <div className="bg-blue-950 min-h-screen w-full text-blue-100">
+    <div className="bg-blue-950 text-blue-100 rounded-xl overflow-hidden">
       {editing ? (
-        <form onSubmit={handleSubmit} className="w-full min-h-screen">
-          <div className="p-6 w-full">
-            <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto">
-              <div>
-                <h2 className="text-2xl font-bold text-blue-100">Edit Profile</h2>
-                <p className="text-blue-300">Update your personal information</p>
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setEditing(false)}
-                  className="px-4 py-2.5 text-sm font-medium text-blue-100 bg-blue-900 rounded-lg hover:bg-blue-800 transition-all flex items-center border border-blue-800"
-                  disabled={saving}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 text-sm font-medium text-blue-100 bg-blue-700 rounded-lg hover:bg-blue-600 transition-all flex items-center shadow-lg border border-blue-600"
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </button>
-              </div>
+        // Edit Form
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Edit Profile</h2>
+              <p className="text-blue-300">Update your personal information</p>
             </div>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 bg-blue-900 hover:bg-blue-800 rounded-lg flex items-center"
+                disabled={saving}
+              >
+                <X className="h-4 w-4 mr-2" /> Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg flex items-center"
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-              <div className="lg:col-span-1">
-                <div className="flex flex-col items-center bg-blue-900 p-6 rounded-xl border border-blue-800">
-                  <div className="relative group mb-6">
-                    <div className="w-36 h-36 rounded-full overflow-hidden border-2 border-blue-700 shadow-2xl">
-                      {profile.avatar ? (
+          {/* Personal Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="md:col-span-1">
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <div className="flex flex-col items-center">
+                  <div className="relative group mb-4">
+                    <div className="w-32 h-32 rounded-full bg-blue-800 flex items-center justify-center overflow-hidden">
+                      {contextProfile.avatar ? (
                         <img 
-                          src={profile.avatar} 
-                          alt={formData.name || 'Profile'} 
+                          src={contextProfile.avatar} 
+                          alt={formData.name} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-blue-800 flex items-center justify-center">
-                          <User className="h-20 w-20 text-blue-300" />
-                        </div>
+                        <User className="h-16 w-16 text-blue-300" />
                       )}
-                      <label 
-                        className="absolute inset-0 bg-blue-900/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-full cursor-pointer backdrop-blur-sm"
-                        title="Change photo"
-                      >
-                        <Camera className="h-10 w-10 text-blue-100 mb-2" />
-                        <span className="text-sm text-blue-100">Change Photo</span>
+                      <label className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <Camera className="h-6 w-6 text-white" />
                         <input 
                           type="file" 
                           className="hidden" 
@@ -305,119 +345,338 @@ export default function ProfileCard({ isDashboard = false }) {
                       </label>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-blue-100 text-center mb-1">
-                    {formData.name || 'No name provided'}
-                  </h3>
-                  <p className="text-sm text-blue-300">
-                    {profile.email}
-                  </p>
+                  <h3 className="text-lg font-semibold">{formData.name}</h3>
+                  <p className="text-blue-300 text-sm">{formData.email}</p>
                 </div>
               </div>
-              
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
-                  <h3 className="text-lg font-semibold text-blue-100 mb-6 pb-3 border-b border-blue-800">Personal Information</h3>
-                  
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-medium text-blue-300 mb-2">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg bg-blue-950 border border-blue-800 text-blue-100 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-sm font-medium text-blue-300 mb-2">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg bg-blue-950/50 border border-blue-800 text-blue-300 cursor-not-allowed"
-                          disabled
-                        />
-                        <p className="mt-2 text-xs text-blue-400">
-                          Contact support to change email
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-blue-300 mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone || ''}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg bg-blue-950 border border-blue-800 text-blue-100 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-                          placeholder="+1 (555) 123-4567"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-blue-300 mb-2">
-                        Bio
-                      </label>
-                      <textarea
-                        name="bio"
-                        value={formData.bio || ''}
-                        onChange={handleInputChange}
-                        rows="4"
-                        className="w-full px-4 py-3 rounded-lg bg-blue-950 border border-blue-800 text-blue-100 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all resize-none"
-                        placeholder="Tell us about yourself..."
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-blue-300 mb-2">
-                        Skills
-                      </label>
-                      <div className="flex gap-2 mb-3">
-                        <input
-                          type="text"
-                          value={newSkill}
-                          onChange={(e) => setNewSkill(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                          className="flex-1 px-4 py-3 rounded-lg bg-blue-950 border border-blue-800 text-blue-100 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-                          placeholder="Add a skill and press Enter"
-                        />
+            </div>
+
+            <div className="md:col-span-2 space-y-6">
+              {/* Basic Info */}
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-300 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-blue-950 border border-blue-800 rounded-lg"
+                      disabled={saving}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-300 mb-1">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-blue-950 border border-blue-800 rounded-lg"
+                      disabled={saving}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-300 mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-blue-950 border border-blue-800 rounded-lg"
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-blue-300 mb-1">Bio</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className="w-full px-4 py-2 bg-blue-950 border border-blue-800 rounded-lg"
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <h3 className="text-lg font-semibold mb-4">Skills</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {formData.skills.map((skill, index) => (
+                    <span key={index} className="px-3 py-1 bg-blue-800 text-blue-100 rounded-full text-sm flex items-center">
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(skill)}
+                        className="ml-2 text-blue-300 hover:text-white"
+                        disabled={saving}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                    placeholder="Add a skill"
+                    className="flex-1 px-4 py-2 bg-blue-950 border border-blue-800 rounded-l-lg"
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={addSkill}
+                    disabled={!newSkill.trim() || saving}
+                    className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-r-lg disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Experience Section */}
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <h3 className="text-lg font-semibold mb-4">Experience</h3>
+                <div className="space-y-4">
+                  {formData.experience.map((exp) => (
+                    <div key={exp.id} className="bg-blue-950 p-4 rounded-lg border border-blue-800">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{exp.title}</h4>
+                          <p className="text-blue-300">{exp.company}</p>
+                          <p className="text-sm text-blue-400">
+                            {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'Present'}
+                          </p>
+                          {exp.description && (
+                            <p className="mt-2 text-blue-200 text-sm">{exp.description}</p>
+                          )}
+                        </div>
                         <button
                           type="button"
-                          onClick={handleAddSkill}
-                          className="px-5 py-3 bg-blue-700 text-blue-100 rounded-lg hover:bg-blue-600 transition-all font-medium shadow-lg border border-blue-600"
+                          onClick={() => removeExperience(exp.id)}
+                          className="text-red-400 hover:text-red-300 p-1"
+                          disabled={saving}
                         >
-                          Add
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.skills?.map((skill, index) => (
-                          <span 
-                            key={index} 
-                            className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-800 text-blue-200 border border-blue-700"
-                          >
-                            {skill}
-                            <button 
-                              type="button"
-                              onClick={() => removeSkill(skill)}
-                              className="ml-3 inline-flex items-center justify-center h-5 w-5 rounded-full text-blue-300 hover:bg-blue-700 hover:text-blue-200 transition-all"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                        ))}
+                    </div>
+                  ))}
+
+                  {/* Add Experience Form */}
+                  <div className="mt-6 p-4 bg-blue-950 rounded-lg border border-dashed border-blue-800">
+                    <h4 className="font-medium mb-3">Add New Experience</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Job Title*</label>
+                        <input
+                          type="text"
+                          name="title"
+                          value={newExperience.title}
+                          onChange={handleExperienceChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
                       </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Company*</label>
+                        <input
+                          type="text"
+                          name="company"
+                          value={newExperience.company}
+                          onChange={handleExperienceChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          name="startDate"
+                          value={newExperience.startDate}
+                          onChange={handleExperienceChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">End Date</label>
+                        <input
+                          type="date"
+                          name="endDate"
+                          value={newExperience.endDate}
+                          onChange={handleExperienceChange}
+                          disabled={newExperience.current || saving}
+                          className={`w-full px-3 py-2 bg-blue-900 border ${newExperience.current ? 'border-blue-800' : 'border-blue-700'} rounded-lg`}
+                        />
+                        <label className="flex items-center mt-2 text-sm text-blue-300">
+                          <input
+                            type="checkbox"
+                            name="current"
+                            checked={newExperience.current}
+                            onChange={handleExperienceChange}
+                            className="mr-2"
+                            disabled={saving}
+                          />
+                          I currently work here
+                        </label>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm text-blue-300 mb-1">Description</label>
+                      <textarea
+                        name="description"
+                        value={newExperience.description}
+                        onChange={handleExperienceChange}
+                        rows="2"
+                        className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                        disabled={saving}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={addExperience}
+                        disabled={!newExperience.title || !newExperience.company || saving}
+                        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm disabled:opacity-50"
+                      >
+                        Add Experience
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Education Section - Similar to Experience */}
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <h3 className="text-lg font-semibold mb-4">Education</h3>
+                <div className="space-y-4">
+                  {formData.education.map((edu) => (
+                    <div key={edu.id} className="bg-blue-950 p-4 rounded-lg border border-blue-800">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{edu.degree}</h4>
+                          <p className="text-blue-300">{edu.school}</p>
+                          <p className="text-blue-300 text-sm">{edu.field}</p>
+                          <p className="text-sm text-blue-400">
+                            {edu.startDate} - {edu.current ? 'Present' : edu.endDate || 'Present'}
+                          </p>
+                          {edu.description && (
+                            <p className="mt-2 text-blue-200 text-sm">{edu.description}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeEducation(edu.id)}
+                          className="text-red-400 hover:text-red-300 p-1"
+                          disabled={saving}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add Education Form */}
+                  <div className="mt-6 p-4 bg-blue-950 rounded-lg border border-dashed border-blue-800">
+                    <h4 className="font-medium mb-3">Add Education</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">School*</label>
+                        <input
+                          type="text"
+                          name="school"
+                          value={newEducation.school}
+                          onChange={handleEducationChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Degree*</label>
+                        <input
+                          type="text"
+                          name="degree"
+                          value={newEducation.degree}
+                          onChange={handleEducationChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Field of Study</label>
+                        <input
+                          type="text"
+                          name="field"
+                          value={newEducation.field}
+                          onChange={handleEducationChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          name="startDate"
+                          value={newEducation.startDate}
+                          onChange={handleEducationChange}
+                          className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-blue-300 mb-1">End Date</label>
+                        <input
+                          type="date"
+                          name="endDate"
+                          value={newEducation.endDate}
+                          onChange={handleEducationChange}
+                          disabled={newEducation.current || saving}
+                          className={`w-full px-3 py-2 bg-blue-900 border ${newEducation.current ? 'border-blue-800' : 'border-blue-700'} rounded-lg`}
+                        />
+                        <label className="flex items-center mt-2 text-sm text-blue-300">
+                          <input
+                            type="checkbox"
+                            name="current"
+                            checked={newEducation.current}
+                            onChange={handleEducationChange}
+                            className="mr-2"
+                            disabled={saving}
+                          />
+                          I currently study here
+                        </label>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm text-blue-300 mb-1">Description</label>
+                      <textarea
+                        name="description"
+                        value={newEducation.description}
+                        onChange={handleEducationChange}
+                        rows="2"
+                        className="w-full px-3 py-2 bg-blue-900 border border-blue-800 rounded-lg"
+                        disabled={saving}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={addEducation}
+                        disabled={!newEducation.school || !newEducation.degree || saving}
+                        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm disabled:opacity-50"
+                      >
+                        Add Education
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -426,302 +685,111 @@ export default function ProfileCard({ isDashboard = false }) {
           </div>
         </form>
       ) : (
-        <div className="p-6 w-full">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-blue-100">Profile</h2>
-                <p className="text-blue-300 mt-2">Manage your profile information</p>
-              </div>
-              <button
-                onClick={() => setEditing(true)}
-                className="px-5 py-3 text-sm font-medium rounded-lg text-blue-100 bg-blue-700 hover:bg-blue-600 transition-all flex items-center shadow-lg border border-blue-600"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </button>
+        // View Mode
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">{contextProfile.name}</h2>
+              <p className="text-blue-300">{contextProfile.title || 'Member'}</p>
             </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-1">
-                <div className="flex flex-col items-center bg-blue-900 p-8 rounded-xl border border-blue-800">
-                  <div className="relative mb-6">
-                    <div className="w-40 h-40 rounded-full overflow-hidden border-2 border-blue-700 shadow-2xl">
-                      {profile.avatar ? (
+            <button
+              onClick={() => setEditing(true)}
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg flex items-center"
+            >
+              <Edit className="h-4 w-4 mr-2" /> Edit Profile
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Profile Sidebar */}
+            <div className="md:col-span-1">
+              <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                <div className="flex flex-col items-center">
+                  <div className="relative group mb-4">
+                    <div className="w-32 h-32 rounded-full bg-blue-800 flex items-center justify-center overflow-hidden">
+                      {contextProfile.avatar ? (
                         <img 
-                          src={profile.avatar} 
-                          alt={profile.name || 'Profile'} 
+                          src={contextProfile.avatar} 
+                          alt={contextProfile.name} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-blue-800 flex items-center justify-center">
-                          <User className="h-24 w-24 text-blue-300" />
-                        </div>
+                        <User className="h-16 w-16 text-blue-300" />
                       )}
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-blue-100 text-center">
-                    {profile.name || 'No name provided'}
-                  </h3>
-                  {profile.title && (
-                    <p className="text-lg text-blue-300 mt-2">
-                      {profile.title}
-                    </p>
+                  <h3 className="text-xl font-semibold">{contextProfile.name}</h3>
+                  <p className="text-blue-300">{contextProfile.email}</p>
+                  <p className="text-blue-300">{contextProfile.phone}</p>
+                  
+                  {contextProfile.skills && contextProfile.skills.length > 0 && (
+                    <div className="mt-4 w-full">
+                      <h4 className="font-medium text-blue-100 mb-2">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {contextProfile.skills.map((skill, index) => (
+                          <span key={index} className="px-3 py-1 bg-blue-800 text-blue-100 rounded-full text-sm">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                  
-                  <div className="mt-8 w-full">
-                    <div className="space-y-4">
-                      <div className="flex items-center p-3 rounded-lg bg-blue-950 border border-blue-800">
-                        <div className="flex-shrink-0 mr-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center">
-                            <svg className="h-5 w-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-medium text-blue-300">Email</div>
-                          <div className="text-sm text-blue-100 truncate">
-                            {profile.email || 'Not provided'}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center p-3 rounded-lg bg-blue-950 border border-blue-800">
-                        <div className="flex-shrink-0 mr-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center">
-                            <svg className="h-5 w-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-medium text-blue-300">Phone</div>
-                          <div className="text-sm text-blue-100">
-                            {profile.phone || 'Not provided'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
-              
-              <div className="lg:col-span-2 space-y-8">
-                <div className="bg-blue-900 rounded-xl overflow-hidden border border-blue-800">
-                  <div className="px-6 py-5 border-b border-blue-800">
-                    <h3 className="text-xl font-semibold text-blue-100">
-                      About
-                    </h3>
-                    <p className="mt-1 text-blue-300">
-                      Personal details and information
-                    </p>
-                  </div>
-                  <div className="p-6">
-                    <dl className="space-y-6">
-                      <div className="flex flex-col sm:flex-row sm:items-start">
-                        <dt className="text-sm font-medium text-blue-300 sm:w-1/4">Bio</dt>
-                        <dd className="mt-1 text-blue-100 sm:mt-0 sm:w-3/4">
-                          {profile.bio || 'No bio provided'}
-                        </dd>
+            </div>
+
+            {/* Main Content */}
+            <div className="md:col-span-2 space-y-6">
+              {/* About */}
+              {contextProfile.bio && (
+                <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                  <h3 className="text-lg font-semibold mb-3">About</h3>
+                  <p className="text-blue-200">{contextProfile.bio}</p>
+                </div>
+              )}
+
+              {/* Experience */}
+              {contextProfile.experience && contextProfile.experience.length > 0 && (
+                <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                  <h3 className="text-lg font-semibold mb-4">Experience</h3>
+                  <div className="space-y-4">
+                    {contextProfile.experience.map((exp, index) => (
+                      <div key={index} className="border-l-2 border-blue-700 pl-4 py-1">
+                        <h4 className="font-medium">{exp.title}</h4>
+                        <p className="text-blue-300">{exp.company}</p>
+                        <p className="text-sm text-blue-400">
+                          {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'Present'}
+                        </p>
+                        {exp.description && (
+                          <p className="mt-2 text-blue-200 text-sm">{exp.description}</p>
+                        )}
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-start">
-                        <dt className="text-sm font-medium text-blue-300 sm:w-1/4">Skills</dt>
-                        <dd className="mt-1 sm:mt-0 sm:w-3/4">
-                          {profile.skills?.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {profile.skills.map((skill, index) => (
-                                <span 
-                                  key={index}
-                                  className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-800 text-blue-200 border border-blue-700"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-blue-400 italic">No skills added</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-start">
-                        <dt className="text-sm font-medium text-blue-300 sm:w-1/4">Member Since</dt>
-                        <dd className="mt-1 text-blue-100 sm:mt-0 sm:w-3/4">
-                          {profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          }) : 'N/A'}
-                        </dd>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-start">
-                        <dt className="text-sm font-medium text-blue-300 sm:w-1/4">Last Updated</dt>
-                        <dd className="mt-1 text-blue-100 sm:mt-0 sm:w-3/4">
-                          {profile.updated_at ? new Date(profile.updated_at).toLocaleString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : 'N/A'}
-                        </dd>
-                      </div>
-                    </dl>
+                    ))}
                   </div>
                 </div>
-                
-                {/* Experience Section */}
-                <div className="bg-blue-900 rounded-xl overflow-hidden border border-blue-800">
-                  <div className="px-6 py-5 border-b border-blue-800 flex justify-between items-center">
-                    <div>
-                      <h3 className="text-xl font-semibold text-blue-100">Experience</h3>
-                      <p className="mt-1 text-sm text-blue-300">Professional background and work history</p>
-                    </div>
-                    <button
-                      onClick={() => {}}
-                      className="px-4 py-2 text-sm font-medium rounded-lg text-blue-100 bg-blue-700 hover:bg-blue-600 transition-all flex items-center border border-blue-600"
-                    >
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Experience
-                    </button>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ul className="space-y-4">
-                      {profile.experience?.length > 0 ? (
-                        profile.experience.map((exp, index) => (
-                          <li key={index} className="bg-blue-950 p-5 rounded-xl border border-blue-800">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
-                              <div>
-                                <h4 className="text-lg font-semibold text-blue-100">{exp.title}</h4>
-                                <div className="flex items-center mt-1">
-                                  <span className="px-3 py-1 text-xs font-medium bg-blue-800 text-blue-200 rounded-full border border-blue-700">
-                                    {exp.company}
-                                  </span>
-                                  {exp.location && (
-                                    <span className="ml-3 text-sm text-blue-300 flex items-center">
-                                      <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      </svg>
-                                      {exp.location}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="mt-2 sm:mt-0">
-                                <span className="px-3 py-1 text-sm font-medium text-green-300 bg-green-900/30 rounded-lg border border-green-800">
-                                  {exp.start_date} - {exp.current ? 'Present' : exp.end_date || 'Present'}
-                                </span>
-                              </div>
-                            </div>
-                            {exp.description && (
-                              <p className="text-blue-200 mt-3 leading-relaxed">
-                                {exp.description}
-                              </p>
-                            )}
-                          </li>
-                        ))
-                      ) : (
-                        <li className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-950 flex items-center justify-center border border-blue-800">
-                            <svg className="h-8 w-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <p className="text-blue-300 mb-4">No experience added yet</p>
-                          <button
-                            type="button"
-                            onClick={() => {}}
-                            className="px-5 py-2.5 text-sm font-medium rounded-lg text-blue-100 bg-blue-700 hover:bg-blue-600 transition-all border border-blue-600"
-                          >
-                            Add your first experience
-                          </button>
-                        </li>
-                      )}
-                    </ul>
+              )}
+
+              {/* Education */}
+              {contextProfile.education && contextProfile.education.length > 0 && (
+                <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
+                  <h3 className="text-lg font-semibold mb-4">Education</h3>
+                  <div className="space-y-4">
+                    {contextProfile.education.map((edu, index) => (
+                      <div key={index} className="border-l-2 border-blue-700 pl-4 py-1">
+                        <h4 className="font-medium">{edu.degree}</h4>
+                        <p className="text-blue-300">{edu.school}</p>
+                        <p className="text-blue-300 text-sm">{edu.field}</p>
+                        <p className="text-sm text-blue-400">
+                          {edu.startDate} - {edu.current ? 'Present' : edu.endDate || 'Present'}
+                        </p>
+                        {edu.description && (
+                          <p className="mt-2 text-blue-200 text-sm">{edu.description}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-                
-                {/* Education Section */}
-                <div className="bg-blue-900 rounded-xl overflow-hidden border border-blue-800">
-                  <div className="px-6 py-5 border-b border-blue-800 flex justify-between items-center">
-                    <div>
-                      <h3 className="text-xl font-semibold text-blue-100">Education</h3>
-                      <p className="mt-1 text-sm text-blue-300">Academic background and qualifications</p>
-                    </div>
-                    <button
-                      onClick={() => {}}
-                      className="px-4 py-2 text-sm font-medium rounded-lg text-blue-100 bg-blue-700 hover:bg-blue-600 transition-all flex items-center border border-blue-600"
-                    >
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Education
-                    </button>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ul className="space-y-4">
-                      {profile.education?.length > 0 ? (
-                        profile.education.map((edu, index) => (
-                          <li key={index} className="bg-blue-950 p-5 rounded-xl border border-blue-800">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
-                              <div>
-                                <h4 className="text-lg font-semibold text-blue-100">{edu.degree} in {edu.field_of_study}</h4>
-                                <div className="flex items-center mt-1">
-                                  <span className="px-3 py-1 text-xs font-medium bg-purple-900 text-purple-200 rounded-full border border-purple-800">
-                                    {edu.school}
-                                  </span>
-                                  {edu.grade && (
-                                    <span className="ml-3 text-sm text-blue-300 flex items-center">
-                                      <svg className="h-4 w-4 mr-1 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                      </svg>
-                                      {edu.grade}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="mt-2 sm:mt-0">
-                                <span className="px-3 py-1 text-sm font-medium text-blue-200 bg-blue-800 rounded-lg border border-blue-700">
-                                  {edu.start_year} - {edu.current ? 'Present' : edu.end_year || 'N/A'}
-                                </span>
-                              </div>
-                            </div>
-                            {edu.activities && (
-                              <p className="text-blue-200 mt-3 leading-relaxed">
-                                {edu.activities}
-                              </p>
-                            )}
-                          </li>
-                        ))
-                      ) : (
-                        <li className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-950 flex items-center justify-center border border-blue-800">
-                            <svg className="h-8 w-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v6l9-5" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v6l-9-5" />
-                            </svg>
-                          </div>
-                          <p className="text-blue-300 mb-4">No education information added yet</p>
-                          <button
-                            type="button"
-                            onClick={() => {}}
-                            className="px-5 py-2.5 text-sm font-medium rounded-lg text-blue-100 bg-blue-700 hover:bg-blue-600 transition-all border border-blue-600"
-                          >
-                            Add your education
-                          </button>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
