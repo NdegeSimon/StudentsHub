@@ -72,5 +72,6 @@ export const applicationAPI = {
   applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
   updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
+  getUpcomingDeadlines: () => api.get('/applications/upcoming-deadlines'),
 };
 export default api;

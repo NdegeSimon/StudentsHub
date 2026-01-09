@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 # Import models and extensions
 from models import User
-from extensions import jwt
+from extensions import jwt, db
 
 # Blueprint
 bp = Blueprint('auth', __name__)
@@ -473,6 +473,54 @@ def get_my_applications():
     except Exception as e:
         current_app.logger.error(f"Get applications error: {str(e)}")
         return jsonify({"error": "Failed to fetch applications"}), 500
+
+
+@bp.route('/applications/upcoming-deadlines', methods=['GET'])
+@jwt_required()
+def get_upcoming_deadlines():
+    from models import User, Application, Job
+    from datetime import datetime, timedelta
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user or user.role != 'student':
+            return jsonify({"error": "Only students can view upcoming deadlines"}), 403
+        
+        # Get applications with deadlines in the next 30 days
+        thirty_days_later = datetime.utcnow() + timedelta(days=30)
+        
+        upcoming = db.session.query(
+            Application, Job
+        ).join(
+            Job, Application.job_id == Job.id
+        ).filter(
+            Application.student_id == user.student_profile.id,
+            Job.deadline >= datetime.utcnow(),
+            Job.deadline <= thirty_days_later
+        ).order_by(
+            Job.deadline.asc()
+        ).all()
+        
+        result = []
+        for app, job in upcoming:
+            result.append({
+                "id": app.id,
+                "job_id": job.id,
+                "job_title": job.title,
+                "company_name": job.company.company_name if job.company else "Unknown",
+                "deadline": job.deadline.isoformat(),
+                "days_remaining": (job.deadline - datetime.utcnow()).days,
+                "status": app.status
+            })
+            
+        return jsonify(result), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get upcoming deadlines error: {str(e)}")
+        return jsonify({"error": "Failed to fetch upcoming deadlines"}), 500
 
 
 # ==================== FILE UPLOAD ====================
