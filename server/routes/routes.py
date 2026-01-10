@@ -554,7 +554,1116 @@ def upload_file(file_type):
     except Exception as e:
         current_app.logger.error(f"File upload error: {str(e)}")
         return jsonify({"error": "File upload failed"}), 500
+# Add these routes to your routes/routes.py file
 
+# ==================== ADMIN ROUTES ====================
+
+@bp.route('/admin/users', methods=['GET'])
+@jwt_required()
+def admin_get_users():
+    """Admin: Get all users (admin only)"""
+    from models import User
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        # Check if user is admin (you might want to add an admin role to User model)
+        user = User.query.get(user_id)
+        if not user or user.role != 'admin':  # Add admin role to User model
+            return jsonify({"error": "Admin access required"}), 403
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('limit', 20, type=int)
+        role = request.args.get('role')
+        
+        query = User.query
+        
+        if role:
+            query = query.filter(User.role == role)
+        
+        pagination = query.order_by(User.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        users_list = []
+        for user in pagination.items:
+            users_list.append(user.to_dict() if hasattr(user, 'to_dict') else {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": user.role,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat()
+            })
+        
+        return jsonify({
+            "users": users_list,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Admin get users error: {str(e)}")
+        return jsonify({"error": "Failed to fetch users"}), 500
+
+
+@bp.route('/admin/users/<int:user_id>/toggle', methods=['PUT'])
+@jwt_required()
+def admin_toggle_user(user_id):
+    """Admin: Toggle user active status"""
+    from models import User, db
+    
+    try:
+        admin_identity = get_jwt_identity()
+        admin_id = admin_identity.get('id') if isinstance(admin_identity, dict) else admin_identity
+        
+        # Check if admin
+        admin = User.query.get(admin_id)
+        if not admin or admin.role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Cannot deactivate yourself
+        if user.id == admin.id:
+            return jsonify({"error": "Cannot deactivate yourself"}), 400
+        
+        user.is_active = not user.is_active
+        db.session.commit()
+        
+        return jsonify({
+            "message": f"User {'activated' if user.is_active else 'deactivated'}",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "is_active": user.is_active
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Admin toggle user error: {str(e)}")
+        return jsonify({"error": "Failed to toggle user status"}), 500
+
+
+# ==================== COMPANY-SPECIFIC ROUTES ====================
+
+@bp.route('/companies', methods=['GET'])
+def get_companies():
+    """Get all companies (public)"""
+    from models import Company
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('limit', 10, type=int)
+        search = request.args.get('search', '')
+        industry = request.args.get('industry')
+        
+        query = Company.query
+        
+        if search:
+            search_like = f"%{search}%"
+            query = query.filter(
+                Company.company_name.ilike(search_like) |
+                Company.description.ilike(search_like) |
+                Company.industry.ilike(search_like)
+            )
+        
+        if industry:
+            query = query.filter(Company.industry == industry)
+        
+        # Only show verified companies by default
+        verification_filter = request.args.get('verification', 'verified')
+        if verification_filter == 'verified':
+            query = query.filter(Company.verification_status == 'verified')
+        elif verification_filter == 'all':
+            pass  # Show all
+        
+        pagination = query.order_by(Company.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        companies_list = []
+        for company in pagination.items:
+            companies_list.append({
+                "id": company.id,
+                "company_name": company.company_name,
+                "description": company.description[:200] if company.description else "",
+                "industry": company.industry,
+                "location": company.location,
+                "logo_url": company.logo_url,
+                "verification_status": company.verification_status,
+                "jobs_count": company.jobs.filter_by(is_active=True).count(),
+                "created_at": company.created_at.isoformat()
+            })
+        
+        return jsonify({
+            "companies": companies_list,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get companies error: {str(e)}")
+        return jsonify({"error": "Failed to fetch companies"}), 500
+
+
+@bp.route('/companies/<int:company_id>', methods=['GET'])
+def get_company(company_id):
+    """Get company details by ID"""
+    from models import Company
+    
+    try:
+        company = Company.query.get_or_404(company_id)
+        
+        # Count active jobs
+        active_jobs_count = company.jobs.filter_by(is_active=True).count()
+        
+        # Get recent jobs
+        recent_jobs = []
+        for job in company.jobs.filter_by(is_active=True).order_by(Job.created_at.desc()).limit(5).all():
+            recent_jobs.append({
+                "id": job.id,
+                "title": job.title,
+                "job_type": job.job_type,
+                "location": job.location,
+                "created_at": job.created_at.isoformat()
+            })
+        
+        company_data = {
+            "id": company.id,
+            "company_name": company.company_name,
+            "description": company.description,
+            "industry": company.industry,
+            "company_size": company.company_size,
+            "founded_year": company.founded_year,
+            "website": company.website,
+            "phone": company.phone,
+            "location": company.location,
+            "address": company.address,
+            "logo_url": company.logo_url,
+            "cover_image_url": company.cover_image_url,
+            "linkedin_url": company.linkedin_url,
+            "twitter_url": company.twitter_url,
+            "verification_status": company.verification_status,
+            "benefits": company.benefits or [],
+            "culture_values": company.culture_values or [],
+            "active_jobs_count": active_jobs_count,
+            "recent_jobs": recent_jobs,
+            "created_at": company.created_at.isoformat()
+        }
+        
+        return jsonify(company_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get company error: {str(e)}")
+        return jsonify({"error": "Failed to fetch company"}), 500
+
+
+@bp.route('/companies/<int:company_id>/jobs', methods=['GET'])
+def get_company_jobs(company_id):
+    """Get all jobs for a specific company"""
+    from models import Company, Job
+    
+    try:
+        company = Company.query.get_or_404(company_id)
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('limit', 10, type=int)
+        job_type = request.args.get('type')
+        
+        query = company.jobs.filter_by(is_active=True)
+        
+        if job_type:
+            query = query.filter(Job.job_type == job_type)
+        
+        pagination = query.order_by(Job.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        jobs_list = []
+        for job in pagination.items:
+            jobs_list.append({
+                "id": job.id,
+                "title": job.title,
+                "description": job.description[:200] if job.description else "",
+                "location": job.location,
+                "job_type": job.job_type,
+                "work_mode": job.work_mode,
+                "experience_level": job.experience_level,
+                "salary_min": job.salary_min,
+                "salary_max": job.salary_max,
+                "created_at": job.created_at.isoformat(),
+                "applicants_count": job.applications.count()
+            })
+        
+        return jsonify({
+            "company": {
+                "id": company.id,
+                "name": company.company_name,
+                "logo_url": company.logo_url
+            },
+            "jobs": jobs_list,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get company jobs error: {str(e)}")
+        return jsonify({"error": "Failed to fetch company jobs"}), 500
+
+
+# ==================== EMPLOYER DASHBOARD ROUTES ====================
+
+@bp.route('/employer/dashboard', methods=['GET'])
+@jwt_required()
+def employer_dashboard():
+    """Get employer dashboard statistics"""
+    from models import User, Company, Job, Application, db
+    from datetime import datetime, timedelta
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user or user.role != 'employer':
+            return jsonify({"error": "Employer access required"}), 403
+        
+        company = Company.query.filter_by(user_id=user_id).first()
+        if not company:
+            return jsonify({"error": "Company profile not found"}), 404
+        
+        # Basic stats
+        active_jobs = company.jobs.filter_by(is_active=True).count()
+        total_applications = db.session.query(Application).join(Job).filter(Job.company_id == company.id).count()
+        
+        # Recent applications (last 30 days)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        recent_applications = db.session.query(Application).join(Job).filter(
+            Job.company_id == company.id,
+            Application.created_at >= thirty_days_ago
+        ).count()
+        
+        # Job with most applications
+        popular_job = db.session.query(
+            Job, db.func.count(Application.id).label('app_count')
+        ).outerjoin(
+            Application, Job.id == Application.job_id
+        ).filter(
+            Job.company_id == company.id,
+            Job.is_active == True
+        ).group_by(
+            Job.id
+        ).order_by(
+            db.desc('app_count')
+        ).first()
+        
+        # Recent job postings
+        recent_jobs = []
+        for job in company.jobs.filter_by(is_active=True).order_by(Job.created_at.desc()).limit(5).all():
+            recent_jobs.append({
+                "id": job.id,
+                "title": job.title,
+                "created_at": job.created_at.isoformat(),
+                "applications": job.applications.count()
+            })
+        
+        dashboard_data = {
+            "company": {
+                "id": company.id,
+                "name": company.company_name,
+                "logo_url": company.logo_url
+            },
+            "stats": {
+                "active_jobs": active_jobs,
+                "total_applications": total_applications,
+                "recent_applications": recent_applications
+            },
+            "popular_job": {
+                "id": popular_job[0].id if popular_job else None,
+                "title": popular_job[0].title if popular_job else None,
+                "applications": popular_job[1] if popular_job else 0
+            } if popular_job else None,
+            "recent_jobs": recent_jobs
+        }
+        
+        return jsonify(dashboard_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Employer dashboard error: {str(e)}")
+        return jsonify({"error": "Failed to load dashboard"}), 500
+
+
+@bp.route('/employer/applications', methods=['GET'])
+@jwt_required()
+def employer_get_applications():
+    """Get applications for employer's jobs"""
+    from models import User, Company, Application, Job, Student
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user or user.role != 'employer':
+            return jsonify({"error": "Employer access required"}), 403
+        
+        company = Company.query.filter_by(user_id=user_id).first()
+        if not company:
+            return jsonify({"error": "Company profile not found"}), 404
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('limit', 10, type=int)
+        job_id = request.args.get('job_id')
+        status = request.args.get('status')
+        
+        # Build query
+        query = db.session.query(Application, Job, Student, User).join(
+            Job, Application.job_id == Job.id
+        ).join(
+            Student, Application.student_id == Student.id
+        ).join(
+            User, Student.user_id == User.id
+        ).filter(
+            Job.company_id == company.id
+        )
+        
+        if job_id:
+            query = query.filter(Application.job_id == job_id)
+        if status:
+            query = query.filter(Application.status == status)
+        
+        total = query.count()
+        applications = query.order_by(
+            Application.created_at.desc()
+        ).offset((page - 1) * per_page).limit(per_page).all()
+        
+        applications_list = []
+        for app, job, student, student_user in applications:
+            applications_list.append({
+                "id": app.id,
+                "job": {
+                    "id": job.id,
+                    "title": job.title
+                },
+                "student": {
+                    "id": student.id,
+                    "name": f"{student_user.first_name} {student_user.last_name or ''}".strip(),
+                    "email": student_user.email,
+                    "phone": student.phone,
+                    "resume_url": student.resume_url,
+                    "profile_picture": student.profile_picture
+                },
+                "cover_letter": app.cover_letter,
+                "status": app.status,
+                "applied_at": app.created_at.isoformat(),
+                "match_percentage": app.match_percentage
+            })
+        
+        return jsonify({
+            "applications": applications_list,
+            "total": total,
+            "pages": (total + per_page - 1) // per_page,
+            "current_page": page
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Employer get applications error: {str(e)}")
+        return jsonify({"error": "Failed to fetch applications"}), 500
+
+
+@bp.route('/employer/applications/<int:application_id>', methods=['PUT'])
+@jwt_required()
+def update_application_status(application_id):
+    """Update application status (employer only)"""
+    from models import User, Company, Application, db
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user or user.role != 'employer':
+            return jsonify({"error": "Employer access required"}), 403
+        
+        company = Company.query.filter_by(user_id=user_id).first()
+        if not company:
+            return jsonify({"error": "Company profile not found"}), 404
+        
+        application = Application.query.get_or_404(application_id)
+        
+        # Check if application belongs to employer's company
+        if application.job.company_id != company.id:
+            return jsonify({"error": "Application not found"}), 404
+        
+        data = request.get_json()
+        new_status = data.get('status')
+        notes = data.get('notes')
+        rejection_reason = data.get('rejection_reason')
+        
+        if not new_status:
+            return jsonify({"error": "Status is required"}), 400
+        
+        valid_statuses = ['new', 'under_review', 'interview_scheduled', 'rejected', 'hired']
+        if new_status not in valid_statuses:
+            return jsonify({"error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}), 400
+        
+        application.status = new_status
+        application.reviewed_at = datetime.utcnow()
+        
+        if notes:
+            application.employer_notes = notes
+        if rejection_reason and new_status == 'rejected':
+            application.rejection_reason = rejection_reason
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Application status updated",
+            "application": {
+                "id": application.id,
+                "status": application.status,
+                "job_title": application.job.title,
+                "student_name": f"{application.student.user.first_name} {application.student.user.last_name or ''}".strip()
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Update application status error: {str(e)}")
+        return jsonify({"error": "Failed to update application status"}), 500
+
+
+# ==================== STUDENT DASHBOARD ROUTES ====================
+
+@bp.route('/student/dashboard', methods=['GET'])
+@jwt_required()
+def student_dashboard():
+    """Get student dashboard statistics"""
+    from models import User, Student, Application, db
+    from datetime import datetime, timedelta
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user or user.role != 'student':
+            return jsonify({"error": "Student access required"}), 403
+        
+        student = Student.query.filter_by(user_id=user_id).first()
+        if not student:
+            return jsonify({"error": "Student profile not found"}), 404
+        
+        # Basic stats
+        total_applications = Application.query.filter_by(student_id=student.id).count()
+        
+        # Status breakdown
+        status_counts = db.session.query(
+            Application.status, db.func.count(Application.id)
+        ).filter(
+            Application.student_id == student.id
+        ).group_by(
+            Application.status
+        ).all()
+        
+        status_breakdown = {status: count for status, count in status_counts}
+        
+        # Recent applications (last 30 days)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        recent_applications = Application.query.filter(
+            Application.student_id == student.id,
+            Application.created_at >= thirty_days_ago
+        ).count()
+        
+        # Recent application activity
+        recent_activity = []
+        for app in Application.query.filter_by(
+            student_id=student.id
+        ).order_by(
+            Application.created_at.desc()
+        ).limit(5).all():
+            recent_activity.append({
+                "job_title": app.job.title,
+                "company_name": app.job.company.company_name,
+                "status": app.status,
+                "applied_at": app.created_at.isoformat()
+            })
+        
+        dashboard_data = {
+            "student": {
+                "id": student.id,
+                "name": f"{user.first_name} {user.last_name or ''}".strip(),
+                "profile_picture": student.profile_picture
+            },
+            "stats": {
+                "total_applications": total_applications,
+                "recent_applications": recent_applications,
+                "status_breakdown": status_breakdown
+            },
+            "recent_activity": recent_activity
+        }
+        
+        return jsonify(dashboard_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Student dashboard error: {str(e)}")
+        return jsonify({"error": "Failed to load dashboard"}), 500
+
+
+# ==================== NOTIFICATION ROUTES ====================
+
+@bp.route('/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    """Get user notifications"""
+    from models import User, Notification
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('limit', 20, type=int)
+        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+        
+        query = Notification.query.filter_by(user_id=user_id)
+        
+        if unread_only:
+            query = query.filter_by(is_read=False)
+        
+        pagination = query.order_by(
+            Notification.created_at.desc()
+        ).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        notifications_list = []
+        for notification in pagination.items:
+            notifications_list.append(notification.to_dict() if hasattr(notification, 'to_dict') else {
+                "id": notification.id,
+                "type": notification.notification_type,
+                "title": notification.title,
+                "message": notification.message,
+                "link_url": notification.link_url,
+                "is_read": notification.is_read,
+                "metadata": notification.notification_metadata,
+                "created_at": notification.created_at.isoformat()
+            })
+        
+        # Get unread count
+        unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+        
+        return jsonify({
+            "notifications": notifications_list,
+            "unread_count": unread_count,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get notifications error: {str(e)}")
+        return jsonify({"error": "Failed to fetch notifications"}), 500
+
+
+@bp.route('/notifications/<int:notification_id>/read', methods=['PUT'])
+@jwt_required()
+def mark_notification_read(notification_id):
+    """Mark notification as read"""
+    from models import User, Notification, db
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        notification = Notification.query.get_or_404(notification_id)
+        
+        # Check if notification belongs to user
+        if notification.user_id != user_id:
+            return jsonify({"error": "Notification not found"}), 404
+        
+        if not notification.is_read:
+            notification.is_read = True
+            notification.read_at = datetime.utcnow()
+            db.session.commit()
+        
+        return jsonify({
+            "message": "Notification marked as read",
+            "notification": {
+                "id": notification.id,
+                "is_read": notification.is_read
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Mark notification read error: {str(e)}")
+        return jsonify({"error": "Failed to mark notification as read"}), 500
+
+
+@bp.route('/notifications/read-all', methods=['PUT'])
+@jwt_required()
+def mark_all_notifications_read():
+    """Mark all notifications as read"""
+    from models import User, Notification, db
+    
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        # Update all unread notifications for user
+        updated = db.session.query(Notification).filter(
+            Notification.user_id == user_id,
+            Notification.is_read == False
+        ).update({
+            'is_read': True,
+            'read_at': datetime.utcnow()
+        })
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": f"Marked {updated} notifications as read"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Mark all notifications read error: {str(e)}")
+        return jsonify({"error": "Failed to mark notifications as read"}), 500
+
+
+# ==================== ANALYTICS ROUTES ====================
+
+@bp.route('/analytics/job-views/<int:job_id>', methods=['POST'])
+def track_job_view(job_id):
+    """Track a job view (for analytics)"""
+    from models import Job, JobAnalytics, db
+    from datetime import date
+    
+    try:
+        job = Job.query.get(job_id)
+        if not job or not job.is_active:
+            return jsonify({"error": "Job not found"}), 404
+        
+        # Increment job views
+        job.views_count += 1
+        
+        # Update or create daily analytics
+        today = date.today()
+        analytics = JobAnalytics.query.filter_by(
+            job_id=job_id,
+            date=today
+        ).first()
+        
+        if analytics:
+            analytics.views += 1
+        else:
+            analytics = JobAnalytics(
+                job_id=job_id,
+                date=today,
+                views=1,
+                applications=0,
+                clicks=0,
+                unique_visitors=1
+            )
+            db.session.add(analytics)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "View tracked",
+            "job": {
+                "id": job.id,
+                "title": job.title,
+                "views_count": job.views_count
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Track job view error: {str(e)}")
+        return jsonify({"error": "Failed to track view"}), 500
+
+
+# ==================== UTILITY ROUTES ====================
+
+@bp.route('/industries', methods=['GET'])
+def get_industries():
+    """Get list of unique industries"""
+    from models import Company, db
+    
+    try:
+        industries = db.session.query(
+            Company.industry
+        ).filter(
+            Company.industry.isnot(None),
+            Company.industry != '',
+            Company.verification_status == 'verified'
+        ).distinct().order_by(
+            Company.industry
+        ).all()
+        
+        industry_list = [industry[0] for industry in industries if industry[0]]
+        
+        return jsonify({
+            "industries": industry_list,
+            "count": len(industry_list)
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get industries error: {str(e)}")
+        return jsonify({"error": "Failed to fetch industries"}), 500
+
+
+@bp.route('/locations', methods=['GET'])
+def get_locations():
+    """Get list of unique locations"""
+    from models import Company, Job, db
+    
+    try:
+        # Get company locations
+        company_locations = db.session.query(
+            Company.location
+        ).filter(
+            Company.location.isnot(None),
+            Company.location != '',
+            Company.verification_status == 'verified'
+        ).distinct().all()
+        
+        # Get job locations
+        job_locations = db.session.query(
+            Job.location
+        ).filter(
+            Job.location.isnot(None),
+            Job.location != '',
+            Job.is_active == True
+        ).distinct().all()
+        
+        # Combine and deduplicate
+        all_locations = set()
+        for loc in company_locations:
+            if loc[0]:
+                all_locations.add(loc[0])
+        for loc in job_locations:
+            if loc[0]:
+                all_locations.add(loc[0])
+        
+        location_list = sorted(list(all_locations))
+        
+        return jsonify({
+            "locations": location_list,
+            "count": len(location_list)
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get locations error: {str(e)}")
+        return jsonify({"error": "Failed to fetch locations"}), 500
+
+
+@bp.route('/skills', methods=['GET'])
+def get_skills():
+    """Get list of unique skills from jobs and students"""
+    from models import Job, Student, db
+    import json
+    
+    try:
+        all_skills = set()
+        
+        # Get skills from jobs
+        jobs = Job.query.filter(
+            Job.is_active == True
+        ).all()
+        
+        for job in jobs:
+            if job.required_skills:
+                try:
+                    skills = json.loads(job.required_skills) if isinstance(job.required_skills, str) else job.required_skills
+                    if isinstance(skills, list):
+                        all_skills.update(skills)
+                except:
+                    pass
+            
+            if job.preferred_skills:
+                try:
+                    skills = json.loads(job.preferred_skills) if isinstance(job.preferred_skills, str) else job.preferred_skills
+                    if isinstance(skills, list):
+                        all_skills.update(skills)
+                except:
+                    pass
+        
+        # Get skills from students
+        students = Student.query.filter(
+            Student.skills.isnot(None)
+        ).all()
+        
+        for student in students:
+            if student.skills:
+                try:
+                    skills = json.loads(student.skills) if isinstance(student.skills, str) else student.skills
+                    if isinstance(skills, list):
+                        all_skills.update(skills)
+                except:
+                    pass
+        
+        skill_list = sorted(list(all_skills))
+        
+        return jsonify({
+            "skills": skill_list,
+            "count": len(skill_list)
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get skills error: {str(e)}")
+        return jsonify({"error": "Failed to fetch skills"}), 500
+
+
+# ==================== SEARCH ROUTES ====================
+
+@bp.route('/search/global', methods=['GET'])
+def global_search():
+    """Global search across jobs, companies, and students"""
+    from models import Job, Company, Student, User
+    
+    try:
+        query = request.args.get('q', '')
+        if not query or len(query.strip()) < 2:
+            return jsonify({
+                "jobs": [],
+                "companies": [],
+                "students": [],
+                "total": 0
+            }), 200
+        
+        search_term = f"%{query.strip()}%"
+        
+        # Search jobs
+        jobs = Job.query.filter(
+            Job.is_active == True,
+            (Job.title.ilike(search_term) | 
+             Job.description.ilike(search_term) |
+             Job.requirements.ilike(search_term))
+        ).order_by(Job.created_at.desc()).limit(10).all()
+        
+        # Search companies
+        companies = Company.query.filter(
+            Company.verification_status == 'verified',
+            (Company.company_name.ilike(search_term) |
+             Company.description.ilike(search_term) |
+             Company.industry.ilike(search_term))
+        ).order_by(Company.created_at.desc()).limit(10).all()
+        
+        # Search students
+        students = Student.query.join(User).filter(
+            Student.is_profile_public == True,
+            (User.first_name.ilike(search_term) |
+             User.last_name.ilike(search_term) |
+             Student.bio.ilike(search_term) |
+             Student.location.ilike(search_term))
+        ).order_by(Student.created_at.desc()).limit(10).all()
+        
+        jobs_list = []
+        for job in jobs:
+            jobs_list.append({
+                "id": job.id,
+                "title": job.title,
+                "company_name": job.company.company_name if job.company else "Unknown",
+                "location": job.location,
+                "job_type": job.job_type
+            })
+        
+        companies_list = []
+        for company in companies:
+            companies_list.append({
+                "id": company.id,
+                "name": company.company_name,
+                "industry": company.industry,
+                "location": company.location,
+                "logo_url": company.logo_url
+            })
+        
+        students_list = []
+        for student in students:
+            students_list.append({
+                "id": student.id,
+                "name": f"{student.user.first_name} {student.user.last_name or ''}".strip(),
+                "bio": student.bio[:100] if student.bio else "",
+                "location": student.location,
+                "profile_picture": student.profile_picture,
+                "skills": student.skills[:3] if student.skills else []
+            })
+        
+        return jsonify({
+            "jobs": jobs_list,
+            "companies": companies_list,
+            "students": students_list,
+            "total": len(jobs_list) + len(companies_list) + len(students_list)
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Global search error: {str(e)}")
+        return jsonify({"error": "Search failed"}), 500
+
+
+# ==================== PASSWORD RESET ROUTES ====================
+
+@bp.route('/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    """Request password reset"""
+    from models import User, db
+    import secrets
+    from datetime import datetime, timedelta
+    
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            # Don't reveal if user exists or not
+            return jsonify({
+                "message": "If an account exists with this email, a reset link has been sent"
+            }), 200
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        user.reset_token = reset_token
+        user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
+        
+        db.session.commit()
+        
+        # In a real app, send email here
+        reset_link = f"{request.host_url}reset-password?token={reset_token}"
+        
+        # For development, return the link
+        return jsonify({
+            "message": "Password reset requested",
+            "reset_token": reset_token,  # Remove in production
+            "reset_link": reset_link     # Remove in production
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Forgot password error: {str(e)}")
+        return jsonify({"error": "Password reset request failed"}), 500
+
+
+@bp.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    """Reset password with token"""
+    from models import User, db
+    from datetime import datetime
+    
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        new_password = data.get('password')
+        
+        if not token or not new_password:
+            return jsonify({"error": "Token and password are required"}), 400
+        
+        if len(new_password) < 8:
+            return jsonify({"error": "Password must be at least 8 characters"}), 400
+        
+        user = User.query.filter_by(reset_token=token).first()
+        if not user or not user.reset_token_expiry or user.reset_token_expiry < datetime.utcnow():
+            return jsonify({"error": "Invalid or expired reset token"}), 400
+        
+        # Update password
+        user.password_hash = generate_password_hash(new_password)
+        user.reset_token = None
+        user.reset_token_expiry = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Password reset successful"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Reset password error: {str(e)}")
+        return jsonify({"error": "Password reset failed"}), 500
+
+
+# ==================== LOGOUT ROUTE ====================
+
+@bp.route('/auth/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """Logout user (client-side token invalidation)"""
+    try:
+        # In a real app, you might want to add token to a blacklist
+        # For JWT, tokens are stateless, so client should delete them
+        
+        return jsonify({
+            "message": "Logged out successfully"
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {str(e)}")
+        return jsonify({"error": "Logout failed"}), 500
+
+
+# ==================== SYSTEM STATUS ====================
+
+@bp.route('/system/status', methods=['GET'])
+def system_status():
+    """Get system status and statistics"""
+    from models import User, Job, Company, Application
+    
+    try:
+        total_users = User.query.count()
+        total_jobs = Job.query.filter_by(is_active=True).count()
+        total_companies = Company.query.filter_by(verification_status='verified').count()
+        total_applications = Application.query.count()
+        
+        # Recent activity (last 24 hours)
+        from datetime import datetime, timedelta
+        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+        
+        recent_users = User.query.filter(User.created_at >= twenty_four_hours_ago).count()
+        recent_jobs = Job.query.filter(
+            Job.is_active == True,
+            Job.created_at >= twenty_four_hours_ago
+        ).count()
+        recent_applications = Application.query.filter(
+            Application.created_at >= twenty_four_hours_ago
+        ).count()
+        
+        return jsonify({
+            "status": "online",
+            "timestamp": datetime.utcnow().isoformat(),
+            "statistics": {
+                "total_users": total_users,
+                "total_jobs": total_jobs,
+                "total_companies": total_companies,
+                "total_applications": total_applications
+            },
+            "recent_activity": {
+                "users_registered": recent_users,
+                "jobs_posted": recent_jobs,
+                "applications_submitted": recent_applications
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"System status error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "Failed to get system status"
+        }), 500
 # Note: Saved jobs routes have been moved to saved_jobs_routes.py
 # Import and register the saved_jobs_bp in app.py
 
