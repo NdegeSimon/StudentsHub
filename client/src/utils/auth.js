@@ -1,9 +1,14 @@
 import { authAPI } from './api';
 import { toast } from 'react-toastify';
 
+// Get authentication token
+export const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
 // Check if user is authenticated
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
+  return !!getAuthToken();
 };
 
 // Get current user from localStorage
