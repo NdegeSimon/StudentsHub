@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 // Context Providers
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -23,6 +24,12 @@ import Resources from "./pages/resources/Resources.jsx";
 import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import CareerTips from "./pages/resources/CareerTips.jsx";
 import NotFound from "./pages/NotFound.jsx";
+
+// New Components
+import CompanyProfile from "./pages/company/CompanyProfile.jsx";
+import JobDetails from "./pages/JobDetails.jsx";
+import ApplicationsList from "./pages/ApplicationsList.jsx";
+import CompanyJobs from "./pages/company/CompanyJobs.jsx";
 
 // Components
 import JobCard from "./components/JobCard.jsx";
@@ -71,6 +78,18 @@ const App = () => {
           <ProfileProvider>
             <ErrorBoundary>
               <div className="min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden">
+                <ToastContainer 
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="dark"
+                />
                 <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[100vw]">
                   <Routes>
 
@@ -112,14 +131,21 @@ const App = () => {
                     />
 
                     <Route
-                      path="/myapplications"
+                      path="/my-applications"
                       element={
                         <ProtectedRoute roles={["student"]}>
-                          <MyApplications />
+                          <ApplicationsList />
                         </ProtectedRoute>
                       }
                     />
-
+                    
+                    {/* Redirect old route to new one for backward compatibility */}
+                    <Route 
+                      path="/myapplications"
+                      element={
+                        <Navigate to="/my-applications" replace />}
+                    />
+                    
                     <Route
                       path="/jobpostings"
                       element={
