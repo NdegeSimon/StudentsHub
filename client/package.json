@@ -12,6 +12,8 @@
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
+    "emoji-picker-react": "^4.16.1",
     "firebase": "^12.6.0",
     "framer-motion": "^12.23.26",
     "lucide": "^0.560.0",

@@ -41,25 +41,46 @@ export default function ProfileCard({ isDashboard = false }) {
     description: ''
   });
 
+  // Helper function to format date for input fields
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
   // Initialize form data when contextProfile changes
   useEffect(() => {
     if (contextProfile) {
+      console.log("Context Profile loaded:", contextProfile);
       setFormData({
-        name: contextProfile.name || '',
+        name: contextProfile.name || contextProfile.full_name || '',
         email: contextProfile.email || '',
         phone: contextProfile.phone || '',
         bio: contextProfile.bio || '',
         skills: contextProfile.skills || [],
         experience: contextProfile.experience?.map(exp => ({
-          ...exp,
-          id: exp.id || Date.now() + Math.random()
+          id: exp.id || Date.now() + Math.random(),
+          title: exp.title || exp.position || '',
+          company: exp.company || exp.organization || '',
+          location: exp.location || '',
+          startDate: formatDateForInput(exp.start_date || exp.startDate),
+          endDate: formatDateForInput(exp.end_date || exp.endDate),
+          current: exp.current || false,
+          description: exp.description || exp.summary || ''
         })) || [],
         education: contextProfile.education?.map(edu => ({
-          ...edu,
-          id: edu.id || Date.now() + Math.random()
+          id: edu.id || Date.now() + Math.random(),
+          school: edu.school || edu.institution || '',
+          degree: edu.degree || edu.qualification || '',
+          field: edu.field_of_study || edu.major || '',
+          startDate: formatDateForInput(edu.start_year || edu.start_date || edu.startDate),
+          endDate: formatDateForInput(edu.end_year || edu.end_date || edu.endDate),
+          current: edu.current || false,
+          description: edu.activities || edu.description || ''
         })) || []
       });
       setLoading(false);
+      console.log("Form Data set to:", formData);
     }
   }, [contextProfile]);
 
@@ -189,41 +210,98 @@ export default function ProfileCard({ isDashboard = false }) {
     }));
   };
 
-  // Form submission
+  // Form submission - UPDATED WITH BACKEND INTEGRATION
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSaving(true);
       
-      // Prepare data for submission
+      // Prepare data for submission - FIX FIELD NAMES
       const dataToSubmit = {
-        ...formData,
-        // Remove temporary IDs before sending to server
-        experience: formData.experience.map(({ id, ...rest }) => rest),
-        education: formData.education.map(({ id, ...rest }) => rest)
-      };
-
-      const response = await userAPI.updateProfile(dataToSubmit);
-      const updatedProfile = {
-        ...contextProfile,
-        ...response.data,
-        // Ensure we have IDs for local state management
-        experience: response.data.experience?.map(exp => ({
-          ...exp,
-          id: exp.id || Date.now() + Math.random()
+        // Map your form field names to backend expected field names
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || '',
+        bio: formData.bio || '',
+        skills: formData.skills || [],
+        experience: formData.experience.map(exp => ({
+          title: exp.title,
+          company: exp.company,
+          location: exp.location || '',
+          start_date: exp.startDate,
+          end_date: exp.endDate,
+          current: exp.current || false,
+          description: exp.description || ''
         })) || [],
-        education: response.data.education?.map(edu => ({
-          ...edu,
-          id: edu.id || Date.now() + Math.random()
+        education: formData.education.map(edu => ({
+          school: edu.school,
+          degree: edu.degree,
+          field_of_study: edu.field || '',
+          start_year: edu.startDate,
+          end_year: edu.endDate,
+          current: edu.current || false,
+          activities: edu.description || ''
         })) || []
       };
 
-      updateProfile(updatedProfile);
+      console.log("Sending data to backend:", dataToSubmit);
+      const response = await userAPI.updateProfile(dataToSubmit);
+      
+      console.log("Backend response:", response.data);
+      
+      // Update local state with response
+      const updatedProfile = response.data;
+      
+      // Transform backend response to match your local state
+      const transformedProfile = {
+        name: updatedProfile.name || updatedProfile.full_name || '',
+        email: updatedProfile.email || '',
+        phone: updatedProfile.phone || '',
+        bio: updatedProfile.bio || '',
+        skills: updatedProfile.skills || [],
+        experience: updatedProfile.experience?.map(exp => ({
+          id: exp.id || Date.now() + Math.random(),
+          title: exp.title || exp.position || '',
+          company: exp.company || exp.organization || '',
+          location: exp.location || '',
+          startDate: formatDateForInput(exp.start_date || exp.startDate),
+          endDate: formatDateForInput(exp.end_date || exp.endDate),
+          current: exp.current || false,
+          description: exp.description || exp.summary || ''
+        })) || [],
+        education: updatedProfile.education?.map(edu => ({
+          id: edu.id || Date.now() + Math.random(),
+          school: edu.school || edu.institution || '',
+          degree: edu.degree || edu.qualification || '',
+          field: edu.field_of_study || edu.major || '',
+          startDate: formatDateForInput(edu.start_year || edu.start_date || edu.startDate),
+          endDate: formatDateForInput(edu.end_year || edu.end_date || edu.endDate),
+          current: edu.current || false,
+          description: edu.activities || edu.description || ''
+        })) || []
+      };
+
+      // Update context/profile state
+      updateProfile(transformedProfile);
+      
+      // Also update your local formData
+      setFormData({
+        name: transformedProfile.name,
+        email: transformedProfile.email,
+        phone: transformedProfile.phone,
+        bio: transformedProfile.bio,
+        skills: transformedProfile.skills,
+        experience: transformedProfile.experience,
+        education: transformedProfile.education
+      });
+
       setEditing(false);
-      toast.success('Profile updated successfully');
+      toast.success('Profile updated successfully!');
+      
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+      console.error('Error details:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -278,6 +356,17 @@ export default function ProfileCard({ isDashboard = false }) {
       </div>
     );
   }
+
+  // Helper function for date display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   // Main Profile View
   return (
@@ -453,7 +542,7 @@ export default function ProfileCard({ isDashboard = false }) {
                           <h4 className="font-medium">{exp.title}</h4>
                           <p className="text-blue-300">{exp.company}</p>
                           <p className="text-sm text-blue-400">
-                            {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'Present'}
+                            {formatDateForDisplay(exp.startDate)} - {exp.current ? 'Present' : formatDateForDisplay(exp.endDate) || 'Present'}
                           </p>
                           {exp.description && (
                             <p className="mt-2 text-blue-200 text-sm">{exp.description}</p>
@@ -556,7 +645,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 </div>
               </div>
 
-              {/* Education Section - Similar to Experience */}
+              {/* Education Section */}
               <div className="bg-blue-900 p-6 rounded-xl border border-blue-800">
                 <h3 className="text-lg font-semibold mb-4">Education</h3>
                 <div className="space-y-4">
@@ -568,7 +657,7 @@ export default function ProfileCard({ isDashboard = false }) {
                           <p className="text-blue-300">{edu.school}</p>
                           <p className="text-blue-300 text-sm">{edu.field}</p>
                           <p className="text-sm text-blue-400">
-                            {edu.startDate} - {edu.current ? 'Present' : edu.endDate || 'Present'}
+                            {formatDateForDisplay(edu.startDate)} - {edu.current ? 'Present' : formatDateForDisplay(edu.endDate) || 'Present'}
                           </p>
                           {edu.description && (
                             <p className="mt-2 text-blue-200 text-sm">{edu.description}</p>
@@ -758,7 +847,7 @@ export default function ProfileCard({ isDashboard = false }) {
                         <h4 className="font-medium">{exp.title}</h4>
                         <p className="text-blue-300">{exp.company}</p>
                         <p className="text-sm text-blue-400">
-                          {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'Present'}
+                          {formatDateForDisplay(exp.startDate)} - {exp.current ? 'Present' : formatDateForDisplay(exp.endDate) || 'Present'}
                         </p>
                         {exp.description && (
                           <p className="mt-2 text-blue-200 text-sm">{exp.description}</p>
@@ -780,7 +869,7 @@ export default function ProfileCard({ isDashboard = false }) {
                         <p className="text-blue-300">{edu.school}</p>
                         <p className="text-blue-300 text-sm">{edu.field}</p>
                         <p className="text-sm text-blue-400">
-                          {edu.startDate} - {edu.current ? 'Present' : edu.endDate || 'Present'}
+                          {formatDateForDisplay(edu.startDate)} - {edu.current ? 'Present' : formatDateForDisplay(edu.endDate) || 'Present'}
                         </p>
                         {edu.description && (
                           <p className="mt-2 text-blue-200 text-sm">{edu.description}</p>
