@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, HelpCircle, User, Settings, Moon, Sparkles, Shield, Zap, Mail, Save, ChevronRight } from 'lucide-react';
+import { Search, Bell, HelpCircle, User, Settings, Sparkles, Shield, Zap, Mail, Save, ChevronRight } from 'lucide-react';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -229,7 +229,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                    <SettingsIcon className="h-5 w-5 text-purple-400" />
+                    <Settings className="h-5 w-5 text-purple-400" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-white">Settings</div>
