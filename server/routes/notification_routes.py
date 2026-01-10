@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models.notification import Notification  # Assuming you have a Notification model
+from models.models import Notification, db
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 

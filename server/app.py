@@ -112,7 +112,7 @@ def create_app():
         print("✅ Notification routes blueprint registered")
         
         # Import and register messaging routes
-        from routes.messages import messages_bp
+        from routes.message_routes import message_bp as messages_bp
         app.register_blueprint(messages_bp, url_prefix='/api/messages')
         print("✅ Messaging routes blueprint registered")
         

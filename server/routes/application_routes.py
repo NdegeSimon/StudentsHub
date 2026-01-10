@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models.application import Application  # Assuming you have an Application model
+from models.models import Application, db
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 

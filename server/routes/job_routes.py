@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models.job import Job  # Assuming you have a Job model
+from models.models import Job, db
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
