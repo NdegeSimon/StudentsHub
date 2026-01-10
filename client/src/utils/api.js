@@ -79,4 +79,118 @@ export const applicationAPI = {
   updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
   getUpcomingDeadlines: () => api.get('/applications/upcoming-deadlines'),
 };
+export const initSocket = (token, userId) => {
+  if (socket) socket.disconnect();
+  
+  socket = io(process.env.REACT_APP_WS_URL || 'http://localhost:5000', {
+    auth: { token },
+    query: { userId }
+  });
+  
+  return socket;
+};
+
+// Get socket instance
+export const getSocket = () => socket;
+
+// API calls
+export const messageAPI = {
+  // Get all conversations
+  getConversations: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/messages/conversations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+  
+  // Create or get conversation
+  createConversation: async (otherUserId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(
+      `${API_BASE_URL}/messages/conversations/${otherUserId}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+  
+  // Get messages
+  getMessages: async (conversationId, page = 1, perPage = 50) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(
+      `${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
+      {
+        params: { page, per_page: perPage },
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return response.data;
+  },
+  
+  // Upload file
+  uploadFile: async (file, conversationId) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('conversation_id', conversationId);
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/messages/upload`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return response.data;
+  },
+  
+  // Mark message as read
+  markAsRead: async (messageId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(
+      `${API_BASE_URL}/messages/${messageId}/read`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
+};
+
+// WebSocket events
+export const setupSocketEvents = (socket, callbacks) => {
+  if (!socket) return;
+  
+  socket.on('connect', () => {
+    console.log('Connected to WebSocket');
+    socket.emit('join', { user_id: callbacks.userId });
+  });
+  
+  socket.on('new_message', (message) => {
+    callbacks.onNewMessage && callbacks.onNewMessage(message);
+  });
+  
+  socket.on('user_typing', (data) => {
+    callbacks.onUserTyping && callbacks.onUserTyping(data);
+  });
+  
+  socket.on('message_read_status', (data) => {
+    callbacks.onMessageRead && callbacks.onMessageRead(data);
+  });
+  
+  socket.on('reaction_added', (data) => {
+    callbacks.onReactionAdded && callbacks.onReactionAdded(data);
+  });
+  
+  socket.on('user_online', (data) => {
+    callbacks.onUserOnline && callbacks.onUserOnline(data);
+  });
+  
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+  });
+};
 export default api;

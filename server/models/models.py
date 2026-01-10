@@ -5,6 +5,11 @@ from extensions import db  # Import db from extensions
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 
+import jwt
+import os
+from extensions import db, bcrypt
+from sqlalchemy.dialects.postgresql import JSON
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -15,6 +20,10 @@ class User(db.Model):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=True)
     role = db.Column(db.String(20), nullable=False)  # 'student' or 'employer'
+    avatar = db.Column(db.String(255))
+    is_online = db.Column(db.Boolean, default=False)
+    socket_id = db.Column(db.String(100))
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), nullable=True)
@@ -28,6 +37,8 @@ class User(db.Model):
     student_profile = db.relationship('Student', backref='user', uselist=False, cascade='all, delete-orphan')
     company_profile = db.relationship('Company', backref='user', uselist=False, cascade='all, delete-orphan')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    conversations = db.relationship('Participant', back_populates='user', cascade='all, delete-orphan')
+    sent_messages = db.relationship('Message', backref='sender', lazy=True, foreign_keys='Message.sender_id')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -35,16 +46,29 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def generate_token(self):
+        payload = {
+            'user_id': self.id,
+            'email': self.email,
+            'role': self.role,
+            'exp': datetime.utcnow().timestamp() + 86400  # 24 hours
+        }
+        return jwt.encode(payload, os.getenv('SECRET_KEY'), algorithm='HS256')
+
     def to_dict(self):
         return {
             'id': self.id,
             'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name or '',
+            'name': f"{self.first_name} {self.last_name or ''}".strip(),
             'role': self.role,
+            'avatar': self.avatar,
+            'is_online': self.is_online,
             'is_active': self.is_active,
             'is_verified': self.is_verified,
             'last_login': self.last_login.isoformat() if self.last_login else None,
+            'last_seen': self.last_seen.isoformat(),
             'created_at': self.created_at.isoformat()
         }
 
@@ -78,11 +102,14 @@ class Student(db.Model):
     # Relationships
     applications = db.relationship('Application', backref='student', lazy='dynamic', cascade='all, delete-orphan')
     saved_jobs = db.relationship('SavedJob', backref='student', lazy='dynamic', cascade='all, delete-orphan')
+    saved_by_companies = db.relationship('SavedCandidate', backref='student', lazy='dynamic', cascade='all, delete-orphan')
+    reviews = db.relationship('CompanyReview', backref='student', lazy='dynamic', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'user': self.user.to_dict() if self.user else None,
             'phone': self.phone,
             'location': self.location,
             'bio': self.bio,
@@ -133,6 +160,7 @@ class Company(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'user': self.user.to_dict() if self.user else None,
             'company_name': self.company_name,
             'description': self.description,
             'industry': self.industry,
@@ -180,6 +208,7 @@ class Job(db.Model):
     # Relationships
     applications = db.relationship('Application', backref='job', lazy='dynamic', cascade='all, delete-orphan')
     saved_by = db.relationship('SavedJob', backref='job', lazy='dynamic', cascade='all, delete-orphan')
+    analytics = db.relationship('JobAnalytics', backref='job', lazy='dynamic', cascade='all, delete-orphan')
 
     def to_dict(self, include_company=True):
         data = {
@@ -318,39 +347,6 @@ class Interview(db.Model):
         }
 
 
-class Message(db.Model):
-    __tablename__ = 'messages'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=False)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    sender_type = db.Column(db.String(20), nullable=False)  # 'student' or 'employer'
-    subject = db.Column(db.String(200))
-    message_body = db.Column(db.Text, nullable=False)
-    is_read = db.Column(db.Boolean, default=False, index=True)
-    attachments = db.Column(db.JSON)  # Array of attachment URLs
-    sent_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    read_at = db.Column(db.DateTime)
-
-    # Relationships
-    sender = db.relationship('User', foreign_keys=[sender_id])
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'application_id': self.application_id,
-            'sender_id': self.sender_id,
-            'sender_type': self.sender_type,
-            'sender_name': f"{self.sender.first_name} {self.sender.last_name or ''}".strip(),
-            'subject': self.subject,
-            'message_body': self.message_body,
-            'is_read': self.is_read,
-            'attachments': self.attachments,
-            'sent_at': self.sent_at.isoformat(),
-            'read_at': self.read_at.isoformat() if self.read_at else None
-        }
-
-
 class SavedJob(db.Model):
     __tablename__ = 'saved_jobs'
     
@@ -374,9 +370,6 @@ class SavedCandidate(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     notes = db.Column(db.Text)
     saved_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
-    student = db.relationship('Student', backref='saved_by_companies')
 
     # Ensure unique saved candidate per company
     __table_args__ = (
@@ -435,9 +428,6 @@ class CompanyReview(db.Model):
     helpful_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Relationships
-    student = db.relationship('Student', backref='reviews')
 
     def to_dict(self):
         return {
@@ -498,8 +488,81 @@ class JobAnalytics(db.Model):
     clicks = db.Column(db.Integer, default=0)
     unique_visitors = db.Column(db.Integer, default=0)
     
-    job = db.relationship('Job', backref='analytics')
-    
     __table_args__ = (
         db.UniqueConstraint('job_id', 'date', name='unique_job_analytics_per_day'),
     )
+
+
+# Messaging System Models
+
+class Conversation(db.Model):
+    __tablename__ = 'conversations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=True)
+    last_message = db.Column(db.String(500))
+    last_message_at = db.Column(db.DateTime, default=datetime.utcnow)
+    encryption_key = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    participants = db.relationship('Participant', back_populates='conversation', cascade='all, delete-orphan')
+    messages = db.relationship('Message', backref='conversation', lazy=True, cascade='all, delete-orphan')
+
+
+class Participant(db.Model):
+    __tablename__ = 'participants'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_type = db.Column(db.String(20), nullable=False)  # 'student' or 'employer'
+    unread_count = db.Column(db.Integer, default=0)
+    is_muted = db.Column(db.Boolean, default=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    conversation = db.relationship('Conversation', back_populates='participants')
+    user = db.relationship('User', back_populates='conversations')
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    message_type = db.Column(db.String(20), default='text')  # 'text', 'image', 'document', 'voice'
+    file_url = db.Column(db.String(500))
+    file_name = db.Column(db.String(255))
+    file_size = db.Column(db.String(50))
+    is_encrypted = db.Column(db.Boolean, default=True)
+    encryption_key = db.Column(db.String(255))
+    reactions = db.Column(JSON)  # Store as JSON: [{"emoji": "👍", "users": [1, 2]}]
+    reply_to_id = db.Column(db.Integer, db.ForeignKey('messages.id'), nullable=True)
+    status = db.Column(db.String(20), default='sent')  # 'sent', 'delivered', 'read'
+    read_by = db.Column(JSON)  # Store user IDs who read the message
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Self-referential relationship for replies
+    replies = db.relationship('Message', backref=db.backref('parent', remote_side=[id]), lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'sender_id': self.sender_id,
+            'sender': self.sender.to_dict() if self.sender else None,
+            'content': self.content,
+            'message_type': self.message_type,
+            'file_url': self.file_url,
+            'file_name': self.file_name,
+            'file_size': self.file_size,
+            'reactions': self.reactions or [],
+            'reply_to_id': self.reply_to_id,
+            'status': self.status,
+            'read_by': self.read_by or [],
+            'created_at': self.created_at.isoformat()
+        }
