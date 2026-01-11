@@ -269,9 +269,13 @@ class Application(db.Model):
 
     # Relationships
     interviews = db.relationship('Interview', backref='application', lazy='dynamic', cascade='all, delete-orphan')
-    messages = db.relationship('Message', backref='application', lazy='dynamic', cascade='all, delete-orphan')
-
-    # Ensure unique application per student per job
+    messages = db.relationship(
+        'Message', 
+        foreign_keys='Message.application_id',
+        backref=db.backref('application', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
     __table_args__ = (
         db.UniqueConstraint('job_id', 'student_id', name='unique_job_student_application'),
     )
@@ -548,7 +552,8 @@ class Message(db.Model):
     
     # Self-referential relationship for replies
     replies = db.relationship('Message', backref=db.backref('parent', remote_side=[id]), lazy=True)
-
+    application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=True)
+    
     def to_dict(self):
         return {
             'id': self.id,
