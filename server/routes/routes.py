@@ -1,4 +1,4 @@
-# routes/routes.py
+# routes/routes.py - FIXED VERSION
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import (
@@ -9,14 +9,18 @@ from flask_jwt_extended import (
     get_jwt
 )
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import os
+import secrets
+import json
 from werkzeug.utils import secure_filename
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func
 
-# Import models and extensions
-from models import User
-from extensions import jwt, db
+# Import ALL models and extensions at the top
+from models import db, User, Student, Company, Job, Application, Notification, JobAnalytics
+from extensions import jwt
 
 # Blueprint
 bp = Blueprint('auth', __name__)
@@ -31,9 +35,6 @@ def is_valid_email(email):
 
 @bp.route('/auth/register', methods=['POST'])
 def register():
-    from models import db, User, Student, Company
-    from sqlalchemy.exc import SQLAlchemyError
-
     try:
         data = request.get_json()
         
@@ -118,8 +119,6 @@ def register():
         
 @bp.route('/auth/login', methods=['POST'])
 def login():
-    from models import User
-
     try:
         data = request.get_json()
         if not data or not data.get('email') or not data.get('password'):
@@ -140,7 +139,7 @@ def login():
         return jsonify({
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "user": user.to_dict() if hasattr(user, 'to_dict') else {
+            "user": {
                 "id": user.id,
                 "email": user.email,
                 "first_name": user.first_name,
@@ -165,8 +164,6 @@ def refresh():
 @bp.route('/auth/me', methods=['GET'])
 @jwt_required()
 def get_me():
-    from models import User
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -175,7 +172,7 @@ def get_me():
         if not user:
             return jsonify({"error": "User not found"}), 404
             
-        return jsonify(user.to_dict() if hasattr(user, 'to_dict') else {
+        return jsonify({
             "id": user.id,
             "email": user.email,
             "first_name": user.first_name,
@@ -194,8 +191,6 @@ def get_me():
 @jwt_required()
 def get_profile():
     """Get the current user's profile"""
-    from models import User
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -204,7 +199,7 @@ def get_profile():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        profile = user.to_dict() if hasattr(user, 'to_dict') else {
+        profile = {
             "id": user.id,
             "email": user.email,
             "first_name": user.first_name,
@@ -212,8 +207,8 @@ def get_profile():
             "role": user.role
         }
 
-        if user.role == 'student' and hasattr(user, 'student_profile') and user.student_profile:
-            s = user.student_profile
+        if user.role == 'student' and hasattr(user, 'student') and user.student:
+            s = user.student
             profile.update({
                 "phone": s.phone,
                 "address": s.address,
@@ -222,8 +217,8 @@ def get_profile():
                 "resume_url": s.resume_url,
                 "profile_picture": s.profile_picture
             })
-        elif user.role == 'employer' and hasattr(user, 'company_profile') and user.company_profile:
-            c = user.company_profile
+        elif user.role == 'employer' and hasattr(user, 'company') and user.company:
+            c = user.company
             profile.update({
                 "company_name": c.company_name,
                 "description": c.description,
@@ -244,14 +239,53 @@ def get_profile():
 @jwt_required()
 def get_auth_profile():
     """Alias for /profile to maintain API consistency"""
-    return get_profile()
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        profile = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role
+        }
+
+        if user.role == 'student' and hasattr(user, 'student') and user.student:
+            s = user.student
+            profile.update({
+                "phone": s.phone,
+                "address": s.address,
+                "education": s.education,
+                "skills": s.skills,
+                "resume_url": s.resume_url,
+                "profile_picture": s.profile_picture
+            })
+        elif user.role == 'employer' and hasattr(user, 'company') and user.company:
+            c = user.company
+            profile.update({
+                "company_name": c.company_name,
+                "description": c.description,
+                "website": c.website,
+                "phone": c.phone,
+                "address": c.address,
+                "logo_url": c.logo_url
+            })
+
+        return jsonify(profile), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get auth profile error: {str(e)}")
+        return jsonify({"error": "Failed to fetch profile"}), 500
 
 
 @bp.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    from models import db, User
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -273,8 +307,8 @@ def update_profile():
             user.password_hash = generate_password_hash(data['new_password'])
 
         # Student profile
-        if user.role == 'student' and hasattr(user, 'student_profile') and user.student_profile:
-            s = user.student_profile
+        if user.role == 'student' and hasattr(user, 'student') and user.student:
+            s = user.student
             if 'phone' in data:
                 s.phone = data['phone']
             if 'address' in data:
@@ -289,8 +323,8 @@ def update_profile():
                 s.profile_picture = data['profile_picture']
 
         # Employer profile
-        elif user.role == 'employer' and hasattr(user, 'company_profile') and user.company_profile:
-            c = user.company_profile
+        elif user.role == 'employer' and hasattr(user, 'company') and user.company:
+            c = user.company
             if 'company_name' in data:
                 c.company_name = data['company_name']
             if 'description' in data:
@@ -317,8 +351,6 @@ def update_profile():
 
 @bp.route('/jobs', methods=['GET'])
 def get_jobs():
-    from models import Job
-    
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('limit', 10, type=int)
@@ -370,8 +402,6 @@ def get_jobs():
 
 @bp.route('/jobs/<int:job_id>', methods=['GET'])
 def get_job(job_id):
-    from models import Job
-    
     try:
         job = Job.query.get_or_404(job_id)
         if not job.is_active:
@@ -404,8 +434,6 @@ def get_job(job_id):
 @bp.route('/applications', methods=['POST'])
 @jwt_required()
 def create_application():
-    from models import db, User, Job, Application
-
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -422,12 +450,17 @@ def create_application():
         if not job or not job.is_active:
             return jsonify({"error": "Job not found or inactive"}), 404
 
-        if Application.query.filter_by(job_id=job.id, student_id=user.student_profile.id).first():
+        # Get student profile
+        student = Student.query.filter_by(user_id=user_id).first()
+        if not student:
+            return jsonify({"error": "Student profile not found"}), 404
+
+        if Application.query.filter_by(job_id=job.id, student_id=student.id).first():
             return jsonify({"error": "Already applied"}), 400
 
         app = Application(
             job_id=job.id,
-            student_id=user.student_profile.id,
+            student_id=student.id,
             cover_letter=data.get('cover_letter', '')
         )
         db.session.add(app)
@@ -444,8 +477,6 @@ def create_application():
 @bp.route('/applications/me', methods=['GET'])
 @jwt_required()
 def get_my_applications():
-    from models import User, Application
-
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -454,7 +485,11 @@ def get_my_applications():
         if not user or user.role != 'student':
             return jsonify({"error": "Only students can view applications"}), 403
 
-        apps = Application.query.filter_by(student_id=user.student_profile.id)\
+        student = Student.query.filter_by(user_id=user_id).first()
+        if not student:
+            return jsonify({"error": "Student profile not found"}), 404
+
+        apps = Application.query.filter_by(student_id=student.id)\
             .order_by(Application.created_at.desc()).all()
 
         result = []
@@ -478,9 +513,6 @@ def get_my_applications():
 @bp.route('/applications/upcoming-deadlines', methods=['GET'])
 @jwt_required()
 def get_upcoming_deadlines():
-    from models import User, Application, Job
-    from datetime import datetime, timedelta
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -488,6 +520,10 @@ def get_upcoming_deadlines():
         user = User.query.get(user_id)
         if not user or user.role != 'student':
             return jsonify({"error": "Only students can view upcoming deadlines"}), 403
+        
+        student = Student.query.filter_by(user_id=user_id).first()
+        if not student:
+            return jsonify({"error": "Student profile not found"}), 404
         
         # Get applications with deadlines in the next 30 days
         thirty_days_later = datetime.utcnow() + timedelta(days=30)
@@ -497,7 +533,7 @@ def get_upcoming_deadlines():
         ).join(
             Job, Application.job_id == Job.id
         ).filter(
-            Application.student_id == user.student_profile.id,
+            Application.student_id == student.id,
             Job.deadline >= datetime.utcnow(),
             Job.deadline <= thirty_days_later
         ).order_by(
@@ -554,7 +590,7 @@ def upload_file(file_type):
     except Exception as e:
         current_app.logger.error(f"File upload error: {str(e)}")
         return jsonify({"error": "File upload failed"}), 500
-# Add these routes to your routes/routes.py file
+
 
 # ==================== ADMIN ROUTES ====================
 
@@ -562,15 +598,13 @@ def upload_file(file_type):
 @jwt_required()
 def admin_get_users():
     """Admin: Get all users (admin only)"""
-    from models import User
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
         
-        # Check if user is admin (you might want to add an admin role to User model)
+        # Check if user is admin
         user = User.query.get(user_id)
-        if not user or user.role != 'admin':  # Add admin role to User model
+        if not user or user.role != 'admin':
             return jsonify({"error": "Admin access required"}), 403
         
         page = request.args.get('page', 1, type=int)
@@ -588,14 +622,14 @@ def admin_get_users():
         
         users_list = []
         for user in pagination.items:
-            users_list.append(user.to_dict() if hasattr(user, 'to_dict') else {
+            users_list.append({
                 "id": user.id,
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "role": user.role,
-                "is_active": user.is_active,
-                "created_at": user.created_at.isoformat()
+                "is_active": getattr(user, 'is_active', True),
+                "created_at": user.created_at.isoformat() if user.created_at else None
             })
         
         return jsonify({
@@ -614,8 +648,6 @@ def admin_get_users():
 @jwt_required()
 def admin_toggle_user(user_id):
     """Admin: Toggle user active status"""
-    from models import User, db
-    
     try:
         admin_identity = get_jwt_identity()
         admin_id = admin_identity.get('id') if isinstance(admin_identity, dict) else admin_identity
@@ -656,8 +688,6 @@ def admin_toggle_user(user_id):
 @bp.route('/companies', methods=['GET'])
 def get_companies():
     """Get all companies (public)"""
-    from models import Company
-    
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('limit', 10, type=int)
@@ -698,7 +728,7 @@ def get_companies():
                 "location": company.location,
                 "logo_url": company.logo_url,
                 "verification_status": company.verification_status,
-                "jobs_count": company.jobs.filter_by(is_active=True).count(),
+                "jobs_count": len([job for job in company.jobs if job.is_active]),
                 "created_at": company.created_at.isoformat()
             })
         
@@ -717,17 +747,16 @@ def get_companies():
 @bp.route('/companies/<int:company_id>', methods=['GET'])
 def get_company(company_id):
     """Get company details by ID"""
-    from models import Company
-    
     try:
         company = Company.query.get_or_404(company_id)
         
         # Count active jobs
-        active_jobs_count = company.jobs.filter_by(is_active=True).count()
+        active_jobs = [job for job in company.jobs if job.is_active]
+        active_jobs_count = len(active_jobs)
         
         # Get recent jobs
         recent_jobs = []
-        for job in company.jobs.filter_by(is_active=True).order_by(Job.created_at.desc()).limit(5).all():
+        for job in sorted(active_jobs, key=lambda x: x.created_at, reverse=True)[:5]:
             recent_jobs.append({
                 "id": job.id,
                 "title": job.title,
@@ -769,8 +798,6 @@ def get_company(company_id):
 @bp.route('/companies/<int:company_id>/jobs', methods=['GET'])
 def get_company_jobs(company_id):
     """Get all jobs for a specific company"""
-    from models import Company, Job
-    
     try:
         company = Company.query.get_or_404(company_id)
         
@@ -778,17 +805,20 @@ def get_company_jobs(company_id):
         per_page = request.args.get('limit', 10, type=int)
         job_type = request.args.get('type')
         
-        query = company.jobs.filter_by(is_active=True)
+        query = [job for job in company.jobs if job.is_active]
         
         if job_type:
-            query = query.filter(Job.job_type == job_type)
+            query = [job for job in query if job.job_type == job_type]
         
-        pagination = query.order_by(Job.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        # Manual pagination
+        total = len(query)
+        pages = (total + per_page - 1) // per_page
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_jobs = query[start:end]
         
         jobs_list = []
-        for job in pagination.items:
+        for job in paginated_jobs:
             jobs_list.append({
                 "id": job.id,
                 "title": job.title,
@@ -800,7 +830,7 @@ def get_company_jobs(company_id):
                 "salary_min": job.salary_min,
                 "salary_max": job.salary_max,
                 "created_at": job.created_at.isoformat(),
-                "applicants_count": job.applications.count()
+                "applicants_count": len(job.applications)
             })
         
         return jsonify({
@@ -810,9 +840,9 @@ def get_company_jobs(company_id):
                 "logo_url": company.logo_url
             },
             "jobs": jobs_list,
-            "total": pagination.total,
-            "pages": pagination.pages,
-            "current_page": pagination.page
+            "total": total,
+            "pages": pages,
+            "current_page": page
         }), 200
         
     except Exception as e:
@@ -826,9 +856,6 @@ def get_company_jobs(company_id):
 @jwt_required()
 def employer_dashboard():
     """Get employer dashboard statistics"""
-    from models import User, Company, Job, Application, db
-    from datetime import datetime, timedelta
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -842,39 +869,39 @@ def employer_dashboard():
             return jsonify({"error": "Company profile not found"}), 404
         
         # Basic stats
-        active_jobs = company.jobs.filter_by(is_active=True).count()
-        total_applications = db.session.query(Application).join(Job).filter(Job.company_id == company.id).count()
+        active_jobs = len([job for job in company.jobs if job.is_active])
+        
+        # Get all applications for company's jobs
+        all_applications = []
+        for job in company.jobs:
+            all_applications.extend(job.applications)
+        total_applications = len(all_applications)
         
         # Recent applications (last 30 days)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        recent_applications = db.session.query(Application).join(Job).filter(
-            Job.company_id == company.id,
-            Application.created_at >= thirty_days_ago
-        ).count()
+        recent_applications = len([app for app in all_applications 
+                                  if app.created_at >= thirty_days_ago])
         
         # Job with most applications
-        popular_job = db.session.query(
-            Job, db.func.count(Application.id).label('app_count')
-        ).outerjoin(
-            Application, Job.id == Application.job_id
-        ).filter(
-            Job.company_id == company.id,
-            Job.is_active == True
-        ).group_by(
-            Job.id
-        ).order_by(
-            db.desc('app_count')
-        ).first()
+        popular_job = None
+        max_applications = 0
+        for job in company.jobs:
+            if job.is_active:
+                app_count = len(job.applications)
+                if app_count > max_applications:
+                    max_applications = app_count
+                    popular_job = job
         
         # Recent job postings
         recent_jobs = []
-        for job in company.jobs.filter_by(is_active=True).order_by(Job.created_at.desc()).limit(5).all():
-            recent_jobs.append({
-                "id": job.id,
-                "title": job.title,
-                "created_at": job.created_at.isoformat(),
-                "applications": job.applications.count()
-            })
+        for job in sorted(company.jobs, key=lambda x: x.created_at, reverse=True)[:5]:
+            if job.is_active:
+                recent_jobs.append({
+                    "id": job.id,
+                    "title": job.title,
+                    "created_at": job.created_at.isoformat(),
+                    "applications": len(job.applications)
+                })
         
         dashboard_data = {
             "company": {
@@ -888,9 +915,9 @@ def employer_dashboard():
                 "recent_applications": recent_applications
             },
             "popular_job": {
-                "id": popular_job[0].id if popular_job else None,
-                "title": popular_job[0].title if popular_job else None,
-                "applications": popular_job[1] if popular_job else 0
+                "id": popular_job.id if popular_job else None,
+                "title": popular_job.title if popular_job else None,
+                "applications": max_applications
             } if popular_job else None,
             "recent_jobs": recent_jobs
         }
@@ -906,8 +933,6 @@ def employer_dashboard():
 @jwt_required()
 def employer_get_applications():
     """Get applications for employer's jobs"""
-    from models import User, Company, Application, Job, Student
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -925,29 +950,44 @@ def employer_get_applications():
         job_id = request.args.get('job_id')
         status = request.args.get('status')
         
-        # Build query
-        query = db.session.query(Application, Job, Student, User).join(
-            Job, Application.job_id == Job.id
-        ).join(
-            Student, Application.student_id == Student.id
-        ).join(
-            User, Student.user_id == User.id
-        ).filter(
-            Job.company_id == company.id
-        )
+        # Get all applications for company's jobs
+        all_applications = []
+        for job in company.jobs:
+            for app in job.applications:
+                # Filter by job_id if specified
+                if job_id and str(job.id) != str(job_id):
+                    continue
+                # Filter by status if specified
+                if status and app.status != status:
+                    continue
+                
+                student = Student.query.get(app.student_id)
+                student_user = User.query.get(student.user_id) if student else None
+                
+                all_applications.append({
+                    "app": app,
+                    "job": job,
+                    "student": student,
+                    "student_user": student_user
+                })
         
-        if job_id:
-            query = query.filter(Application.job_id == job_id)
-        if status:
-            query = query.filter(Application.status == status)
+        # Sort by creation date
+        all_applications.sort(key=lambda x: x["app"].created_at, reverse=True)
         
-        total = query.count()
-        applications = query.order_by(
-            Application.created_at.desc()
-        ).offset((page - 1) * per_page).limit(per_page).all()
+        # Pagination
+        total = len(all_applications)
+        pages = (total + per_page - 1) // per_page
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_apps = all_applications[start:end]
         
         applications_list = []
-        for app, job, student, student_user in applications:
+        for item in paginated_apps:
+            app = item["app"]
+            job = item["job"]
+            student = item["student"]
+            student_user = item["student_user"]
+            
             applications_list.append({
                 "id": app.id,
                 "job": {
@@ -955,23 +995,23 @@ def employer_get_applications():
                     "title": job.title
                 },
                 "student": {
-                    "id": student.id,
-                    "name": f"{student_user.first_name} {student_user.last_name or ''}".strip(),
-                    "email": student_user.email,
-                    "phone": student.phone,
-                    "resume_url": student.resume_url,
-                    "profile_picture": student.profile_picture
+                    "id": student.id if student else None,
+                    "name": f"{student_user.first_name} {student_user.last_name or ''}".strip() if student_user else "Unknown",
+                    "email": student_user.email if student_user else None,
+                    "phone": student.phone if student else None,
+                    "resume_url": student.resume_url if student else None,
+                    "profile_picture": student.profile_picture if student else None
                 },
                 "cover_letter": app.cover_letter,
                 "status": app.status,
                 "applied_at": app.created_at.isoformat(),
-                "match_percentage": app.match_percentage
+                "match_percentage": getattr(app, 'match_percentage', 0)
             })
         
         return jsonify({
             "applications": applications_list,
             "total": total,
-            "pages": (total + per_page - 1) // per_page,
+            "pages": pages,
             "current_page": page
         }), 200
         
@@ -984,8 +1024,6 @@ def employer_get_applications():
 @jwt_required()
 def update_application_status(application_id):
     """Update application status (employer only)"""
-    from models import User, Company, Application, db
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -1001,7 +1039,8 @@ def update_application_status(application_id):
         application = Application.query.get_or_404(application_id)
         
         # Check if application belongs to employer's company
-        if application.job.company_id != company.id:
+        job = Job.query.get(application.job_id)
+        if not job or job.company_id != company.id:
             return jsonify({"error": "Application not found"}), 404
         
         data = request.get_json()
@@ -1031,8 +1070,8 @@ def update_application_status(application_id):
             "application": {
                 "id": application.id,
                 "status": application.status,
-                "job_title": application.job.title,
-                "student_name": f"{application.student.user.first_name} {application.student.user.last_name or ''}".strip()
+                "job_title": job.title,
+                "student_name": f"{application.student.user.first_name} {application.student.user.last_name or ''}".strip() if application.student and application.student.user else "Unknown"
             }
         }), 200
         
@@ -1048,9 +1087,6 @@ def update_application_status(application_id):
 @jwt_required()
 def student_dashboard():
     """Get student dashboard statistics"""
-    from models import User, Student, Application, db
-    from datetime import datetime, timedelta
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -1064,36 +1100,25 @@ def student_dashboard():
             return jsonify({"error": "Student profile not found"}), 404
         
         # Basic stats
-        total_applications = Application.query.filter_by(student_id=student.id).count()
+        total_applications = len(student.applications)
         
         # Status breakdown
-        status_counts = db.session.query(
-            Application.status, db.func.count(Application.id)
-        ).filter(
-            Application.student_id == student.id
-        ).group_by(
-            Application.status
-        ).all()
-        
-        status_breakdown = {status: count for status, count in status_counts}
+        status_counts = {}
+        for app in student.applications:
+            status = app.status
+            status_counts[status] = status_counts.get(status, 0) + 1
         
         # Recent applications (last 30 days)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        recent_applications = Application.query.filter(
-            Application.student_id == student.id,
-            Application.created_at >= thirty_days_ago
-        ).count()
+        recent_applications = len([app for app in student.applications 
+                                  if app.created_at >= thirty_days_ago])
         
         # Recent application activity
         recent_activity = []
-        for app in Application.query.filter_by(
-            student_id=student.id
-        ).order_by(
-            Application.created_at.desc()
-        ).limit(5).all():
+        for app in sorted(student.applications, key=lambda x: x.created_at, reverse=True)[:5]:
             recent_activity.append({
                 "job_title": app.job.title,
-                "company_name": app.job.company.company_name,
+                "company_name": app.job.company.company_name if app.job.company else "Unknown",
                 "status": app.status,
                 "applied_at": app.created_at.isoformat()
             })
@@ -1107,7 +1132,7 @@ def student_dashboard():
             "stats": {
                 "total_applications": total_applications,
                 "recent_applications": recent_applications,
-                "status_breakdown": status_breakdown
+                "status_breakdown": status_counts
             },
             "recent_activity": recent_activity
         }
@@ -1125,8 +1150,6 @@ def student_dashboard():
 @jwt_required()
 def get_notifications():
     """Get user notifications"""
-    from models import User, Notification
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -1148,7 +1171,7 @@ def get_notifications():
         
         notifications_list = []
         for notification in pagination.items:
-            notifications_list.append(notification.to_dict() if hasattr(notification, 'to_dict') else {
+            notifications_list.append({
                 "id": notification.id,
                 "type": notification.notification_type,
                 "title": notification.title,
@@ -1179,8 +1202,6 @@ def get_notifications():
 @jwt_required()
 def mark_notification_read(notification_id):
     """Mark notification as read"""
-    from models import User, Notification, db
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
@@ -1214,25 +1235,20 @@ def mark_notification_read(notification_id):
 @jwt_required()
 def mark_all_notifications_read():
     """Mark all notifications as read"""
-    from models import User, Notification, db
-    
     try:
         user_identity = get_jwt_identity()
         user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
         
         # Update all unread notifications for user
-        updated = db.session.query(Notification).filter(
-            Notification.user_id == user_id,
-            Notification.is_read == False
-        ).update({
-            'is_read': True,
-            'read_at': datetime.utcnow()
-        })
+        notifications = Notification.query.filter_by(user_id=user_id, is_read=False).all()
+        for notification in notifications:
+            notification.is_read = True
+            notification.read_at = datetime.utcnow()
         
         db.session.commit()
         
         return jsonify({
-            "message": f"Marked {updated} notifications as read"
+            "message": f"Marked {len(notifications)} notifications as read"
         }), 200
         
     except Exception as e:
@@ -1246,19 +1262,19 @@ def mark_all_notifications_read():
 @bp.route('/analytics/job-views/<int:job_id>', methods=['POST'])
 def track_job_view(job_id):
     """Track a job view (for analytics)"""
-    from models import Job, JobAnalytics, db
-    from datetime import date
-    
     try:
         job = Job.query.get(job_id)
         if not job or not job.is_active:
             return jsonify({"error": "Job not found"}), 404
         
         # Increment job views
-        job.views_count += 1
+        if hasattr(job, 'views_count'):
+            job.views_count += 1
+        else:
+            job.views_count = 1
         
         # Update or create daily analytics
-        today = date.today()
+        today = datetime.utcnow().date()
         analytics = JobAnalytics.query.filter_by(
             job_id=job_id,
             date=today
@@ -1299,20 +1315,19 @@ def track_job_view(job_id):
 @bp.route('/industries', methods=['GET'])
 def get_industries():
     """Get list of unique industries"""
-    from models import Company, db
-    
     try:
-        industries = db.session.query(
-            Company.industry
-        ).filter(
+        companies = Company.query.filter(
             Company.industry.isnot(None),
             Company.industry != '',
             Company.verification_status == 'verified'
-        ).distinct().order_by(
-            Company.industry
         ).all()
         
-        industry_list = [industry[0] for industry in industries if industry[0]]
+        industries = set()
+        for company in companies:
+            if company.industry:
+                industries.add(company.industry)
+        
+        industry_list = sorted(list(industries))
         
         return jsonify({
             "industries": industry_list,
@@ -1327,35 +1342,30 @@ def get_industries():
 @bp.route('/locations', methods=['GET'])
 def get_locations():
     """Get list of unique locations"""
-    from models import Company, Job, db
-    
     try:
+        all_locations = set()
+        
         # Get company locations
-        company_locations = db.session.query(
-            Company.location
-        ).filter(
+        companies = Company.query.filter(
             Company.location.isnot(None),
             Company.location != '',
             Company.verification_status == 'verified'
-        ).distinct().all()
+        ).all()
+        
+        for company in companies:
+            if company.location:
+                all_locations.add(company.location)
         
         # Get job locations
-        job_locations = db.session.query(
-            Job.location
-        ).filter(
+        jobs = Job.query.filter(
             Job.location.isnot(None),
             Job.location != '',
             Job.is_active == True
-        ).distinct().all()
+        ).all()
         
-        # Combine and deduplicate
-        all_locations = set()
-        for loc in company_locations:
-            if loc[0]:
-                all_locations.add(loc[0])
-        for loc in job_locations:
-            if loc[0]:
-                all_locations.add(loc[0])
+        for job in jobs:
+            if job.location:
+                all_locations.add(job.location)
         
         location_list = sorted(list(all_locations))
         
@@ -1372,9 +1382,6 @@ def get_locations():
 @bp.route('/skills', methods=['GET'])
 def get_skills():
     """Get list of unique skills from jobs and students"""
-    from models import Job, Student, db
-    import json
-    
     try:
         all_skills = set()
         
@@ -1431,8 +1438,6 @@ def get_skills():
 @bp.route('/search/global', methods=['GET'])
 def global_search():
     """Global search across jobs, companies, and students"""
-    from models import Job, Company, Student, User
-    
     try:
         query = request.args.get('q', '')
         if not query or len(query.strip()) < 2:
@@ -1462,13 +1467,18 @@ def global_search():
         ).order_by(Company.created_at.desc()).limit(10).all()
         
         # Search students
-        students = Student.query.join(User).filter(
-            Student.is_profile_public == True,
-            (User.first_name.ilike(search_term) |
-             User.last_name.ilike(search_term) |
-             Student.bio.ilike(search_term) |
-             Student.location.ilike(search_term))
-        ).order_by(Student.created_at.desc()).limit(10).all()
+        students = []
+        all_students = Student.query.join(User).filter(
+            Student.is_profile_public == True
+        ).all()
+        
+        for student in all_students:
+            user = student.user
+            if (user.first_name and search_term[2:-2].lower() in user.first_name.lower() or
+                user.last_name and search_term[2:-2].lower() in user.last_name.lower() or
+                student.bio and search_term[2:-2].lower() in student.bio.lower() or
+                student.location and search_term[2:-2].lower() in student.location.lower()):
+                students.append(student)
         
         jobs_list = []
         for job in jobs:
@@ -1491,10 +1501,11 @@ def global_search():
             })
         
         students_list = []
-        for student in students:
+        for student in students[:10]:  # Limit to 10
+            user = student.user
             students_list.append({
                 "id": student.id,
-                "name": f"{student.user.first_name} {student.user.last_name or ''}".strip(),
+                "name": f"{user.first_name} {user.last_name or ''}".strip(),
                 "bio": student.bio[:100] if student.bio else "",
                 "location": student.location,
                 "profile_picture": student.profile_picture,
@@ -1518,10 +1529,6 @@ def global_search():
 @bp.route('/auth/forgot-password', methods=['POST'])
 def forgot_password():
     """Request password reset"""
-    from models import User, db
-    import secrets
-    from datetime import datetime, timedelta
-    
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
@@ -1562,9 +1569,6 @@ def forgot_password():
 @bp.route('/auth/reset-password', methods=['POST'])
 def reset_password():
     """Reset password with token"""
-    from models import User, db
-    from datetime import datetime
-    
     try:
         data = request.get_json()
         token = data.get('token')
@@ -1621,23 +1625,18 @@ def logout():
 @bp.route('/system/status', methods=['GET'])
 def system_status():
     """Get system status and statistics"""
-    from models import User, Job, Company, Application
-    
     try:
         total_users = User.query.count()
-        total_jobs = Job.query.filter_by(is_active=True).count()
+        total_jobs = len([job for job in Job.query.all() if job.is_active])
         total_companies = Company.query.filter_by(verification_status='verified').count()
         total_applications = Application.query.count()
         
         # Recent activity (last 24 hours)
-        from datetime import datetime, timedelta
         twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
         
         recent_users = User.query.filter(User.created_at >= twenty_four_hours_ago).count()
-        recent_jobs = Job.query.filter(
-            Job.is_active == True,
-            Job.created_at >= twenty_four_hours_ago
-        ).count()
+        recent_jobs = len([job for job in Job.query.filter(Job.created_at >= twenty_four_hours_ago).all() 
+                          if job.is_active])
         recent_applications = Application.query.filter(
             Application.created_at >= twenty_four_hours_ago
         ).count()
@@ -1664,8 +1663,7 @@ def system_status():
             "status": "error",
             "message": "Failed to get system status"
         }), 500
-# Note: Saved jobs routes have been moved to saved_jobs_routes.py
-# Import and register the saved_jobs_bp in app.py
+
 
 # ==================== JWT ERROR HANDLERS ====================
 
@@ -1684,5 +1682,3 @@ def expired_token_callback(_, __):
 @jwt.revoked_token_loader
 def revoked_token_callback(_, __):
     return jsonify({"error": "Token revoked"}), 401
-
-

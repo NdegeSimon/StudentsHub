@@ -57,20 +57,20 @@ class User(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'email': self.email,
-            'first_name': self.first_name,
-            'last_name': self.last_name or '',
-            'name': f"{self.first_name} {self.last_name or ''}".strip(),
-            'role': self.role,
-            'avatar': self.avatar,
-            'is_online': self.is_online,
-            'is_active': self.is_active,
-            'is_verified': self.is_verified,
-            'last_login': self.last_login.isoformat() if self.last_login else None,
-            'last_seen': self.last_seen.isoformat(),
-            'created_at': self.created_at.isoformat()
-        }
+        'id': self.id,
+        'email': self.email,
+        'first_name': self.first_name,
+        'last_name': self.last_name or '',
+        'name': f"{self.first_name} {self.last_name or ''}".strip(),
+        'role': self.role,
+        'avatar': self.avatar,
+        'is_online': self.is_online,
+        'is_active': self.is_active,
+        'is_verified': self.is_verified,
+        'last_login': self.last_login.isoformat() if self.last_login else None,
+        'last_seen': self.last_seen.isoformat() if self.last_seen else None,  # FIXED
+        'created_at': self.created_at.isoformat() if self.created_at else None  # FIXED
+    }
 
 
 class Student(db.Model):
