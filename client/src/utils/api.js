@@ -2,17 +2,17 @@ import axios from 'axios';
 
 // Create an axios instance with base URL
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api', // Point to the correct backend URL
+  baseURL: 'http://localhost:5001/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for cookies if using sessions
+  timeout: 10000, // 10 second timeout
 });
 
-// Add a request interceptor to include auth token if available
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,174 +23,110 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle specific error cases
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          console.log('Unauthorized - redirecting to login');
+          // Clear auth data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+          break;
+        
+        case 403:
+          console.log('Forbidden access');
+          break;
+          
+        case 404:
+          console.log('API endpoint not found');
+          break;
+          
+        case 500:
+          console.log('Server error');
+          break;
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+    } else {
+      // Something happened in setting up the request
+      console.error('Request error:', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // API functions
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
   getCurrentUser: () => api.get('/auth/me'),
+  logout: () => api.post('/auth/logout'),
 };
 
-// In client/src/utils/api.js
+// User profile API
 export const userAPI = {
-  getProfile: () => api.get('/auth/me'),  // Changed from '/auth/profile' to '/auth/me'
-  updateProfile: (data) => api.put('/profile', data, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  }),
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/profile', data),
 };
 
-export const courseAPI = {
-  getAllCourses: () => api.get('/courses'),
-  getCourse: (courseId) => api.get(`/courses/${courseId}`),
-  createCourse: (courseData) => api.post('/courses', courseData),
-  updateCourse: (courseId, courseData) => api.put(`/courses/${courseId}`, courseData),
-  deleteCourse: (courseId) => api.delete(`/courses/${courseId}`),
-};
-// Add this with the other APIs
+// Job API
 export const jobAPI = {
   getAllJobs: () => api.get('/jobs'),
   getJob: (jobId) => api.get(`/jobs/${jobId}`),
   createJob: (jobData) => api.post('/jobs', jobData),
-  updateJob: (jobId, jobData) => api.put(`/jobs/${jobId}`, jobData),
-  deleteJob: (jobId) => api.delete(`/jobs/${jobId}`),
-  applyToJob: (jobId) => api.post(`/jobs/${jobId}/apply`),
-  // Add more endpoints as needed
+  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
 };
+
+// Course API
+export const courseAPI = {
+  getAllCourses: () => api.get('/courses'),
+  getCourse: (courseId) => api.get(`/courses/${courseId}`),
+  enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
+};
+
+// Upload API
 export const uploadAPI = {
   uploadProfilePicture: (file) => {
     const formData = new FormData();
     formData.append('profile_picture', file);
-    return api.post('/auth/upload-profile-picture', formData);
+    return api.post('/upload/profile-picture', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   },
-
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('resume', file);
-    return api.post('/auth/upload-resume', formData);
+    return api.post('/upload/resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   },
 };
+
+// Application API
 export const applicationAPI = {
   getMyApplications: () => api.get('/applications/me'),
-  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
-  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
-  updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
-  getUpcomingDeadlines: () => api.get('/applications/upcoming-deadlines'),
-};
-export const initSocket = (token, userId) => {
-  if (socket) socket.disconnect();
-  
-  socket = io(process.env.REACT_APP_WS_URL || 'http://localhost:5000', {
-    auth: { token },
-    query: { userId }
-  });
-  
-  return socket;
 };
 
-// Get socket instance
-export const getSocket = () => socket;
-
-// API calls
+// Message API
 export const messageAPI = {
-  // Get all conversations
-  getConversations: async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_BASE_URL}/messages/conversations`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  },
-  
-  // Create or get conversation
-  createConversation: async (otherUserId) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_BASE_URL}/messages/conversations/${otherUserId}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  },
-  
-  // Get messages
-  getMessages: async (conversationId, page = 1, perPage = 50) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(
-      `${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
-      {
-        params: { page, per_page: perPage },
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-    return response.data;
-  },
-  
-  // Upload file
-  uploadFile: async (file, conversationId) => {
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('conversation_id', conversationId);
-    
-    const response = await axios.post(
-      `${API_BASE_URL}/messages/upload`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
-    return response.data;
-  },
-  
-  // Mark message as read
-  markAsRead: async (messageId) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_BASE_URL}/messages/${messageId}/read`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  }
+  getConversations: () => api.get('/messages/conversations'),
+  getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
+  sendMessage: (conversationId, message) => api.post(`/messages/conversations/${conversationId}`, message),
 };
 
-// WebSocket events
-export const setupSocketEvents = (socket, callbacks) => {
-  if (!socket) return;
-  
-  socket.on('connect', () => {
-    console.log('Connected to WebSocket');
-    socket.emit('join', { user_id: callbacks.userId });
-  });
-  
-  socket.on('new_message', (message) => {
-    callbacks.onNewMessage && callbacks.onNewMessage(message);
-  });
-  
-  socket.on('user_typing', (data) => {
-    callbacks.onUserTyping && callbacks.onUserTyping(data);
-  });
-  
-  socket.on('message_read_status', (data) => {
-    callbacks.onMessageRead && callbacks.onMessageRead(data);
-  });
-  
-  socket.on('reaction_added', (data) => {
-    callbacks.onReactionAdded && callbacks.onReactionAdded(data);
-  });
-  
-  socket.on('user_online', (data) => {
-    callbacks.onUserOnline && callbacks.onUserOnline(data);
-  });
-  
-  socket.on('error', (error) => {
-    console.error('Socket error:', error);
-  });
-};
+// Export the axios instance as default
 export default api;

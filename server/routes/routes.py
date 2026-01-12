@@ -14,6 +14,7 @@ import re
 import os
 import secrets
 import json
+import traceback
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
@@ -130,37 +131,86 @@ def register():
 @bp.route('/auth/login', methods=['POST'])
 def login():
     try:
+        current_app.logger.info("=== Login attempt ===")
         data = request.get_json()
-        if not data or not data.get('email') or not data.get('password'):
-            return jsonify({"error": "Email and password required"}), 400
+        
+        if not data:
+            current_app.logger.error("No data provided in login request")
+            return jsonify({"error": "Request data is required"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        current_app.logger.info(f"Login attempt for email: {email}")
+        
+        if not email or not password:
+            current_app.logger.error("Email and password are required")
+            return jsonify({"error": "Email and password are required"}), 400
 
-        email = data['email'].strip().lower()
-        user = User.query.filter_by(email=email).first()
+        email = email.strip().lower()
+        current_app.logger.debug(f"Looking up user with email: {email}")
+        
+        try:
+            user = User.query.filter_by(email=email).first()
+        except Exception as db_error:
+            current_app.logger.error(f"Database error during user lookup: {str(db_error)}")
+            current_app.logger.error(traceback.format_exc())
+            return jsonify({"error": "Database error during login"}), 500
 
-        if not user or not check_password_hash(user.password_hash, data['password']):
+        if not user:
+            current_app.logger.warning(f"No user found with email: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
+            
+        current_app.logger.debug(f"User found: ID {user.id}, Role: {user.role}")
 
+        # Verify password
+        try:
+            if not check_password_hash(user.password_hash, password):
+                current_app.logger.warning(f"Invalid password for user: {email}")
+                return jsonify({"error": "Invalid email or password"}), 401
+        except Exception as pwd_error:
+            current_app.logger.error(f"Password verification failed: {str(pwd_error)}")
+            current_app.logger.error(traceback.format_exc())
+            return jsonify({"error": "Error during password verification"}), 500
+
+        # Check if account is active
         if getattr(user, 'is_active', True) is False:
+            current_app.logger.warning(f"Login attempt for deactivated account: {email}")
             return jsonify({"error": "Account deactivated"}), 403
 
-        access_token = create_access_token(identity={"id": user.id, "role": user.role})
-        refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
-
-        return jsonify({
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user": {
+        # Create tokens
+        try:
+            token_data = {"id": user.id, "role": user.role}
+            current_app.logger.debug(f"Creating tokens for user ID: {user.id}")
+            
+            access_token = create_access_token(identity=token_data)
+            refresh_token = create_refresh_token(identity=token_data)
+            
+            user_data = {
                 "id": user.id,
                 "email": user.email,
                 "first_name": user.first_name,
-                "last_name": user.last_name,
+                "last_name": user.last_name or "",
                 "role": user.role
             }
-        }), 200
+            
+            current_app.logger.info(f"Successful login for user ID: {user.id}")
+            
+            return jsonify({
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "user": user_data
+            }), 200
+            
+        except Exception as token_error:
+            current_app.logger.error(f"Token creation failed: {str(token_error)}")
+            current_app.logger.error(traceback.format_exc())
+            return jsonify({"error": "Error creating authentication tokens"}), 500
 
     except Exception as e:
-        current_app.logger.error(f"Login error: {str(e)}")
-        return jsonify({"error": "Login failed"}), 500
+        current_app.logger.error(f"Unexpected error in login: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({"error": "An unexpected error occurred during login"}), 500
 
 
 @bp.route('/auth/refresh', methods=['POST'])
@@ -176,19 +226,32 @@ def refresh():
 def get_me():
     try:
         # Get the identity from the JWT token
-        user_identity = get_jwt_identity()
+        current_app.logger.info("=== /auth/me endpoint called ===")
         
-        # Log the raw identity for debugging
-        current_app.logger.debug(f"JWT Identity: {user_identity}")
+        # Get the raw JWT token for debugging
+        jwt_data = get_jwt()
+        current_app.logger.info(f"JWT data: {jwt_data}")
+        
+        user_identity = get_jwt_identity()
+        current_app.logger.info(f"JWT Identity: {user_identity}")
         
         # Handle different identity formats
         if isinstance(user_identity, dict):
             user_id = user_identity.get('id')
             if not user_id:
-                current_app.logger.error("JWT identity is missing 'id' field")
-                return jsonify({"error": "Invalid token format"}), 401
+                error_msg = "JWT identity is missing 'id' field"
+                current_app.logger.error(error_msg)
+                return jsonify({"error": error_msg}), 401
         else:
             user_id = user_identity
+            
+        current_app.logger.info(f"Extracted user_id: {user_id}")
+        
+        # Verify user_id is not None or empty
+        if not user_id:
+            error_msg = "No user ID found in JWT token"
+            current_app.logger.error(error_msg)
+            return jsonify({"error": error_msg}), 401
             
         # Get user from database
         user = User.query.get(user_id)
