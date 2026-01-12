@@ -20,7 +20,6 @@ class User(db.Model):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=True)
     role = db.Column(db.String(20), nullable=False)  # 'student' or 'employer'
-    avatar = db.Column(db.String(255))
     is_online = db.Column(db.Boolean, default=False)
     socket_id = db.Column(db.String(100))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -57,21 +56,20 @@ class User(db.Model):
 
     def to_dict(self):
         return {
-        'id': self.id,
-        'email': self.email,
-        'first_name': self.first_name,
-        'last_name': self.last_name or '',
-        'name': f"{self.first_name} {self.last_name or ''}".strip(),
-        'role': self.role,
-        'avatar': self.avatar,
-        'is_online': self.is_online,
-        'is_active': self.is_active,
-        'is_verified': self.is_verified,
-        'last_login': self.last_login.isoformat() if self.last_login else None,
-        'last_seen': self.last_seen.isoformat() if self.last_seen else None,  # FIXED
-        'created_at': self.created_at.isoformat() if self.created_at else None  # FIXED
-    }
-
+            'id': self.id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name or '',
+            'name': f"{self.first_name} {self.last_name or ''}".strip(),
+            'role': self.role,
+            'avatar': self.avatar,
+            'is_online': self.is_online,
+            'is_active': self.is_active,
+            'is_verified': self.is_verified,
+            'last_login': self.last_login.isoformat() if self.last_login else None,
+            'last_seen': self.last_seen.isoformat() if self.last_seen else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
 class Student(db.Model):
     __tablename__ = 'students'

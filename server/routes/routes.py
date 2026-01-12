@@ -67,14 +67,14 @@ def register():
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 409
 
-        # Create user WITHOUT explicit transaction management
+        # Create user with proper password hashing
         user = User(
             email=email,
-            password_hash=generate_password_hash(password),
             first_name=first_name,
             last_name=last_name,
             role=role
         )
+        user.set_password(password)  # This will properly hash the password
         db.session.add(user)
         db.session.flush()  # Get the user ID without committing
 
@@ -90,7 +90,7 @@ def register():
         # Commit everything at once
         db.session.commit()
 
-        # Generate tokens
+        # Generate tokens using Flask-JWT-Extended
         access_token = create_access_token(identity={"id": user.id, "role": user.role})
         refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
 
@@ -109,12 +109,22 @@ def register():
 
     except SQLAlchemyError as e:
         db.session.rollback()
-        current_app.logger.error(f"Database error during registration: {str(e)}")
-        return jsonify({"error": "Database error during registration"}), 500
+        error_msg = f"Database error during registration: {str(e)}"
+        current_app.logger.error(error_msg)
+        return jsonify({
+            "error": "Database error during registration",
+            "details": str(e)
+        }), 500
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Unexpected error in registration: {str(e)}")
-        return jsonify({"error": "An unexpected error occurred"}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        current_app.logger.error(f"Unexpected error in registration: {str(e)}\n{error_trace}")
+        return jsonify({
+            "error": "An unexpected error occurred",
+            "details": str(e),
+            "trace": error_trace if current_app.config.get('DEBUG') else None
+        }), 500
 
         
 @bp.route('/auth/login', methods=['POST'])
@@ -165,24 +175,54 @@ def refresh():
 @jwt_required()
 def get_me():
     try:
+        # Get the identity from the JWT token
         user_identity = get_jwt_identity()
-        user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
         
+        # Log the raw identity for debugging
+        current_app.logger.debug(f"JWT Identity: {user_identity}")
+        
+        # Handle different identity formats
+        if isinstance(user_identity, dict):
+            user_id = user_identity.get('id')
+            if not user_id:
+                current_app.logger.error("JWT identity is missing 'id' field")
+                return jsonify({"error": "Invalid token format"}), 401
+        else:
+            user_id = user_identity
+            
+        # Get user from database
         user = User.query.get(user_id)
         if not user:
+            current_app.logger.error(f"User not found with ID: {user_id}")
             return jsonify({"error": "User not found"}), 404
             
-        return jsonify({
+        # Return user data
+        user_data = {
             "id": user.id,
             "email": user.email,
             "first_name": user.first_name,
-            "last_name": user.last_name,
-            "role": user.role
-        }), 200
+            "last_name": user.last_name or '',
+            "role": user.role,
+            "is_active": user.is_active
+        }
+        
+        # Add profile data based on role
+        if hasattr(user, 'student_profile') and user.student_profile:
+            user_data['profile_complete'] = bool(user.student_profile.skills)
+        elif hasattr(user, 'company_profile') and user.company_profile:
+            user_data['profile_complete'] = bool(user.company_profile.description)
+            
+        return jsonify(user_data), 200
         
     except Exception as e:
-        current_app.logger.error(f"Get me error: {str(e)}")
-        return jsonify({"error": "Failed to fetch user"}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        current_app.logger.error(f"Error in /auth/me: {str(e)}\n{error_trace}")
+        return jsonify({
+            "error": "Failed to fetch user data",
+            "details": str(e),
+            "trace": error_trace if current_app.config.get('DEBUG') else None
+        }), 500
 
 
 # ==================== PROFILE ROUTES ====================
