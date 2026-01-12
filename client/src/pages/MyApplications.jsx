@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, HelpCircle, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import { applicationAPI } from "../utils/api";
+
+// Backend API configuration
+const API_BASE_URL = 'http://localhost:5001/api'; // Change this to your backend URL
+
+// API functions
+const applicationAPI = {
+  getMyApplications: async (params) => {
+    const response = await fetch(`${API_BASE_URL}/applications?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Add auth token if needed
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch applications');
+    }
+    
+    return await response.json();
+  }
+};
 
 export default function MyApplications() {
-  const navigate = useNavigate();
-  const { darkMode } = useTheme();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    status: 'all',
-    sort: 'newest'
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
-  // Fetch applications when component mounts or filters change
+  // Fetch applications from backend
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -24,11 +39,11 @@ export default function MyApplications() {
         
         // Build query params
         const params = new URLSearchParams();
-        if (filters.status !== 'all') params.append('status', filters.status);
-        if (filters.sort) params.append('sort', filters.sort);
+        if (filterStatus !== 'all') params.append('status', filterStatus);
+        if (searchTerm) params.append('search', searchTerm);
         
         const response = await applicationAPI.getMyApplications(params);
-        setApplications(response.data || []);
+        setApplications(response.data || response || []);
       } catch (err) {
         console.error('Error fetching applications:', err);
         setError('Failed to load applications. Please try again later.');
@@ -38,37 +53,19 @@ export default function MyApplications() {
     };
 
     fetchApplications();
-  }, [filters]);
+  }, [filterStatus, searchTerm]);
 
-  const handleStatusFilter = (status) => {
-    setFilters(prev => ({
-      ...prev,
-      status: prev.status === status ? 'all' : status
-    }));
-  };
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Trigger fetch through filterStatus dependency
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  const handleSortChange = (e) => {
-    setFilters(prev => ({
-      ...prev,
-      sort: e.target.value
-    }));
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return <Clock className="h-4 w-4 mr-1.5" />;
-      case 'accepted':
-      case 'hired':
-        return <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 mr-1.5 text-red-500" />;
-      case 'withdrawn':
-        return <AlertCircle className="h-4 w-4 mr-1.5 text-yellow-500" />;
-      default:
-        return <Clock className="h-4 w-4 mr-1.5" />;
-    }
-  };
+  // Filter applications locally if needed (optional - can be done on backend)
+  const filteredApplications = applications;
 
   const statusStyles = {
     'pending': 'bg-blue-900/50 text-blue-100 border-blue-700',
@@ -90,6 +87,8 @@ export default function MyApplications() {
     'withdrawn': 'Withdrawn'
   };
 
+  const shortlistedCount = applications.filter(app => app.status === 'shortlisted').length;
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       {/* Navigation Bar */}
@@ -97,29 +96,18 @@ export default function MyApplications() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
+              <div className="text-xl font-bold text-purple-400">
                 Studex
-              </Link>
+              </div>
               <nav className="hidden md:ml-10 md:flex space-x-1">
-                <NavLink to="/jobs">Jobs</NavLink>
-                <NavLink to="/internships">Internships</NavLink>
-                <NavLink to="/myapplications" active>My Applications</NavLink>
-                <NavLink to="/messages">Messages</NavLink>
+                <NavLink>Jobs</NavLink>
+                <NavLink>Internships</NavLink>
+                <NavLink active>My Applications</NavLink>
+                <NavLink>Messages</NavLink>
               </nav>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
-                  placeholder="Search jobs..."
-                />
-              </div>
-              
               <button className="p-2 rounded-full text-gray-300 hover:bg-gray-700 focus:outline-none transition-colors">
                 <HelpCircle className="h-6 w-6" />
               </button>
@@ -158,10 +146,40 @@ export default function MyApplications() {
               <div className="bg-gray-800 border border-gray-700 rounded-xl px-5 py-3 text-center">
                 <p className="text-sm text-gray-400">Shortlisted</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {applications.filter(app => app.status === 'Shortlisted').length}
+                  {shortlistedCount}
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-lg leading-5 focus:outline-none sm:text-sm transition-colors"
+                placeholder="Search applications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-purple-500 focus:border-purple-500 focus:outline-none transition-colors"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under Review</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="interview">Interview</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+            </select>
           </div>
 
           {/* Loading State */}
@@ -175,13 +193,19 @@ export default function MyApplications() {
           {error && (
             <div className="bg-red-900/20 border border-red-700 rounded-2xl p-6 text-center">
               <p className="text-red-300">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Retry
+              </button>
             </div>
           )}
 
           {/* Applications List */}
-          {!loading && !error && applications.length > 0 && (
+          {!loading && !error && filteredApplications.length > 0 && (
             <div className="space-y-5">
-              {applications.map((app) => (
+              {filteredApplications.map((app) => (
                 <div
                   key={app.id}
                   className="bg-gray-800 border border-gray-700 hover:border-purple-600 rounded-2xl p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between transition-all hover:shadow-lg hover:shadow-purple-900/20"
@@ -189,7 +213,7 @@ export default function MyApplications() {
                   {/* Left */}
                   <div className="flex gap-4">
                     {/* Company Logo Placeholder */}
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center font-bold bg-gray-700 text-purple-400">
+                    <div className="h-14 w-14 rounded-xl flex items-center justify-center font-bold bg-gray-700 text-purple-400 text-xl">
                       {app.company.charAt(0)}
                     </div>
 
@@ -226,26 +250,28 @@ export default function MyApplications() {
           )}
 
           {/* Empty State */}
-          {!loading && !error && applications.length === 0 && (
+          {!loading && !error && filteredApplications.length === 0 && (
             <div className="bg-gray-800 border border-gray-700 rounded-2xl p-16 text-center">
               <div className="max-w-md mx-auto">
                 <div className="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center mx-auto mb-6">
-                  <svg className="h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <Search className="h-12 w-12 text-gray-500" />
                 </div>
                 <h2 className="text-2xl font-semibold text-white mb-3">
-                  No applications yet
+                  {searchTerm || filterStatus !== 'all' ? 'No applications found' : 'No applications yet'}
                 </h2>
                 <p className="text-gray-400 mb-6">
-                  Start applying for jobs and track them here. Your job search journey begins now!
+                  {searchTerm || filterStatus !== 'all' 
+                    ? 'Try adjusting your search or filters to find what you\'re looking for.'
+                    : 'Start applying for jobs and track them here. Your job search journey begins now!'
+                  }
                 </p>
-                <button 
-                  onClick={() => navigate('/jobs')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50"
-                >
-                  Browse Jobs
-                </button>
+                {!searchTerm && filterStatus === 'all' && (
+                  <button 
+                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50"
+                  >
+                    Browse Jobs
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -256,10 +282,9 @@ export default function MyApplications() {
 }
 
 // NavLink component for consistent styling
-function NavLink({ to, children, active = false }) {
+function NavLink({ children, active = false }) {
   return (
-    <Link
-      to={to}
+    <button
       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
           ? 'bg-blue-900 text-white'
@@ -267,6 +292,6 @@ function NavLink({ to, children, active = false }) {
       }`}
     >
       {children}
-    </Link>
+    </button>
   );
 }

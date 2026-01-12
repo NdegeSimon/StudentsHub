@@ -27,43 +27,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle specific error cases
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          console.log('Unauthorized - redirecting to login');
-          // Clear auth data
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          
-          // Only redirect if not already on login page
-          if (!window.location.pathname.includes('/login')) {
-            window.location.href = '/login';
-          }
-          break;
-        
-        case 403:
-          console.log('Forbidden access');
-          break;
-          
-        case 404:
-          console.log('API endpoint not found');
-          break;
-          
-        case 500:
-          console.log('Server error');
-          break;
-      }
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-    } else {
-      // Something happened in setting up the request
-      console.error('Request error:', error.message);
-    }
-    
+    console.error('API Error:', error.response?.status, error.message);
     return Promise.reject(error);
   }
 );
@@ -88,6 +52,7 @@ export const jobAPI = {
   getJob: (jobId) => api.get(`/jobs/${jobId}`),
   createJob: (jobData) => api.post('/jobs', jobData),
   applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
+  searchJobs: (filters) => api.get('/jobs/search', { params: filters }),
 };
 
 // Course API
@@ -115,10 +80,21 @@ export const uploadAPI = {
   },
 };
 
-// Application API
+// Application API - ADD THE MISSING FUNCTION
 export const applicationAPI = {
   getMyApplications: () => api.get('/applications/me'),
+  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
+  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
+  updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
+  getUpcomingDeadlines: () => api.get('/applications/upcoming-deadlines'), // ADD THIS LINE
+};
+
+// Search API
+export const searchAPI = {
+  getSavedSearches: () => api.get('/searches/saved'),
+  saveSearch: (searchData) => api.post('/searches/save', searchData),
+  deleteSavedSearch: (searchId) => api.delete(`/searches/${searchId}`),
 };
 
 // Message API
@@ -126,6 +102,142 @@ export const messageAPI = {
   getConversations: () => api.get('/messages/conversations'),
   getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
   sendMessage: (conversationId, message) => api.post(`/messages/conversations/${conversationId}`, message),
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getRecentActivity: () => api.get('/dashboard/activity'),
+  getUpcomingDeadlines: () => api.get('/dashboard/deadlines'), // Alternative endpoint
+};
+
+// Mock data for development when backend is down
+export const mockAPI = {
+  jobs: {
+    getAllJobs: async () => {
+      return {
+        data: [
+          {
+            id: 1,
+            title: 'Frontend Developer',
+            company: 'TechCorp',
+            location: 'Remote',
+            salary: '$80,000 - $100,000',
+            description: 'Looking for React developer',
+            type: 'Full-time',
+            postedDate: '2024-01-15'
+          },
+          {
+            id: 2,
+            title: 'Backend Developer',
+            company: 'StartupHub',
+            location: 'New York, NY',
+            salary: '$90,000 - $120,000',
+            description: 'Node.js developer needed',
+            type: 'Full-time',
+            postedDate: '2024-01-14'
+          }
+        ]
+      };
+    }
+  },
+  
+  applications: {
+    getUpcomingDeadlines: async () => {
+      return {
+        data: [
+          {
+            id: 1,
+            jobTitle: 'Senior Developer',
+            company: 'TechCorp',
+            deadline: '2024-01-25',
+            status: 'Submitted'
+          },
+          {
+            id: 2,
+            jobTitle: 'Marketing Manager',
+            company: 'StartupHub',
+            deadline: '2024-01-28',
+            status: 'In Review'
+          }
+        ]
+      };
+    },
+    
+    getMyApplications: async () => {
+      return {
+        data: [
+          {
+            id: 1,
+            jobTitle: 'Frontend Developer',
+            company: 'TechCorp',
+            appliedDate: '2024-01-10',
+            status: 'Under Review'
+          }
+        ]
+      };
+    }
+  },
+  
+  searches: {
+    getSavedSearches: async () => {
+      return {
+        data: [
+          {
+            id: 1,
+            query: 'React Developer',
+            filters: { location: 'Remote' },
+            lastSearch: '2024-01-15'
+          }
+        ]
+      };
+    }
+  }
+};
+
+// Smart API wrapper that falls back to mock data when backend is down
+export const smartAPI = {
+  jobs: {
+    getAllJobs: async () => {
+      try {
+        return await jobAPI.getAllJobs();
+      } catch (error) {
+        console.log('Using mock jobs data');
+        return await mockAPI.jobs.getAllJobs();
+      }
+    }
+  },
+  
+  applications: {
+    getUpcomingDeadlines: async () => {
+      try {
+        return await applicationAPI.getUpcomingDeadlines();
+      } catch (error) {
+        console.log('Using mock deadlines data');
+        return await mockAPI.applications.getUpcomingDeadlines();
+      }
+    },
+    
+    getMyApplications: async () => {
+      try {
+        return await applicationAPI.getMyApplications();
+      } catch (error) {
+        console.log('Using mock applications data');
+        return await mockAPI.applications.getMyApplications();
+      }
+    }
+  },
+  
+  searches: {
+    getSavedSearches: async () => {
+      try {
+        return await searchAPI.getSavedSearches();
+      } catch (error) {
+        console.log('Using mock searches data');
+        return await mockAPI.searches.getSavedSearches();
+      }
+    }
+  }
 };
 
 // Export the axios instance as default

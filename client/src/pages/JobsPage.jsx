@@ -94,21 +94,23 @@ export default function JobsPage() {
 
   // Fetch jobs from API
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const response = await jobAPI.getAllJobs();
-        setJobs(response.data);
-      } catch (err) {
-        console.error("Error fetching jobs:", err);
-        setError("Failed to load jobs. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const response = await jobAPI.getAllJobs();
+      // Ensure we're working with an array
+      setJobs(Array.isArray(response?.data) ? response.data : []);
+    } catch (err) {
+      console.error('Error fetching jobs:', err);
+      setError('Failed to load jobs. Please try again later.');
+      setJobs([]); // Ensure jobs is always an array
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchJobs();
-  }, []);
+  fetchJobs();
+}, []);
 
   // Handle search
   const handleSearch = (e) => {
