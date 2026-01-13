@@ -1,249 +1,929 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import { toast } from 'react-toastify';
-import moment from 'moment';
+import { 
+  Search, Filter, Calendar, X, Plus, TrendingUp, Users, Target, FileText,
+  ChevronDown, Clock, Building, MapPin, Briefcase, DollarSign, Zap, Sparkles,
+  Eye, Download, Share2, MessageSquare, CheckCircle, XCircle, AlertCircle, 
+  Loader2, Star, Bookmark, ExternalLink, BarChart3, Bell, Trash2, Edit3,
+  ArrowUpRight, TrendingDown, Activity, Award, Send, Phone, Mail
+} from 'lucide-react';
 
-const ApplicationsList = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+// Mock Data Generator
+const generateMockApplications = () => [
+  {
+    id: 1,
+    title: 'Senior Frontend Developer',
+    company: 'TechCorp Inc.',
+    location: 'San Francisco, CA',
+    type: 'Full-time',
+    salary: '$120k - $180k',
+    status: 'interviewing',
+    appliedDate: '2025-01-10T10:00:00Z',
+    updatedAt: '2025-01-12T15:30:00Z',
+    description: 'We are looking for an experienced frontend developer to join our growing team.',
+    isFavorite: true,
+    notes: 'Second round interview scheduled for next week',
+    contactPerson: 'Sarah Johnson',
+    contactEmail: 'sarah@techcorp.com',
+    nextAction: 'Prepare for technical interview',
+    nextActionDate: '2025-01-20'
+  },
+  {
+    id: 2,
+    title: 'Full Stack Engineer',
+    company: 'StartupXYZ',
+    location: 'Remote',
+    type: 'Full-time',
+    salary: '$90k - $140k',
+    status: 'offered',
+    appliedDate: '2025-01-08T14:20:00Z',
+    updatedAt: '2025-01-13T09:15:00Z',
+    description: 'Join our fast-paced startup and build innovative solutions.',
+    isFavorite: true,
+    notes: 'Great culture fit, offer expires in 2 weeks',
+    contactPerson: 'Mike Chen',
+    contactEmail: 'mike@startupxyz.com',
+    nextAction: 'Review offer and negotiate',
+    nextActionDate: '2025-01-15'
+  },
+  {
+    id: 3,
+    title: 'React Developer',
+    company: 'Digital Agency Pro',
+    location: 'New York, NY',
+    type: 'Contract',
+    salary: '$80/hour',
+    status: 'reviewing',
+    appliedDate: '2025-01-05T11:30:00Z',
+    updatedAt: '2025-01-11T16:45:00Z',
+    description: 'Work on exciting client projects with cutting-edge technologies.',
+    isFavorite: false,
+    notes: 'HR mentioned potential for full-time conversion'
+  },
+  {
+    id: 4,
+    title: 'UI/UX Developer',
+    company: 'Design Studios',
+    location: 'Los Angeles, CA',
+    type: 'Full-time',
+    salary: '$100k - $130k',
+    status: 'pending',
+    appliedDate: '2025-01-11T09:00:00Z',
+    updatedAt: '2025-01-11T09:00:00Z',
+    description: 'Create beautiful and functional user interfaces.',
+    isFavorite: false
+  },
+  {
+    id: 5,
+    title: 'JavaScript Developer',
+    company: 'Enterprise Solutions',
+    location: 'Austin, TX',
+    type: 'Full-time',
+    salary: '$110k - $150k',
+    status: 'rejected',
+    appliedDate: '2025-01-03T13:15:00Z',
+    updatedAt: '2025-01-09T10:30:00Z',
+    description: 'Build scalable enterprise applications.',
+    isFavorite: false,
+    notes: 'Not enough enterprise experience, consider reapplying in 6 months'
+  }
+];
+
+const MyApplicationsDashboard = () => {
   const [applications, setApplications] = useState([]);
+  const [filteredApplications, setFilteredApplications] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    status: '',
-    dateFrom: '',
-    dateTo: ''
+    status: 'all',
+    type: 'all',
+    fromDate: '',
+    toDate: '',
+    favoriteOnly: false
   });
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'status', 'company'
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        // Add filters as query params
-        const params = new URLSearchParams();
-        if (filters.status) params.append('status', filters.status);
-        if (filters.dateFrom) params.append('date_from', filters.dateFrom);
-        if (filters.dateTo) params.append('date_to', filters.dateTo);
-        
-        const response = await api.get(`/api/applications?${params.toString()}`);
-        setApplications(response.data);
-      } catch (error) {
-        console.error('Error fetching applications:', error);
-        toast.error('Failed to load applications');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApplications();
-  }, [user, filters]);
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // Status Configuration
+  const statusConfig = {
+    pending: {
+      label: 'Pending',
+      icon: Clock,
+      color: 'bg-yellow-500',
+      lightBg: 'bg-yellow-50',
+      textColor: 'text-yellow-700',
+      borderColor: 'border-yellow-200',
+      gradient: 'from-yellow-400 to-amber-400'
+    },
+    reviewing: {
+      label: 'Under Review',
+      icon: Eye,
+      color: 'bg-blue-500',
+      lightBg: 'bg-blue-50',
+      textColor: 'text-blue-700',
+      borderColor: 'border-blue-200',
+      gradient: 'from-blue-400 to-cyan-400'
+    },
+    interviewing: {
+      label: 'Interviewing',
+      icon: Users,
+      color: 'bg-purple-500',
+      lightBg: 'bg-purple-50',
+      textColor: 'text-purple-700',
+      borderColor: 'border-purple-200',
+      gradient: 'from-purple-400 to-pink-400'
+    },
+    offered: {
+      label: 'Offered',
+      icon: CheckCircle,
+      color: 'bg-green-500',
+      lightBg: 'bg-green-50',
+      textColor: 'text-green-700',
+      borderColor: 'border-green-200',
+      gradient: 'from-green-400 to-emerald-400'
+    },
+    rejected: {
+      label: 'Rejected',
+      icon: XCircle,
+      color: 'bg-red-500',
+      lightBg: 'bg-red-50',
+      textColor: 'text-red-700',
+      borderColor: 'border-red-200',
+      gradient: 'from-red-400 to-rose-400'
+    },
+    withdrawn: {
+      label: 'Withdrawn',
+      icon: AlertCircle,
+      color: 'bg-gray-500',
+      lightBg: 'bg-gray-50',
+      textColor: 'text-gray-700',
+      borderColor: 'border-gray-200',
+      gradient: 'from-gray-400 to-slate-400'
+    }
   };
 
-  const handleWithdraw = async (applicationId) => {
-    if (window.confirm('Are you sure you want to withdraw this application?')) {
-      try {
-        await api.delete(`/api/applications/${applicationId}`);
-        setApplications(applications.filter(app => app.id !== applicationId));
-        toast.success('Application withdrawn successfully');
-      } catch (error) {
-        console.error('Error withdrawing application:', error);
-        toast.error('Failed to withdraw application');
+  // Initialize
+  useEffect(() => {
+    setTimeout(() => {
+      const mockData = generateMockApplications();
+      setApplications(mockData);
+      setFilteredApplications(mockData);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  // Filter and Search
+  useEffect(() => {
+    let filtered = [...applications];
+
+    // Search
+    if (searchQuery) {
+      filtered = filtered.filter(app =>
+        app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.location.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(app => app.status === filters.status);
+    }
+
+    // Type filter
+    if (filters.type !== 'all') {
+      filtered = filtered.filter(app => app.type === filters.type);
+    }
+
+    // Favorite filter
+    if (filters.favoriteOnly) {
+      filtered = filtered.filter(app => app.isFavorite);
+    }
+
+    // Date filters
+    if (filters.fromDate) {
+      filtered = filtered.filter(app => new Date(app.appliedDate) >= new Date(filters.fromDate));
+    }
+    if (filters.toDate) {
+      filtered = filtered.filter(app => new Date(app.appliedDate) <= new Date(filters.toDate));
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.appliedDate) - new Date(a.appliedDate);
+      } else if (sortBy === 'company') {
+        return a.company.localeCompare(b.company);
+      }
+      return 0;
+    });
+
+    setFilteredApplications(filtered);
+  }, [searchQuery, filters, applications, sortBy]);
+
+  // Calculate Stats
+  const stats = {
+    total: applications.length,
+    pending: applications.filter(app => app.status === 'pending').length,
+    reviewing: applications.filter(app => app.status === 'reviewing').length,
+    interviewing: applications.filter(app => app.status === 'interviewing').length,
+    offered: applications.filter(app => app.status === 'offered').length,
+    rejected: applications.filter(app => app.status === 'rejected').length,
+    inProgress: applications.filter(app => 
+      ['pending', 'reviewing', 'interviewing'].includes(app.status)
+    ).length,
+    successRate: applications.length > 0 
+      ? Math.round((applications.filter(app => app.status === 'offered').length / applications.length) * 100)
+      : 0
+  };
+
+  // Handlers
+  const toggleFavorite = (id) => {
+    setApplications(prev => prev.map(app =>
+      app.id === id ? { ...app, isFavorite: !app.isFavorite } : app
+    ));
+  };
+
+  const handleWithdraw = (id) => {
+    if (confirm('Are you sure you want to withdraw this application?')) {
+      setApplications(prev => prev.map(app =>
+        app.id === id ? { ...app, status: 'withdrawn' } : app
+      ));
+    }
+  };
+
+  const handleDelete = (id) => {
+    if (confirm('Are you sure you want to delete this application?')) {
+      setApplications(prev => prev.filter(app => app.id !== id));
+      if (selectedApplication?.id === id) {
+        setSelectedApplication(null);
       }
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      'applied': 'bg-blue-500',
-      'reviewed': 'bg-yellow-500',
-      'interview': 'bg-purple-500',
-      'offered': 'bg-green-500',
-      'hired': 'bg-green-700',
-      'rejected': 'bg-red-500',
-      'withdrawn': 'bg-gray-500'
-    };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
-    return (
-      <span className={`px-2 py-1 text-xs rounded-full ${statusMap[status] || 'bg-gray-600'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
   };
 
-  if (loading && applications.length === 0) {
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Job Title', 'Company', 'Location', 'Type', 'Status', 'Applied Date', 'Salary'].join(','),
+      ...filteredApplications.map(app => [
+        app.title,
+        app.company,
+        app.location,
+        app.type,
+        statusConfig[app.status]?.label,
+        new Date(app.appliedDate).toLocaleDateString(),
+        app.salary
+      ].map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `applications-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading your applications...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Applications</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Decorative Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-200 to-cyan-200 rounded-full opacity-20 blur-3xl" />
       </div>
 
-      {/* Filters */}
-      <div className="bg-gray-800 rounded-lg p-4 mb-6">
-        <h2 className="text-lg font-medium mb-4">Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="w-full p-2 rounded bg-gray-700 border border-gray-600"
-            >
-              <option value="">All Statuses</option>
-              <option value="applied">Applied</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="interview">Interview</option>
-              <option value="offered">Offered</option>
-              <option value="hired">Hired</option>
-              <option value="rejected">Rejected</option>
-              <option value="withdrawn">Withdrawn</option>
-            </select>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30">
+                  <Briefcase className="h-7 w-7 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                  My Applications
+                </h1>
+              </div>
+              <p className="text-gray-600 text-lg">
+                Track, manage, and optimize your job search journey
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={exportToCSV}
+                className="px-5 py-3 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200 flex items-center gap-2"
+              >
+                <Download className="h-5 w-5" />
+                Export
+              </button>
+              <button className="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-xl flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Add Application
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">From Date</label>
-            <input
-              type="date"
-              name="dateFrom"
-              value={filters.dateFrom}
-              onChange={handleFilterChange}
-              className="w-full p-2 rounded bg-gray-700 border border-gray-600"
-            />
+
+          {/* Advanced Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                </div>
+                <span className="text-sm font-semibold text-green-600">+12%</span>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
+              <div className="text-sm text-gray-600">Total Applications</div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-purple-50 rounded-lg">
+                  <Activity className="h-6 w-6 text-purple-600" />
+                </div>
+                <span className="text-sm font-semibold text-green-600">+8%</span>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.inProgress}</div>
+              <div className="text-sm text-gray-600">In Progress</div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <Users className="h-6 w-6 text-amber-600" />
+                </div>
+                <span className="text-sm font-semibold text-green-600">+15%</span>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.interviewing}</div>
+              <div className="text-sm text-gray-600">Interviewing</div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-green-50 rounded-lg">
+                  <Award className="h-6 w-6 text-green-600" />
+                </div>
+                <span className="text-sm font-semibold text-green-600">+25%</span>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.offered}</div>
+              <div className="text-sm text-gray-600">Offers</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Target className="h-6 w-6 text-white" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">{stats.successRate}%</div>
+              <div className="text-sm text-blue-100">Success Rate</div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">To Date</label>
-            <input
-              type="date"
-              name="dateTo"
-              value={filters.dateTo}
-              onChange={handleFilterChange}
-              className="w-full p-2 rounded bg-gray-700 border border-gray-600"
-            />
+        </div>
+
+        {/* Search and Filters */}
+        <div className="mb-6">
+          <div className="flex flex-col lg:flex-row gap-4 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by job title, company, or location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-md"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-6 py-4 rounded-2xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                  showFilters ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-700 border border-gray-200 shadow-md'
+                }`}
+              >
+                <Filter className="h-5 w-5" />
+                Filters
+              </button>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md appearance-none cursor-pointer"
+              >
+                <option value="date">Sort by Date</option>
+                <option value="company">Sort by Company</option>
+                <option value="status">Sort by Status</option>
+              </select>
+
+              <div className="flex bg-white rounded-2xl border border-gray-200 shadow-md">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-4 py-3 rounded-l-2xl transition-all ${
+                    viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <BarChart3 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-3 rounded-r-2xl transition-all ${
+                    viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <FileText className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={() => setFilters({ status: '', dateFrom: '', dateTo: '' })}
-              className="w-full p-2 bg-gray-600 hover:bg-gray-500 rounded-md"
-            >
-              Clear Filters
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="reviewing">Reviewing</option>
+                    <option value="interviewing">Interviewing</option>
+                    <option value="offered">Offered</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
+                  <select
+                    value={filters.type}
+                    onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Remote">Remote</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                  <input
+                    type="date"
+                    value={filters.fromDate}
+                    onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                  <input
+                    type="date"
+                    value={filters.toDate}
+                    onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.favoriteOnly}
+                    onChange={(e) => setFilters({ ...filters, favoriteOnly: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Show favorites only</span>
+                </label>
+
+                <button
+                  onClick={() => setFilters({ status: 'all', type: 'all', fromDate: '', toDate: '', favoriteOnly: false })}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters */}
+          {(filters.status !== 'all' || filters.type !== 'all' || filters.favoriteOnly) && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {filters.status !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                  {statusConfig[filters.status]?.label}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, status: 'all' })} />
+                </span>
+              )}
+              {filters.type !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 text-sm font-medium rounded-full">
+                  {filters.type}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, type: 'all' })} />
+                </span>
+              )}
+              {filters.favoriteOnly && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 text-sm font-medium rounded-full">
+                  Favorites
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, favoriteOnly: false })} />
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Applications Display */}
+        {filteredApplications.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-xl p-12 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FileText className="h-10 w-10 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">No applications found</h3>
+            <p className="text-gray-600 mb-6">
+              {searchQuery || filters.status !== 'all' 
+                ? "Try adjusting your search or filters"
+                : "Start tracking your job applications to see them here"}
+            </p>
+            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
+              <Plus className="h-5 w-5 inline mr-2" />
+              Add Your First Application
             </button>
           </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-gray-600">
+                Showing <span className="font-semibold text-gray-900">{filteredApplications.length}</span> of {applications.length} applications
+              </p>
+            </div>
+
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 lg:grid-cols-2 gap-6" 
+              : "space-y-4"
+            }>
+              {filteredApplications.map((app) => {
+                const status = statusConfig[app.status];
+                const StatusIcon = status.icon;
+
+                return (
+                  <div
+                    key={app.id}
+                    className="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-xl font-bold text-gray-700 shadow-md">
+                          {app.company.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
+                            {app.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Building className="h-4 w-4" />
+                            <span className="font-medium">{app.company}</span>
+                            <span className="text-gray-400">•</span>
+                            <MapPin className="h-4 w-4" />
+                            <span>{app.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleFavorite(app.id)}
+                          className={`p-2 rounded-lg transition-all ${
+                            app.isFavorite 
+                              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' 
+                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                          }`}
+                        >
+                          <Star className={`h-5 w-5 ${app.isFavorite ? 'fill-current' : ''}`} />
+                        </button>
+                        <button className="p-2 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg transition-all">
+                          <Share2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${status.lightBg} ${status.textColor} ${status.borderColor} border rounded-lg text-sm font-medium`}>
+                        <StatusIcon className="h-4 w-4" />
+                        {status.label}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm">
+                        <Briefcase className="h-4 w-4" />
+                        {app.type}
+                      </span>
+                      {app.salary && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium">
+                          <DollarSign className="h-4 w-4" />
+                          {app.salary}
+                        </span>
+                      )}
+                    </div>
+
+                    {app.description && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {app.description}
+                      </p>
+                    )}
+
+                    {app.nextAction && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-start gap-2">
+                          <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-900">{app.nextAction}</p>
+                            {app.nextActionDate && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                Due: {new Date(app.nextActionDate).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <Clock className="h-4 w-4" />
+                        Applied {formatDate(app.appliedDate)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedApplication(app)}
+                          className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition-all flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </button>
+                        {(app.status === 'pending' || app.status === 'reviewing') && (
+                          <button
+                            onClick={() => handleWithdraw(app.id)}
+                            className="px-4 py-2 bg-red-50 text-red-700 rounded-lg font-medium hover:bg-red-100 transition-all"
+                          >
+                            Withdraw
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Quick Actions & Tips */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg mb-2">AI-Powered Insights</h4>
+                <p className="text-blue-100 text-sm mb-4">
+                  Get personalized recommendations to improve your application success rate
+                </p>
+                <button className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all text-sm">
+                  View Insights
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Target className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg mb-2">Interview Preparation</h4>
+                <p className="text-purple-100 text-sm mb-4">
+                  Access curated resources to ace your upcoming interviews
+                </p>
+                <button className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm">
+                  Start Preparing
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {applications.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-medium mb-2">No applications found</h3>
-          <p className="text-gray-400 mb-4">You haven't applied to any jobs yet.</p>
-          <button
-            onClick={() => navigate('/jobs')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md"
+      {/* Application Details Modal */}
+      {selectedApplication && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedApplication(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            Browse Jobs
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {applications.map((application) => (
-            <div key={application.id} className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors">
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div className="mb-4 md:mb-0">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      {application.job.company.logo_url ? (
-                        <img 
-                          src={application.job.company.logo_url} 
-                          alt={`${application.job.company.company_name} logo`}
-                          className="h-12 w-12 rounded-md object-cover"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-md bg-gray-700 flex items-center justify-center text-lg font-bold">
-                          {application.job.company.company_name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Application Details</h2>
+                  <p className="text-gray-600 mt-1">Complete information and timeline</p>
+                </div>
+                <button
+                  onClick={() => setSelectedApplication(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-6 w-6 text-gray-600" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-start gap-4 pb-6 border-b border-gray-200">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-700 shadow-md">
+                  {selectedApplication.company.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedApplication.title}</h3>
+                  <div className="flex items-center gap-3 text-gray-600 mb-3">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      <span className="font-medium">{selectedApplication.company}</span>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium">
-                        <button 
-                          onClick={() => navigate(`/jobs/${application.job.id}`)}
-                          className="hover:text-blue-400 hover:underline"
-                        >
-                          {application.job.title}
-                        </button>
-                      </h3>
-                      <div className="flex items-center text-sm text-gray-400">
-                        <span>{application.job.company.company_name}</span>
-                        <span className="mx-2">•</span>
-                        <span>{application.job.location || 'Remote'}</span>
+                    <span className="text-gray-400">•</span>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{selectedApplication.location}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusConfig[selectedApplication.status] && (
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${statusConfig[selectedApplication.status].lightBg} ${statusConfig[selectedApplication.status].textColor} border ${statusConfig[selectedApplication.status].borderColor} rounded-lg text-sm font-medium`}>
+                        {React.createElement(statusConfig[selectedApplication.status].icon, { className: "h-4 w-4" })}
+                        {statusConfig[selectedApplication.status].label}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm">
+                      {selectedApplication.type}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Information Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-1">Applied Date</p>
+                  <p className="font-semibold text-gray-900">{formatDate(selectedApplication.appliedDate)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-1">Last Updated</p>
+                  <p className="font-semibold text-gray-900">{formatDate(selectedApplication.updatedAt)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-1">Salary Range</p>
+                  <p className="font-semibold text-gray-900">{selectedApplication.salary || 'Not specified'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-1">Job Type</p>
+                  <p className="font-semibold text-gray-900">{selectedApplication.type}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedApplication.description && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Job Description</h4>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-gray-700 leading-relaxed">{selectedApplication.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Information */}
+              {(selectedApplication.contactPerson || selectedApplication.contactEmail) && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Contact Information</h4>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                    {selectedApplication.contactPerson && (
+                      <div className="flex items-center gap-2 text-blue-900">
+                        <User className="h-4 w-4" />
+                        <span className="font-medium">{selectedApplication.contactPerson}</span>
+                      </div>
+                    )}
+                    {selectedApplication.contactEmail && (
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <Mail className="h-4 w-4" />
+                        <a href={`mailto:${selectedApplication.contactEmail}`} className="hover:underline">
+                          {selectedApplication.contactEmail}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Next Action */}
+              {selectedApplication.nextAction && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Next Action</h4>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-amber-100 rounded-lg">
+                        <Bell className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-amber-900 mb-1">{selectedApplication.nextAction}</p>
+                        {selectedApplication.nextActionDate && (
+                          <p className="text-sm text-amber-700">
+                            Due: {new Date(selectedApplication.nextActionDate).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex flex-col md:items-end space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-400">Applied:</span>
-                    <span className="text-sm">
-                      {moment(application.applied_at).format('MMM D, YYYY')}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-400">Status:</span>
-                    {getStatusBadge(application.status)}
-                  </div>
-                </div>
-              </div>
-              
-              {application.status === 'rejected' && application.rejection_reason && (
-                <div className="mt-3 p-3 bg-red-900/30 border border-red-800 rounded-md">
-                  <h4 className="font-medium text-red-300 mb-1">Reason for rejection:</h4>
-                  <p className="text-sm">{application.rejection_reason}</p>
-                </div>
               )}
-              
-              <div className="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
-                <div className="text-sm text-gray-400">
-                  Last updated: {moment(application.updated_at).fromNow()}
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => navigate(`/jobs/${application.job.id}`)}
-                    className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded-md"
-                  >
-                    View Job
-                  </button>
-                  {['applied', 'reviewed'].includes(application.status) && (
-                    <button
-                      onClick={() => handleWithdraw(application.id)}
-                      className="px-3 py-1 text-sm bg-red-900/50 hover:bg-red-800/50 border border-red-800 rounded-md"
-                    >
-                      Withdraw
-                    </button>
-                  )}
-                </div>
+
+              {/* Notes Section */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Your Notes</h4>
+                <textarea
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows="4"
+                  placeholder="Add your notes, follow-ups, or interview feedback..."
+                  defaultValue={selectedApplication.notes || ''}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => handleDelete(selectedApplication.id)}
+                  className="flex-1 px-6 py-3 bg-red-50 text-red-700 rounded-xl font-medium hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="h-5 w-5" />
+                  Delete Application
+                </button>
+                <button className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
+                  <Edit3 className="h-5 w-5" />
+                  Edit Details
+                </button>
+                <button className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                  <Send className="h-5 w-5" />
+                  Save Notes
+                </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export default ApplicationsList;
+export default MyApplicationsDashboard;
