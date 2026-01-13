@@ -4,7 +4,7 @@ import {
   ChevronDown, Clock, Building, MapPin, Briefcase, DollarSign, Zap, Sparkles,
   Eye, Download, Share2, MessageSquare, CheckCircle, XCircle, AlertCircle, 
   Loader2, Star, Bookmark, ExternalLink, BarChart3, Bell, Trash2, Edit3,
-  ArrowUpRight, TrendingDown, Activity, Award, Send, Phone, Mail
+  ArrowUpRight, TrendingDown, Activity, Award, Send, Phone, Mail, Moon, Sun
 } from 'lucide-react';
 
 // Mock Data Generator
@@ -102,64 +102,71 @@ const MyApplicationsDashboard = () => {
     toDate: '',
     favoriteOnly: false
   });
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [sortBy, setSortBy] = useState('date'); // 'date', 'status', 'company'
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('date');
+  const [darkMode, setDarkMode] = useState(true);
 
-  // Status Configuration
+  // Status Configuration - Dark Mode Colors
   const statusConfig = {
     pending: {
       label: 'Pending',
       icon: Clock,
       color: 'bg-yellow-500',
-      lightBg: 'bg-yellow-50',
-      textColor: 'text-yellow-700',
-      borderColor: 'border-yellow-200',
-      gradient: 'from-yellow-400 to-amber-400'
+      darkBg: 'bg-yellow-500/20',
+      lightBg: 'bg-yellow-500/10',
+      textColor: 'text-yellow-400',
+      borderColor: 'border-yellow-500/30',
+      gradient: 'from-yellow-500 to-amber-500'
     },
     reviewing: {
       label: 'Under Review',
       icon: Eye,
       color: 'bg-blue-500',
-      lightBg: 'bg-blue-50',
-      textColor: 'text-blue-700',
-      borderColor: 'border-blue-200',
-      gradient: 'from-blue-400 to-cyan-400'
+      darkBg: 'bg-blue-500/20',
+      lightBg: 'bg-blue-500/10',
+      textColor: 'text-blue-400',
+      borderColor: 'border-blue-500/30',
+      gradient: 'from-blue-500 to-cyan-500'
     },
     interviewing: {
       label: 'Interviewing',
       icon: Users,
       color: 'bg-purple-500',
-      lightBg: 'bg-purple-50',
-      textColor: 'text-purple-700',
-      borderColor: 'border-purple-200',
-      gradient: 'from-purple-400 to-pink-400'
+      darkBg: 'bg-purple-500/20',
+      lightBg: 'bg-purple-500/10',
+      textColor: 'text-purple-400',
+      borderColor: 'border-purple-500/30',
+      gradient: 'from-purple-500 to-pink-500'
     },
     offered: {
       label: 'Offered',
       icon: CheckCircle,
-      color: 'bg-green-500',
-      lightBg: 'bg-green-50',
-      textColor: 'text-green-700',
-      borderColor: 'border-green-200',
-      gradient: 'from-green-400 to-emerald-400'
+      color: 'bg-emerald-500',
+      darkBg: 'bg-emerald-500/20',
+      lightBg: 'bg-emerald-500/10',
+      textColor: 'text-emerald-400',
+      borderColor: 'border-emerald-500/30',
+      gradient: 'from-emerald-500 to-green-500'
     },
     rejected: {
       label: 'Rejected',
       icon: XCircle,
       color: 'bg-red-500',
-      lightBg: 'bg-red-50',
-      textColor: 'text-red-700',
-      borderColor: 'border-red-200',
-      gradient: 'from-red-400 to-rose-400'
+      darkBg: 'bg-red-500/20',
+      lightBg: 'bg-red-500/10',
+      textColor: 'text-red-400',
+      borderColor: 'border-red-500/30',
+      gradient: 'from-red-500 to-rose-500'
     },
     withdrawn: {
       label: 'Withdrawn',
       icon: AlertCircle,
       color: 'bg-gray-500',
-      lightBg: 'bg-gray-50',
-      textColor: 'text-gray-700',
-      borderColor: 'border-gray-200',
-      gradient: 'from-gray-400 to-slate-400'
+      darkBg: 'bg-gray-500/20',
+      lightBg: 'bg-gray-500/10',
+      textColor: 'text-gray-400',
+      borderColor: 'border-gray-500/30',
+      gradient: 'from-gray-500 to-slate-500'
     }
   };
 
@@ -303,21 +310,112 @@ const MyApplicationsDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">Loading your applications...</p>
+          <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-300 text-lg">Loading your applications...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between h-16 items-center">
+      <div className="flex items-center">
+        <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
+          Studex
+        </Link>
+        <nav className="hidden md:ml-10 md:flex space-x-8">
+          <Link 
+            to="/jobs" 
+            className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+          >
+            Jobs
+          </Link>
+          <Link 
+            to="#" 
+            className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+          >
+            Internships
+          </Link>
+          
+          {/* FIXED: Changed to NavLink for active state */}
+          <NavLink 
+            to="/myapplications"
+            className={({ isActive }) => 
+              `px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-purple-900 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`
+            }
+          >
+            My Applications
+          </NavLink>
+          
+          <NavLink 
+            to="/messages"
+            className={({ isActive }) => 
+              `px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-blue-900 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`
+            }
+          >
+            Messages
+          </NavLink>
+        </nav>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          {/* OPTIONAL: Change placeholder for context */}
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
+            placeholder="Search my applications..."  {/* Changed for context */}
+          />
+        </div>
+        
+        {/* Rest of your icons remain the same */}
+        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+          <HelpCircle className="h-6 w-6" />
+        </button>
+        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+          <Bell className="h-6 w-6" />
+        </button>
+        <div 
+          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+          onClick={() => navigate('/settings')}
+        >
+          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+            <Settings className="h-5 w-5" />
+          </div>
+        </div>
+        <div 
+          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+          onClick={() => navigate('/profile')}
+          title="View Profile"
+        >
+          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+            <User className="h-5 w-5" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
       {/* Decorative Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full opacity-20 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-200 to-cyan-200 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-full opacity-30 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-900/20 to-cyan-900/20 rounded-full opacity-30 blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -329,11 +427,11 @@ const MyApplicationsDashboard = () => {
                 <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30">
                   <Briefcase className="h-7 w-7 text-white" />
                 </div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-100 via-blue-200 to-indigo-200 bg-clip-text text-transparent">
                   My Applications
                 </h1>
               </div>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-400 text-lg">
                 Track, manage, and optimize your job search journey
               </p>
             </div>
@@ -341,7 +439,7 @@ const MyApplicationsDashboard = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={exportToCSV}
-                className="px-5 py-3 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200 flex items-center gap-2"
+                className="px-5 py-3 bg-gray-800 text-gray-300 rounded-xl font-medium hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-gray-700 flex items-center gap-2"
               >
                 <Download className="h-5 w-5" />
                 Export
@@ -350,56 +448,62 @@ const MyApplicationsDashboard = () => {
                 <Plus className="h-5 w-5" />
                 Add Application
               </button>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-3 bg-gray-800 text-gray-300 rounded-xl hover:bg-gray-700 transition-all duration-200 border border-gray-700"
+              >
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 
-          {/* Advanced Stats Grid */}
+          {/* Advanced Stats Grid - Dark Mode */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <FileText className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <FileText className="h-6 w-6 text-blue-400" />
                 </div>
-                <span className="text-sm font-semibold text-green-600">+12%</span>
+                <span className="text-sm font-semibold text-green-400">+12%</span>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total Applications</div>
+              <div className="text-3xl font-bold text-white mb-1">{stats.total}</div>
+              <div className="text-sm text-gray-400">Total Applications</div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Activity className="h-6 w-6 text-purple-600" />
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Activity className="h-6 w-6 text-purple-400" />
                 </div>
-                <span className="text-sm font-semibold text-green-600">+8%</span>
+                <span className="text-sm font-semibold text-green-400">+8%</span>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.inProgress}</div>
-              <div className="text-sm text-gray-600">In Progress</div>
+              <div className="text-3xl font-bold text-white mb-1">{stats.inProgress}</div>
+              <div className="text-sm text-gray-400">In Progress</div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50 hover:border-amber-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-amber-50 rounded-lg">
-                  <Users className="h-6 w-6 text-amber-600" />
+                <div className="p-2 bg-amber-500/20 rounded-lg">
+                  <Users className="h-6 w-6 text-amber-400" />
                 </div>
-                <span className="text-sm font-semibold text-green-600">+15%</span>
+                <span className="text-sm font-semibold text-green-400">+15%</span>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.interviewing}</div>
-              <div className="text-sm text-gray-600">Interviewing</div>
+              <div className="text-3xl font-bold text-white mb-1">{stats.interviewing}</div>
+              <div className="text-sm text-gray-400">Interviewing</div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10">
               <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <Award className="h-6 w-6 text-green-600" />
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <Award className="h-6 w-6 text-emerald-400" />
                 </div>
-                <span className="text-sm font-semibold text-green-600">+25%</span>
+                <span className="text-sm font-semibold text-green-400">+25%</span>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.offered}</div>
-              <div className="text-sm text-gray-600">Offers</div>
+              <div className="text-3xl font-bold text-white mb-1">{stats.offered}</div>
+              <div className="text-sm text-gray-400">Offers</div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="bg-gradient-to-br from-blue-600/80 to-indigo-600/80 rounded-2xl p-6 shadow-lg border border-blue-500/30 hover:shadow-xl transition-all duration-300 hover:shadow-blue-500/20">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Target className="h-6 w-6 text-white" />
@@ -407,22 +511,22 @@ const MyApplicationsDashboard = () => {
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <div className="text-3xl font-bold text-white mb-1">{stats.successRate}%</div>
-              <div className="text-sm text-blue-100">Success Rate</div>
+              <div className="text-sm text-blue-200">Success Rate</div>
             </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
+        {/* Search and Filters - Dark Mode */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search by job title, company, or location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-md"
+                className="w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-md text-gray-100 placeholder-gray-500"
               />
             </div>
 
@@ -430,7 +534,9 @@ const MyApplicationsDashboard = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`px-6 py-4 rounded-2xl font-medium transition-all duration-200 flex items-center gap-2 ${
-                  showFilters ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-700 border border-gray-200 shadow-md'
+                  showFilters 
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
+                    : 'bg-gray-800/50 text-gray-300 border border-gray-700 backdrop-blur-sm shadow-md hover:bg-gray-800'
                 }`}
               >
                 <Filter className="h-5 w-5" />
@@ -440,18 +546,18 @@ const MyApplicationsDashboard = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md appearance-none cursor-pointer"
+                className="px-6 py-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md appearance-none cursor-pointer text-gray-100"
               >
-                <option value="date">Sort by Date</option>
-                <option value="company">Sort by Company</option>
-                <option value="status">Sort by Status</option>
+                <option value="date" className="bg-gray-800">Sort by Date</option>
+                <option value="company" className="bg-gray-800">Sort by Company</option>
+                <option value="status" className="bg-gray-800">Sort by Status</option>
               </select>
 
-              <div className="flex bg-white rounded-2xl border border-gray-200 shadow-md">
+              <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 shadow-md">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`px-4 py-3 rounded-l-2xl transition-all ${
-                    viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                    viewMode === 'grid' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700'
                   }`}
                 >
                   <BarChart3 className="h-5 w-5" />
@@ -459,7 +565,7 @@ const MyApplicationsDashboard = () => {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`px-4 py-3 rounded-r-2xl transition-all ${
-                    viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                    viewMode === 'list' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700'
                   }`}
                 >
                   <FileText className="h-5 w-5" />
@@ -468,76 +574,76 @@ const MyApplicationsDashboard = () => {
             </div>
           </div>
 
-          {/* Filter Panel */}
+          {/* Filter Panel - Dark Mode */}
           {showFilters && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6 mb-4">
+            <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700 shadow-xl p-6 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                   <select
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
                   >
-                    <option value="all">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="reviewing">Reviewing</option>
-                    <option value="interviewing">Interviewing</option>
-                    <option value="offered">Offered</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="all" className="bg-gray-800">All Statuses</option>
+                    <option value="pending" className="bg-gray-800">Pending</option>
+                    <option value="reviewing" className="bg-gray-800">Reviewing</option>
+                    <option value="interviewing" className="bg-gray-800">Interviewing</option>
+                    <option value="offered" className="bg-gray-800">Offered</option>
+                    <option value="rejected" className="bg-gray-800">Rejected</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Job Type</label>
                   <select
                     value={filters.type}
                     onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
                   >
-                    <option value="all">All Types</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Remote">Remote</option>
+                    <option value="all" className="bg-gray-800">All Types</option>
+                    <option value="Full-time" className="bg-gray-800">Full-time</option>
+                    <option value="Part-time" className="bg-gray-800">Part-time</option>
+                    <option value="Contract" className="bg-gray-800">Contract</option>
+                    <option value="Remote" className="bg-gray-800">Remote</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">From Date</label>
                   <input
                     type="date"
                     value={filters.fromDate}
                     onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">To Date</label>
                   <input
                     type="date"
                     value={filters.toDate}
                     onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-700">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.favoriteOnly}
                     onChange={(e) => setFilters({ ...filters, favoriteOnly: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 bg-gray-700 border-gray-600"
                   />
-                  <span className="text-sm font-medium text-gray-700">Show favorites only</span>
+                  <span className="text-sm font-medium text-gray-300">Show favorites only</span>
                 </label>
 
                 <button
                   onClick={() => setFilters({ status: 'all', type: 'all', fromDate: '', toDate: '', favoriteOnly: false })}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                  className="px-4 py-2 text-gray-400 hover:text-gray-300 font-medium"
                 >
                   Clear Filters
                 </button>
@@ -545,45 +651,45 @@ const MyApplicationsDashboard = () => {
             </div>
           )}
 
-          {/* Active Filters */}
+          {/* Active Filters - Dark Mode */}
           {(filters.status !== 'all' || filters.type !== 'all' || filters.favoriteOnly) && (
             <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-gray-600">Active filters:</span>
+              <span className="text-sm text-gray-400">Active filters:</span>
               {filters.status !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-medium rounded-full">
                   {statusConfig[filters.status]?.label}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, status: 'all' })} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-blue-300" onClick={() => setFilters({ ...filters, status: 'all' })} />
                 </span>
               )}
               {filters.type !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 text-sm font-medium rounded-full">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-400 text-sm font-medium rounded-full">
                   {filters.type}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, type: 'all' })} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-purple-300" onClick={() => setFilters({ ...filters, type: 'all' })} />
                 </span>
               )}
               {filters.favoriteOnly && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 text-sm font-medium rounded-full">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-medium rounded-full">
                   Favorites
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFilters({ ...filters, favoriteOnly: false })} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-amber-300" onClick={() => setFilters({ ...filters, favoriteOnly: false })} />
                 </span>
               )}
             </div>
           )}
         </div>
 
-        {/* Applications Display */}
+        {/* Applications Display - Dark Mode */}
         {filteredApplications.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-xl p-12 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <FileText className="h-10 w-10 text-blue-600" />
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl border border-gray-700 shadow-xl p-12 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FileText className="h-10 w-10 text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">No applications found</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-2xl font-bold text-white mb-3">No applications found</h3>
+            <p className="text-gray-400 mb-6">
               {searchQuery || filters.status !== 'all' 
                 ? "Try adjusting your search or filters"
                 : "Start tracking your job applications to see them here"}
             </p>
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
+            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/20">
               <Plus className="h-5 w-5 inline mr-2" />
               Add Your First Application
             </button>
@@ -591,8 +697,8 @@ const MyApplicationsDashboard = () => {
         ) : (
           <>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-gray-600">
-                Showing <span className="font-semibold text-gray-900">{filteredApplications.length}</span> of {applications.length} applications
+              <p className="text-gray-400">
+                Showing <span className="font-semibold text-gray-200">{filteredApplications.length}</span> of {applications.length} applications
               </p>
             </div>
 
@@ -607,23 +713,23 @@ const MyApplicationsDashboard = () => {
                 return (
                   <div
                     key={app.id}
-                    className="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
+                    className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-6 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 group hover:border-blue-500/30"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-4 flex-1">
-                        <div className="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-xl font-bold text-gray-700 shadow-md">
+                        <div className="w-14 h-14 bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl flex items-center justify-center text-xl font-bold text-gray-300 shadow-lg">
                           {app.company.charAt(0)}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
+                          <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors mb-1">
                             {app.title}
                           </h3>
-                          <div className="flex items-center gap-2 text-gray-600">
+                          <div className="flex items-center gap-2 text-gray-400">
                             <Building className="h-4 w-4" />
-                            <span className="font-medium">{app.company}</span>
-                            <span className="text-gray-400">•</span>
+                            <span className="font-medium text-gray-300">{app.company}</span>
+                            <span className="text-gray-600">•</span>
                             <MapPin className="h-4 w-4" />
-                            <span>{app.location}</span>
+                            <span className="text-gray-400">{app.location}</span>
                           </div>
                         </div>
                       </div>
@@ -632,29 +738,29 @@ const MyApplicationsDashboard = () => {
                           onClick={() => toggleFavorite(app.id)}
                           className={`p-2 rounded-lg transition-all ${
                             app.isFavorite 
-                              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' 
-                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                              ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
+                              : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
                           }`}
                         >
                           <Star className={`h-5 w-5 ${app.isFavorite ? 'fill-current' : ''}`} />
                         </button>
-                        <button className="p-2 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg transition-all">
+                        <button className="p-2 bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300 rounded-lg transition-all">
                           <Share2 className="h-5 w-5" />
                         </button>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mb-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${status.lightBg} ${status.textColor} ${status.borderColor} border rounded-lg text-sm font-medium`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${status.darkBg} ${status.textColor} border ${status.borderColor} rounded-lg text-sm font-medium`}>
                         <StatusIcon className="h-4 w-4" />
                         {status.label}
                       </span>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 text-gray-300 border border-gray-600 rounded-lg text-sm">
                         <Briefcase className="h-4 w-4" />
                         {app.type}
                       </span>
                       {app.salary && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-sm font-medium">
                           <DollarSign className="h-4 w-4" />
                           {app.salary}
                         </span>
@@ -662,19 +768,19 @@ const MyApplicationsDashboard = () => {
                     </div>
 
                     {app.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                         {app.description}
                       </p>
                     )}
 
                     {app.nextAction && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
                         <div className="flex items-start gap-2">
-                          <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
+                          <Bell className="h-4 w-4 text-blue-400 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-blue-900">{app.nextAction}</p>
+                            <p className="text-sm font-medium text-blue-300">{app.nextAction}</p>
                             {app.nextActionDate && (
-                              <p className="text-xs text-blue-600 mt-1">
+                              <p className="text-xs text-blue-400 mt-1">
                                 Due: {new Date(app.nextActionDate).toLocaleDateString()}
                               </p>
                             )}
@@ -683,7 +789,7 @@ const MyApplicationsDashboard = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                       <div className="flex items-center gap-1 text-sm text-gray-500">
                         <Clock className="h-4 w-4" />
                         Applied {formatDate(app.appliedDate)}
@@ -691,7 +797,7 @@ const MyApplicationsDashboard = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setSelectedApplication(app)}
-                          className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition-all flex items-center gap-2"
+                          className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg font-medium hover:bg-blue-500/30 transition-all flex items-center gap-2 hover:text-blue-300"
                         >
                           <Eye className="h-4 w-4" />
                           View
@@ -699,7 +805,7 @@ const MyApplicationsDashboard = () => {
                         {(app.status === 'pending' || app.status === 'reviewing') && (
                           <button
                             onClick={() => handleWithdraw(app.id)}
-                            className="px-4 py-2 bg-red-50 text-red-700 rounded-lg font-medium hover:bg-red-100 transition-all"
+                            className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg font-medium hover:bg-red-500/30 transition-all hover:text-red-300"
                           >
                             Withdraw
                           </button>
@@ -713,16 +819,16 @@ const MyApplicationsDashboard = () => {
           </>
         )}
 
-        {/* Quick Actions & Tips */}
+        {/* Quick Actions & Tips - Dark Mode */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl">
+          <div className="bg-gradient-to-br from-blue-600/80 to-indigo-600/80 rounded-2xl p-6 shadow-xl border border-blue-500/30">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-white/20 rounded-xl">
-                <Sparkles className="h-6 w-6" />
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h4 className="font-bold text-lg mb-2">AI-Powered Insights</h4>
-                <p className="text-blue-100 text-sm mb-4">
+                <h4 className="font-bold text-lg text-white mb-2">AI-Powered Insights</h4>
+                <p className="text-blue-200 text-sm mb-4">
                   Get personalized recommendations to improve your application success rate
                 </p>
                 <button className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all text-sm">
@@ -732,14 +838,14 @@ const MyApplicationsDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-xl">
+          <div className="bg-gradient-to-br from-purple-600/80 to-pink-600/80 rounded-2xl p-6 shadow-xl border border-purple-500/30">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-white/20 rounded-xl">
-                <Target className="h-6 w-6" />
+                <Target className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h4 className="font-bold text-lg mb-2">Interview Preparation</h4>
-                <p className="text-purple-100 text-sm mb-4">
+                <h4 className="font-bold text-lg text-white mb-2">Interview Preparation</h4>
+                <p className="text-purple-200 text-sm mb-4">
                   Access curated resources to ace your upcoming interviews
                 </p>
                 <button className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm">
@@ -751,45 +857,45 @@ const MyApplicationsDashboard = () => {
         </div>
       </div>
 
-      {/* Application Details Modal */}
+      {/* Application Details Modal - Dark Mode */}
       {selectedApplication && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedApplication(null)}
         >
           <div
-            className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-gray-900 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 rounded-t-3xl z-10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Application Details</h2>
-                  <p className="text-gray-600 mt-1">Complete information and timeline</p>
+                  <h2 className="text-2xl font-bold text-white">Application Details</h2>
+                  <p className="text-gray-400 mt-1">Complete information and timeline</p>
                 </div>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white"
                 >
-                  <X className="h-6 w-6 text-gray-600" />
+                  <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Header */}
-              <div className="flex items-start gap-4 pb-6 border-b border-gray-200">
-                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-700 shadow-md">
+              <div className="flex items-start gap-4 pb-6 border-b border-gray-800">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-300 shadow-lg">
                   {selectedApplication.company.charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedApplication.title}</h3>
-                  <div className="flex items-center gap-3 text-gray-600 mb-3">
+                  <h3 className="text-2xl font-bold text-white mb-2">{selectedApplication.title}</h3>
+                  <div className="flex items-center gap-3 text-gray-400 mb-3">
                     <div className="flex items-center gap-1">
                       <Building className="h-4 w-4" />
-                      <span className="font-medium">{selectedApplication.company}</span>
+                      <span className="font-medium text-gray-300">{selectedApplication.company}</span>
                     </div>
-                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">•</span>
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
                       <span>{selectedApplication.location}</span>
@@ -797,12 +903,12 @@ const MyApplicationsDashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {statusConfig[selectedApplication.status] && (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${statusConfig[selectedApplication.status].lightBg} ${statusConfig[selectedApplication.status].textColor} border ${statusConfig[selectedApplication.status].borderColor} rounded-lg text-sm font-medium`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${statusConfig[selectedApplication.status].darkBg} ${statusConfig[selectedApplication.status].textColor} border ${statusConfig[selectedApplication.status].borderColor} rounded-lg text-sm font-medium`}>
                         {React.createElement(statusConfig[selectedApplication.status].icon, { className: "h-4 w-4" })}
                         {statusConfig[selectedApplication.status].label}
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 rounded-lg text-sm">
                       {selectedApplication.type}
                     </span>
                   </div>
@@ -811,30 +917,30 @@ const MyApplicationsDashboard = () => {
 
               {/* Key Information Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-1">Applied Date</p>
-                  <p className="font-semibold text-gray-900">{formatDate(selectedApplication.appliedDate)}</p>
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                  <p className="text-sm text-gray-400 mb-1">Applied Date</p>
+                  <p className="font-semibold text-white">{formatDate(selectedApplication.appliedDate)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-1">Last Updated</p>
-                  <p className="font-semibold text-gray-900">{formatDate(selectedApplication.updatedAt)}</p>
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                  <p className="text-sm text-gray-400 mb-1">Last Updated</p>
+                  <p className="font-semibold text-white">{formatDate(selectedApplication.updatedAt)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-1">Salary Range</p>
-                  <p className="font-semibold text-gray-900">{selectedApplication.salary || 'Not specified'}</p>
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                  <p className="text-sm text-gray-400 mb-1">Salary Range</p>
+                  <p className="font-semibold text-white">{selectedApplication.salary || 'Not specified'}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-1">Job Type</p>
-                  <p className="font-semibold text-gray-900">{selectedApplication.type}</p>
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                  <p className="text-sm text-gray-400 mb-1">Job Type</p>
+                  <p className="font-semibold text-white">{selectedApplication.type}</p>
                 </div>
               </div>
 
               {/* Description */}
               {selectedApplication.description && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Job Description</h4>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-gray-700 leading-relaxed">{selectedApplication.description}</p>
+                  <h4 className="font-semibold text-white mb-3">Job Description</h4>
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                    <p className="text-gray-300 leading-relaxed">{selectedApplication.description}</p>
                   </div>
                 </div>
               )}
@@ -842,18 +948,18 @@ const MyApplicationsDashboard = () => {
               {/* Contact Information */}
               {(selectedApplication.contactPerson || selectedApplication.contactEmail) && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Contact Information</h4>
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                  <h4 className="font-semibold text-white mb-3">Contact Information</h4>
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-2">
                     {selectedApplication.contactPerson && (
-                      <div className="flex items-center gap-2 text-blue-900">
-                        <User className="h-4 w-4" />
+                      <div className="flex items-center gap-2 text-blue-300">
+                        <Users className="h-4 w-4" />
                         <span className="font-medium">{selectedApplication.contactPerson}</span>
                       </div>
                     )}
                     {selectedApplication.contactEmail && (
-                      <div className="flex items-center gap-2 text-blue-700">
+                      <div className="flex items-center gap-2 text-blue-400">
                         <Mail className="h-4 w-4" />
-                        <a href={`mailto:${selectedApplication.contactEmail}`} className="hover:underline">
+                        <a href={`mailto:${selectedApplication.contactEmail}`} className="hover:underline hover:text-blue-300">
                           {selectedApplication.contactEmail}
                         </a>
                       </div>
@@ -865,16 +971,16 @@ const MyApplicationsDashboard = () => {
               {/* Next Action */}
               {selectedApplication.nextAction && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Next Action</h4>
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-white mb-3">Next Action</h4>
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-amber-100 rounded-lg">
-                        <Bell className="h-5 w-5 text-amber-600" />
+                      <div className="p-2 bg-amber-500/20 rounded-lg">
+                        <Bell className="h-5 w-5 text-amber-400" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-amber-900 mb-1">{selectedApplication.nextAction}</p>
+                        <p className="font-medium text-amber-300 mb-1">{selectedApplication.nextAction}</p>
                         {selectedApplication.nextActionDate && (
-                          <p className="text-sm text-amber-700">
+                          <p className="text-sm text-amber-400">
                             Due: {new Date(selectedApplication.nextActionDate).toLocaleDateString('en-US', { 
                               weekday: 'long', 
                               year: 'numeric', 
@@ -891,9 +997,9 @@ const MyApplicationsDashboard = () => {
 
               {/* Notes Section */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Your Notes</h4>
+                <h4 className="font-semibold text-white mb-3">Your Notes</h4>
                 <textarea
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-100 placeholder-gray-500"
                   rows="4"
                   placeholder="Add your notes, follow-ups, or interview feedback..."
                   defaultValue={selectedApplication.notes || ''}
@@ -901,19 +1007,19 @@ const MyApplicationsDashboard = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-800">
                 <button
                   onClick={() => handleDelete(selectedApplication.id)}
-                  className="flex-1 px-6 py-3 bg-red-50 text-red-700 rounded-xl font-medium hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/30 transition-all flex items-center justify-center gap-2 hover:text-red-300"
                 >
                   <Trash2 className="h-5 w-5" />
                   Delete Application
                 </button>
-                <button className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
+                <button className="flex-1 px-6 py-3 bg-gray-800 text-gray-300 rounded-xl font-medium hover:bg-gray-700 transition-all flex items-center justify-center gap-2 hover:text-white">
                   <Edit3 className="h-5 w-5" />
                   Edit Details
                 </button>
-                <button className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                <button className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
                   <Send className="h-5 w-5" />
                   Save Notes
                 </button>
