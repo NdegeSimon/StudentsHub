@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { 
   Search, Filter, X, Briefcase, MapPin, Clock, Bookmark, 
   Sparkles, HelpCircle, Bell, Settings, TrendingUp, 
-  ChevronDown, Loader2, AlertCircle, Heart, Star, Building, Users
+  ChevronDown, Loader2, AlertCircle, Heart, Star, Building, User,Users
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate,NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { jobAPI } from "../utils/api"; // Your existing jobAPI
 import { toast } from "react-toastify";
+
+
 
 export default function JobsPage() {
   // State management
@@ -291,38 +293,99 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                  Studex Jobs
-                </span>
-              </Link>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-300">Welcome, {user.name}</span>
-                  <Link to="/dashboard" className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm">
-                    Dashboard
-                  </Link>
-                </div>
-              ) : (
-                <Link to="/login" className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm">
-                  Sign In
-                </Link>
-              )}
-            </div>
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between h-16 items-center">
+      <div className="flex items-center">
+        <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
+          Studex
+        </Link>
+        <nav className="hidden md:ml-10 md:flex space-x-8">
+          <NavLink 
+            to="/jobs"
+            end
+            className={({ isActive }) => 
+              `px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-blue-900 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`
+            }
+          >
+            Jobs
+          </NavLink>
+          <Link 
+            to="#" 
+            className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+          >
+            Internships
+          </Link>
+          <NavLink 
+            to="/myapplications"
+            className={({ isActive }) => 
+              `px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-purple-900 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`
+            }
+          >
+            My Applications
+          </NavLink>
+          <NavLink 
+            to="/messages"
+            className={({ isActive }) => 
+              `px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-blue-900 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`
+            }
+          >
+            Messages
+          </NavLink>
+        </nav>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
+            placeholder="Search jobs..."
+          />
+        </div>
+        
+        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+          <HelpCircle className="h-6 w-6" />
+        </button>
+        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+          <Bell className="h-6 w-6" />
+        </button>
+        <div 
+          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+          onClick={() => navigate('/settings')}
+        >
+          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+            <Settings className="h-5 w-5" />
           </div>
         </div>
-      </header>
-
+        <div 
+          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+          onClick={() => navigate('/profile')}
+          title="View Profile"
+        >
+          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+            <User className="h-5 w-5" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
       <div className="container mx-auto px-4 py-8">
         {/* Connection Status */}
         {error && (
