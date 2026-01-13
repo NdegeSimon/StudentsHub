@@ -4,8 +4,10 @@ import {
   ChevronDown, Clock, Building, MapPin, Briefcase, DollarSign, Zap, Sparkles,
   Eye, Download, Share2, MessageSquare, CheckCircle, XCircle, AlertCircle, 
   Loader2, Star, Bookmark, ExternalLink, BarChart3, Bell, Trash2, Edit3,
-  ArrowUpRight, TrendingDown, Activity, Award, Send, Phone, Mail, Moon, Sun
+  ArrowUpRight, TrendingDown, Activity, Award, Send, Phone, Mail, Moon, Sun,
+  HelpCircle, Settings, User
 } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 // Mock Data Generator
 const generateMockApplications = () => [
@@ -89,6 +91,7 @@ const generateMockApplications = () => [
 ];
 
 const MyApplicationsDashboard = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -253,7 +256,7 @@ const MyApplicationsDashboard = () => {
   };
 
   const handleWithdraw = (id) => {
-    if (confirm('Are you sure you want to withdraw this application?')) {
+    if (window.confirm('Are you sure you want to withdraw this application?')) {
       setApplications(prev => prev.map(app =>
         app.id === id ? { ...app, status: 'withdrawn' } : app
       ));
@@ -261,7 +264,7 @@ const MyApplicationsDashboard = () => {
   };
 
   const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this application?')) {
+    if (window.confirm('Are you sure you want to delete this application?')) {
       setApplications(prev => prev.filter(app => app.id !== id));
       if (selectedApplication?.id === id) {
         setSelectedApplication(null);
@@ -321,97 +324,95 @@ const MyApplicationsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
+      {/* Header */}
       <header className="bg-gray-800 shadow-sm border-b border-gray-700">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex justify-between h-16 items-center">
-      <div className="flex items-center">
-        <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
-          Studex
-        </Link>
-        <nav className="hidden md:ml-10 md:flex space-x-8">
-          <Link 
-            to="/jobs" 
-            className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
-          >
-            Jobs
-          </Link>
-          <Link 
-            to="#" 
-            className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
-          >
-            Internships
-          </Link>
-          
-          {/* FIXED: Changed to NavLink for active state */}
-          <NavLink 
-            to="/myapplications"
-            className={({ isActive }) => 
-              `px-3 py-2 rounded-lg transition-colors ${
-                isActive 
-                  ? 'bg-purple-900 text-white' 
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`
-            }
-          >
-            My Applications
-          </NavLink>
-          
-          <NavLink 
-            to="/messages"
-            className={({ isActive }) => 
-              `px-3 py-2 rounded-lg transition-colors ${
-                isActive 
-                  ? 'bg-blue-900 text-white' 
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`
-            }
-          >
-            Messages
-          </NavLink>
-        </nav>
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center">
+              <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
+                Studex
+              </Link>
+              <nav className="hidden md:ml-10 md:flex space-x-8">
+                <Link 
+                  to="/jobs" 
+                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  Jobs
+                </Link>
+                <Link 
+                  to="#" 
+                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  Internships
+                </Link>
+                <NavLink 
+                  to="/myapplications"
+                  end
+                  className={({ isActive }) => 
+                    `px-3 py-2 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-purple-900 text-white' 
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`
+                  }
+                >
+                  My Applications
+                </NavLink>
+                <NavLink 
+                  to="/messages"
+                  className={({ isActive }) => 
+                    `px-3 py-2 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-blue-900 text-white' 
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`
+                  }
+                >
+                  Messages
+                </NavLink>
+              </nav>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
+                  placeholder="Search my applications..."
+                />
+              </div>
+              
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+                <HelpCircle className="h-6 w-6" />
+              </button>
+              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
+                <Bell className="h-6 w-6" />
+              </button>
+              <div 
+                className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+                onClick={() => navigate('/settings')}
+              >
+                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+                  <Settings className="h-5 w-5" />
+                </div>
+              </div>
+              <div 
+                className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
+                onClick={() => navigate('/profile')}
+                title="View Profile"
+              >
+                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
+                  <User className="h-5 w-5" />
+                </div>
+              </div>
+            </div>
           </div>
-          {/* OPTIONAL: Change placeholder for context */}
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
-            placeholder="Search my applications..."  {/* Changed for context */}
-          />
         </div>
-        
-        {/* Rest of your icons remain the same */}
-        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
-          <HelpCircle className="h-6 w-6" />
-        </button>
-        <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
-          <Bell className="h-6 w-6" />
-        </button>
-        <div 
-          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
-          onClick={() => navigate('/settings')}
-        >
-          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
-            <Settings className="h-5 w-5" />
-          </div>
-        </div>
-        <div 
-          className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
-          onClick={() => navigate('/profile')}
-          title="View Profile"
-        >
-          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
-            <User className="h-5 w-5" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
+
       {/* Decorative Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-full opacity-30 blur-3xl" />
@@ -419,7 +420,7 @@ const MyApplicationsDashboard = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Dashboard Header */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
             <div>
@@ -457,7 +458,7 @@ const MyApplicationsDashboard = () => {
             </div>
           </div>
 
-          {/* Advanced Stats Grid - Dark Mode */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
               <div className="flex items-center justify-between mb-3">
@@ -516,7 +517,7 @@ const MyApplicationsDashboard = () => {
           </div>
         </div>
 
-        {/* Search and Filters - Dark Mode */}
+        {/* Search and Filters */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
@@ -550,7 +551,6 @@ const MyApplicationsDashboard = () => {
               >
                 <option value="date" className="bg-gray-800">Sort by Date</option>
                 <option value="company" className="bg-gray-800">Sort by Company</option>
-                <option value="status" className="bg-gray-800">Sort by Status</option>
               </select>
 
               <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 shadow-md">
@@ -574,7 +574,7 @@ const MyApplicationsDashboard = () => {
             </div>
           </div>
 
-          {/* Filter Panel - Dark Mode */}
+          {/* Filter Panel */}
           {showFilters && (
             <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700 shadow-xl p-6 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -651,33 +651,42 @@ const MyApplicationsDashboard = () => {
             </div>
           )}
 
-          {/* Active Filters - Dark Mode */}
+          {/* Active Filters */}
           {(filters.status !== 'all' || filters.type !== 'all' || filters.favoriteOnly) && (
             <div className="flex flex-wrap gap-2">
               <span className="text-sm text-gray-400">Active filters:</span>
               {filters.status !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-medium rounded-full">
                   {statusConfig[filters.status]?.label}
-                  <X className="h-3 w-3 cursor-pointer hover:text-blue-300" onClick={() => setFilters({ ...filters, status: 'all' })} />
+                  <X 
+                    className="h-3 w-3 cursor-pointer hover:text-blue-300" 
+                    onClick={() => setFilters({ ...filters, status: 'all' })} 
+                  />
                 </span>
               )}
               {filters.type !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-400 text-sm font-medium rounded-full">
                   {filters.type}
-                  <X className="h-3 w-3 cursor-pointer hover:text-purple-300" onClick={() => setFilters({ ...filters, type: 'all' })} />
+                  <X 
+                    className="h-3 w-3 cursor-pointer hover:text-purple-300" 
+                    onClick={() => setFilters({ ...filters, type: 'all' })} 
+                  />
                 </span>
               )}
               {filters.favoriteOnly && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-medium rounded-full">
                   Favorites
-                  <X className="h-3 w-3 cursor-pointer hover:text-amber-300" onClick={() => setFilters({ ...filters, favoriteOnly: false })} />
+                  <X 
+                    className="h-3 w-3 cursor-pointer hover:text-amber-300" 
+                    onClick={() => setFilters({ ...filters, favoriteOnly: false })} 
+                  />
                 </span>
               )}
             </div>
           )}
         </div>
 
-        {/* Applications Display - Dark Mode */}
+        {/* Applications Display */}
         {filteredApplications.length === 0 ? (
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl border border-gray-700 shadow-xl p-12 text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -819,7 +828,7 @@ const MyApplicationsDashboard = () => {
           </>
         )}
 
-        {/* Quick Actions & Tips - Dark Mode */}
+        {/* Quick Actions & Tips */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <div className="bg-gradient-to-br from-blue-600/80 to-indigo-600/80 rounded-2xl p-6 shadow-xl border border-blue-500/30">
             <div className="flex items-start gap-4">
@@ -857,7 +866,7 @@ const MyApplicationsDashboard = () => {
         </div>
       </div>
 
-      {/* Application Details Modal - Dark Mode */}
+      {/* Application Details Modal */}
       {selectedApplication && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
