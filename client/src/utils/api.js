@@ -249,4 +249,5 @@ export const smartAPI = {
 };
 
 // Export the axios instance as default
+
 export default api;
