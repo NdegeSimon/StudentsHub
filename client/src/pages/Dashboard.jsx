@@ -1,306 +1,268 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Search, 
-  Bell, 
-  Settings, 
-  HelpCircle, 
-  User, 
-  BookOpen, 
-  Briefcase, 
-  Clock, 
-  Star, 
-  Sun, 
-  Moon,
-  Menu, 
-  X,
-  FileText,
-  Mic,
-  Zap,
-  TrendingUp,
-  Award,
-  UserCheck,
-  FileQuestion,
-  ChevronRight,
-  X as XIcon,
+  Search, Bell, Settings, HelpCircle, User, BookOpen, Briefcase, Clock, 
+  Star, Sun, Moon, Menu, X, FileText, Mic, Zap, TrendingUp, Award, 
+  UserCheck, ChevronRight, Bookmark, BookmarkCheck, Calendar, Target,
+  ArrowUpRight, TrendingDown, Activity, CheckCircle, XCircle, Eye,
+  MapPin, DollarSign, Sparkles, Phone, Mail, Link as LinkIcon,
+  Building, Plus, Filter, Download, Share2, Flame, Crown, Rocket
 } from 'lucide-react';
-import { getSavedSearches, deleteSavedSearch } from '../services/searchService';
-import { Bookmark, BookmarkCheck, BookOpenText } from 'lucide-react';
-import { getSavedJobs, toggleSaveJob } from '../services/savedJobsService';
-import { NavLink } from "react-router-dom";
-import JobCard from '../components/JobCard';
-import MyApplications from './MyApplications';
-import Profile from './Profile';
-import { Link, useNavigate } from 'react-router-dom';
-import { useProfile } from '../context/ProfileContext';
-import { useTheme } from '../context/ThemeContext';
-import { jobAPI, applicationAPI, userAPI } from '../utils/api';
 
-// Helper function to calculate profile completion percentage
-const calculateProfileCompletion = (userProfile) => {
-  if (!userProfile) return 0;
-  
-  const fields = [
-    { key: 'first_name', weight: 20 },
-    { key: 'last_name', weight: 15 },
-    { key: 'email', weight: 15 },
-    { key: 'phone', weight: 10 },
-    { key: 'bio', weight: 10 },
-    { key: 'skills', weight: 15, isArray: true },
-    { key: 'experience', weight: 10, isArray: true },
-    { key: 'education', weight: 5, isArray: true }
-  ];
-  
-  return fields.reduce((total, field) => {
-    const value = userProfile[field.key];
-    const isFilled = field.isArray 
-      ? Array.isArray(value) && value.length > 0 
-      : !!value;
-    return total + (isFilled ? field.weight : 0);
-  }, 0);
-};
-
-const Dashboard = () => {
-  const navigate = useNavigate();
-  const { profile, updateProfile, loading: profileLoading } = useProfile();
-  const { darkMode, toggleDarkMode } = useTheme();
-  
-  // ALL State declarations at the top
-  const [savedJobs, setSavedJobs] = useState([]);
-  const [savedJobIds, setSavedJobIds] = useState({});
-  const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
+const NextLevelDashboard = () => {
   const [activeTab, setActiveTab] = useState('recommended');
-  const [savedSearches, setSavedSearches] = useState([]);
-  const [loadingSearches, setLoadingSearches] = useState(true);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
-  const [dashboardData, setDashboardData] = useState({
-    recommendedJobs: [],
-    recentApplications: [],
-    stats: {
-      totalApplications: 0,
-      activeJobs: 0,
-      profileCompletion: 0
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Mock data
+  const stats = [
+    { 
+      label: 'Applications', 
+      value: '24', 
+      change: '+12%', 
+      icon: FileText, 
+      color: 'from-blue-500 to-cyan-500',
+      trend: 'up'
     },
-    loading: true,
-    error: null
-  });
-
-  // ALL useCallback functions
-  const loadSavedJobs = useCallback(async () => {
-    try {
-      setIsLoadingSavedJobs(true);
-      const jobs = await getSavedJobs();
-      setSavedJobs(jobs);
-      
-      const savedMap = {};
-      jobs.forEach(job => {
-        savedMap[job.job_id] = { 
-          isSaved: true, 
-          savedJobId: job.id 
-        };
-      });
-      setSavedJobIds(savedMap);
-    } catch (error) {
-      console.error('Error loading saved jobs:', error);
-    } finally {
-      setIsLoadingSavedJobs(false);
+    { 
+      label: 'Active Jobs', 
+      value: '8', 
+      change: '+5%', 
+      icon: Briefcase, 
+      color: 'from-purple-500 to-pink-500',
+      trend: 'up'
+    },
+    { 
+      label: 'Interviews', 
+      value: '3', 
+      change: '+2', 
+      icon: Calendar, 
+      color: 'from-amber-500 to-orange-500',
+      trend: 'up'
+    },
+    { 
+      label: 'Profile Views', 
+      value: '156', 
+      change: '+23%', 
+      icon: Eye, 
+      color: 'from-green-500 to-emerald-500',
+      trend: 'up'
     }
-  }, []);
+  ];
 
-  const fetchUpcomingDeadlines = useCallback(async () => {
-    try {
-      const response = await applicationAPI.getUpcomingDeadlines();
-      if (response.data) {
-        setUpcomingDeadlines(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching upcoming deadlines:', error);
+  const upcomingDeadlines = [
+    { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
+    { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
+    { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
+  ];
+
+  const recommendedJobs = [
+    {
+      id: 1,
+      title: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      location: 'San Francisco, CA',
+      type: 'Full-time',
+      salary: '$120k - $180k',
+      logo: 'T',
+      posted: '2 days ago',
+      applicants: 45,
+      match: 95,
+      tags: ['React', 'TypeScript', 'Next.js'],
+      featured: true
+    },
+    {
+      id: 2,
+      title: 'Full Stack Engineer',
+      company: 'StartupXYZ',
+      location: 'Remote',
+      type: 'Full-time',
+      salary: '$90k - $140k',
+      logo: 'S',
+      posted: '1 day ago',
+      applicants: 23,
+      match: 88,
+      tags: ['Node.js', 'MongoDB', 'AWS']
+    },
+    {
+      id: 3,
+      title: 'UI/UX Designer',
+      company: 'Design Studio',
+      location: 'New York, NY',
+      type: 'Contract',
+      salary: '$80/hour',
+      logo: 'D',
+      posted: '3 days ago',
+      applicants: 67,
+      match: 82,
+      tags: ['Figma', 'Sketch', 'Prototyping']
     }
-  }, []);
+  ];
 
-  const fetchSavedSearches = useCallback(async () => {
-    try {
-      setLoadingSearches(true);
-      const searches = await getSavedSearches();
-      setSavedSearches(searches);
-    } catch (error) {
-      console.error('Error fetching saved searches:', error);
-    } finally {
-      setLoadingSearches(false);
+  const recentApplications = [
+    { 
+      id: 1,
+      company: 'Google', 
+      position: 'Software Engineer',
+      status: 'interviewing',
+      date: '2025-01-10',
+      nextStep: 'Technical Interview',
+      nextDate: '2025-01-20'
+    },
+    { 
+      id: 2,
+      company: 'Microsoft', 
+      position: 'Product Manager',
+      status: 'reviewing',
+      date: '2025-01-08',
+      nextStep: 'Pending Review'
+    },
+    { 
+      id: 3,
+      company: 'Amazon', 
+      position: 'Cloud Engineer',
+      status: 'applied',
+      date: '2025-01-05',
+      nextStep: 'Application Submitted'
     }
-  }, []);
+  ];
 
-  const handleDeleteSearch = useCallback(async (searchId, e) => {
-    e.stopPropagation();
-    try {
-      await deleteSavedSearch(searchId);
-      setSavedSearches(prev => prev.filter(search => search.id !== searchId));
-    } catch (error) {
-      console.error('Error deleting saved search:', error);
+  const notifications = [
+    { id: 1, type: 'interview', message: 'Interview scheduled with Google', time: '2 hours ago', unread: true },
+    { id: 2, type: 'application', message: 'Application viewed by Amazon', time: '5 hours ago', unread: true },
+    { id: 3, type: 'recommendation', message: 'New job matches your profile', time: '1 day ago', unread: false }
+  ];
+
+  const savedSearches = [
+    'Frontend Developer Remote',
+    'UX Designer San Francisco',
+    'Product Manager',
+    'Software Engineer',
+    'Data Scientist NYC'
+  ];
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'interviewing': return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
+      case 'reviewing': return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
+      case 'applied': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+      case 'offered': return 'bg-green-500/20 text-green-400 border-green-500/50';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
     }
-  }, []);
+  };
 
-  const handleSaveJob = useCallback(async (jobId) => {
-    try {
-      await toggleSaveJob(jobId);
-      await loadSavedJobs();
-    } catch (error) {
-      console.error('Error toggling save job:', error);
-    }
-  }, [loadSavedJobs]);
-
-  // ALL useEffect hooks
-  useEffect(() => {
-    if (activeTab === 'saved') {
-      loadSavedJobs();
-    }
-  }, [activeTab, loadSavedJobs]);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (profileLoading) return;
-      
-      try {
-        setDashboardData(prev => ({ ...prev, loading: true, error: null }));
-        
-        const profileCompletion = calculateProfileCompletion(profile);
-        
-        const [jobsResponse, appsResponse] = await Promise.allSettled([
-          jobAPI.getAllJobs({ limit: 4 }),
-          profile?.id ? applicationAPI.getMyApplications() : Promise.resolve({ data: [] })
-        ]);
-        
-        const jobs = jobsResponse.status === 'fulfilled' ? jobsResponse.value.data : [];
-        const applications = appsResponse.status === 'fulfilled' ? appsResponse.value.data : [];
-        
-        const totalApplications = applications.length;
-        const activeJobs = applications.filter(app => 
-          ['applied', 'interview', 'offer'].includes(app.status)
-        ).length;
-        
-        setDashboardData({
-          recommendedJobs: Array.isArray(jobs) ? jobs : [],
-          recentApplications: Array.isArray(applications) ? applications.slice(0, 3) : [],
-          stats: {
-            totalApplications,
-            activeJobs,
-            profileCompletion
-          },
-          loading: false,
-          error: null
-        });
-        
-        if (profile?.id) {
-          await fetchUpcomingDeadlines();
-        }
-        
-        if (profile?.id) {
-          try {
-            const userProfile = await userAPI.getProfile();
-            updateProfile(userProfile.data);
-            await fetchSavedSearches();
-          } catch (error) {
-            console.error('Error updating user profile:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setDashboardData(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to load dashboard data. Please try again later.'
-        }));
-      }
-    };
-    
-    fetchDashboardData();
-  }, [profile?.id, profileLoading, updateProfile, fetchUpcomingDeadlines, fetchSavedSearches]);
-  
-  // Loading state check AFTER all hooks
-  if (profileLoading || dashboardData.loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
-  }
-  
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+      <header className="relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <Link to="/" className="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
-                Studex
-              </Link>
-              <nav className="hidden md:ml-10 md:flex space-x-8">
-                <Link 
-                  to="/jobs" 
-                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
-                >
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Rocket className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Studex
+                </span>
+              </div>
+
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center gap-1">
+                <a href="#" className="px-4 py-2 rounded-xl text-white font-medium bg-slate-800/50 hover:bg-slate-800 transition-all">
+                  Dashboard
+                </a>
+                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Jobs
-                </Link>
-                <Link 
-                  to="#" 
-                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
-                >
-                  Internships
-                </Link>
-                <Link 
-                  to="/myapplications" 
-                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors"
-                >
-                  My Applications
-                </Link>
-                <NavLink 
-                  to="/messages"
-                  className={({ isActive }) => 
-                    `px-3 py-2 rounded-lg transition-colors ${
-                      isActive 
-                        ? 'bg-blue-900 text-white' 
-                        : 'text-gray-300 hover:bg-gray-700'
-                    }`
-                  }
-                >
+                </a>
+                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                  Applications
+                </a>
+                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Messages
-                </NavLink>
+                </a>
               </nav>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
+
+            {/* Right Section */}
+            <div className="flex items-center gap-3">
+              {/* Search */}
+              <div className="hidden lg:block relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 rounded-md leading-5 focus:outline-none sm:text-sm transition-colors"
-                  placeholder="Search jobs..."
+                  placeholder="Search jobs, companies..."
+                  className="pl-10 pr-4 py-2 w-64 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
                 />
               </div>
-              
-              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
-                <HelpCircle className="h-6 w-6" />
-              </button>
-              <button className="p-2 rounded-full text-gray-300 hover:text-white focus:outline-none transition-colors">
-                <Bell className="h-6 w-6" />
-              </button>
-              <div 
-                className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
-                onClick={() => navigate('/settings')}
-              >
-                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
-                  <Settings className="h-5 w-5" />
-                </div>
+
+              {/* Notifications */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all relative"
+                >
+                  <Bell className="h-5 w-5 text-slate-400" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="p-4 border-b border-slate-700/50">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-white">Notifications</h3>
+                        <button className="text-xs text-blue-400 hover:text-blue-300">Mark all as read</button>
+                      </div>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 hover:bg-slate-700/30 transition-colors cursor-pointer ${notif.unread ? 'bg-blue-500/5' : ''}`}>
+                          <div className="flex gap-3">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${notif.unread ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                            <div className="flex-1">
+                              <p className="text-sm text-white">{notif.message}</p>
+                              <p className="text-xs text-slate-500 mt-1">{notif.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div 
-                className="ml-1 cursor-pointer rounded-full p-1 transition-colors hover:bg-gray-700"
-                onClick={() => navigate('/profile')}
-                title="View Profile"
-              >
-                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gray-700 text-purple-400">
-                  <User className="h-5 w-5" />
+
+              <button className="p-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all">
+                <Settings className="h-5 w-5 text-slate-400" />
+              </button>
+
+              {/* Profile */}
+              <div className="flex items-center gap-3 pl-3 border-l border-slate-700/50">
+                <div className="hidden md:block text-right">
+                  <p className="text-sm font-medium text-white">John Doe</p>
+                  <p className="text-xs text-slate-400">Premium Member</p>
+                </div>
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <User className="h-6 w-6 text-white" />
                 </div>
               </div>
             </div>
@@ -308,386 +270,293 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+      {/* Main Content */}
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar */}
-          <div className="lg:w-80 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             {/* Profile Card */}
-            <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 rounded-full flex items-center justify-center bg-purple-900/30">
-                  <User className="h-8 w-8 text-purple-400" />
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <User className="h-10 w-10 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-900"></div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-medium text-white">
-                    {profile?.first_name || 'Guest User'}
-                  </h3>
-                  <p className="text-sm text-gray-400">Student</p>
+                <h3 className="text-lg font-bold text-white mb-1">John Doe</h3>
+                <p className="text-sm text-slate-400 mb-4">Software Developer</p>
+                
+                {/* Profile Stats */}
+                <div className="w-full space-y-3 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Profile Strength</span>
+                    <span className="text-green-400 font-medium">85%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" style={{ width: '85%' }}></div>
+                  </div>
                 </div>
+
+                <button className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg shadow-blue-500/30">
+                  Complete Profile
+                </button>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <h3 className="font-medium mb-4 text-white">Quick Actions</h3>
-              <div className="space-y-3">
-                <NavLink
-                  to="/myapplications"
-                  className={({ isActive }) =>
-                    `w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-gray-700 text-white'
-                        : 'hover:bg-gray-700/50 text-gray-200'
-                    }`
-                  }
-                >
-                  <Briefcase className="h-5 w-5 text-purple-400" />
-                  <span>My Applications</span>
-                </NavLink>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-700/50 text-gray-200">
-                  <Clock className="h-5 w-5 text-purple-400" />
-                  <span>Recent Jobs</span>
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
+              <h3 className="font-semibold text-white mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <button className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                    <Briefcase className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm text-white font-medium">Browse Jobs</span>
+                  <ChevronRight className="h-4 w-4 text-slate-400 ml-auto" />
                 </button>
-                <button 
-                  onClick={() => setActiveTab('saved')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-700/50 text-gray-200"
-                >
-                  <Star className="h-5 w-5 text-purple-400" />
-                  <span>Saved Jobs</span>
+                <button className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="p-2 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                    <FileText className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <span className="text-sm text-white font-medium">My Applications</span>
+                  <ChevronRight className="h-4 w-4 text-slate-400 ml-auto" />
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all group">
+                  <div className="p-2 bg-amber-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                    <Star className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <span className="text-sm text-white font-medium">Saved Jobs</span>
+                  <ChevronRight className="h-4 w-4 text-slate-400 ml-auto" />
                 </button>
               </div>
             </div>
 
             {/* Upcoming Deadlines */}
-            <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-white">Upcoming Deadlines</h3>
-                <button 
-                  onClick={fetchUpcomingDeadlines}
-                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                  disabled={dashboardData.loading}
-                >
-                  {dashboardData.loading ? 'Refreshing...' : 'Refresh'}
-                </button>
+                <h3 className="font-semibold text-white">Upcoming Deadlines</h3>
+                <Flame className="h-5 w-5 text-orange-500" />
               </div>
-              {dashboardData.loading ? (
-                <div className="flex justify-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                </div>
-              ) : upcomingDeadlines.length > 0 ? (
-                <div className="space-y-4">
-                  {upcomingDeadlines.map((deadline, index) => {
-                    const dueDate = new Date(deadline.due_date);
-                    const today = new Date();
-                    const timeDiff = dueDate - today;
-                    const daysUntilDue = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-                    
-                    const isUrgent = daysUntilDue <= 3;
-                    const isWarning = daysUntilDue <= 7 && daysUntilDue > 3;
-                    
-                    return (
-                      <div key={index} className="flex items-start group">
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          isUrgent ? 'bg-red-900/30' : isWarning ? 'bg-yellow-900/30' : 'bg-blue-900/30'
-                        }`}>
-                          <span className={`text-sm font-medium ${
-                            isUrgent ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-blue-400'
-                          }`}>
-                            {daysUntilDue}
-                          </span>
-                        </div>
-                        <div className="ml-3 flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate" title={deadline.title}>
-                            {deadline.title}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {daysUntilDue === 0 
-                              ? 'Due today' 
-                              : daysUntilDue < 0 
-                                ? `${Math.abs(daysUntilDue)} days ago` 
-                                : `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 text-center py-2">No upcoming deadlines</p>
-              )}
+              <div className="space-y-3">
+                {upcomingDeadlines.map((deadline, index) => (
+                  <div key={index} className={`flex items-center gap-3 p-3 rounded-xl ${deadline.urgent ? 'bg-red-500/10 border border-red-500/30' : 'bg-slate-800/50'}`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${deadline.urgent ? 'bg-red-500/20' : 'bg-blue-500/20'}`}>
+                      <span className={`text-lg font-bold ${deadline.urgent ? 'text-red-400' : 'text-blue-400'}`}>
+                        {deadline.daysLeft}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{deadline.title}</p>
+                      <p className="text-xs text-slate-400">
+                        {deadline.daysLeft} day{deadline.daysLeft !== 1 ? 's' : ''} left
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Resources */}
-            <div className="rounded-lg p-6 bg-gray-800 shadow-lg border border-gray-700">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-white">Resources</h3>
-                <Link 
-                  to="/resources" 
-                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  View All
-                </Link>
+            {/* Premium Banner */}
+            <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-start gap-3 mb-4">
+                <Crown className="h-6 w-6 text-amber-400" />
+                <div>
+                  <h3 className="font-bold text-white mb-1">Upgrade to Premium</h3>
+                  <p className="text-xs text-slate-300">Get 3x more visibility and exclusive features</p>
+                </div>
               </div>
-              
-              <div className="space-y-3">
-                <Link 
-                  to="/interview-prep"
-                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
-                >
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-900/30 flex items-center justify-center">
-                    <Mic className="h-5 w-5 text-purple-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">Interview Prep</p>
-                    <p className="text-xs text-gray-400">Practice common questions</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
-                </Link>
-
-                <Link 
-                  to="/resume-builder"
-                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
-                >
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-900/30 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">Resume Builder</p>
-                    <p className="text-xs text-gray-400">Create an ATS-friendly resume</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
-                </Link>
-
-                <Link 
-                  to="/career-tips"
-                  className="flex items-center p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700/80 transition-colors group"
-                >
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-900/30 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-green-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">Career Tips</p>
-                    <p className="text-xs text-gray-400">Boost your job search</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 ml-auto text-gray-500 group-hover:text-white transition-colors" />
-                </Link>
-              </div>
+              <button className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-white font-medium transition-all shadow-lg">
+                Upgrade Now
+              </button>
             </div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 space-y-6">
-            {/* Welcome Card */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-lg shadow-purple-900/30 p-6 text-white">
-              <h2 className="text-2xl font-bold mb-2">
-                Welcome back, {profile?.first_name?.split(' ')[0] || 'there'}!
-              </h2>
-              <p className="mb-4 opacity-90">
-                {dashboardData.stats.totalApplications > 0 
-                  ? `You have ${dashboardData.stats.activeJobs} active applications. ${dashboardData.stats.totalApplications} total applications.`
-                  : "You don't have any applications yet. Start applying to jobs!"}
-              </p>
-              {dashboardData.stats.profileCompletion < 80 && (
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Profile Completion</span>
-                    <span>{dashboardData.stats.profileCompletion}%</span>
+          {/* Main Content */}
+          <div className="lg:col-span-9 space-y-6">
+            {/* Welcome Banner */}
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-8 shadow-2xl shadow-purple-500/30 relative overflow-hidden">
+              <div className="absolute inset-0 bg-black/20"></div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">
+                      {getGreeting()}, John! 👋
+                    </h1>
+                    <p className="text-blue-100 mb-6">
+                      You have 3 interviews scheduled this week. Keep up the great work!
+                    </p>
+                    <div className="flex gap-3">
+                      <button className="px-6 py-3 bg-white/90 hover:bg-white text-purple-700 rounded-xl font-medium transition-all shadow-lg flex items-center gap-2">
+                        <Plus className="h-5 w-5" />
+                        Apply to Jobs
+                      </button>
+                      <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all backdrop-blur-sm border border-white/20">
+                        View Applications
+                      </button>
+                    </div>
                   </div>
-                  <div className="w-full bg-white/20 rounded-full h-2.5">
-                    <div 
-                      className="bg-yellow-400 h-2.5 rounded-full transition-all duration-500" 
-                      style={{ width: `${dashboardData.stats.profileCompletion}%` }}
-                    ></div>
+                  <div className="hidden lg:block">
+                    <div className="text-right">
+                      <p className="text-blue-100 text-sm mb-1">{currentTime.toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                      <p className="text-white text-2xl font-bold">
+                        {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs mt-2 text-yellow-200">
-                    Complete your profile to increase your chances of getting hired!
-                  </p>
                 </div>
-              )}
-              <button 
-                onClick={() => navigate('/myapplications')}
-                className="px-4 py-2 bg-white/90 text-purple-700 hover:bg-white rounded-lg text-sm font-medium transition"
-              >
-                View Applications
-              </button>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map((stat, index) => (
+                <div
+                  key={index}
+                  className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all duration-300 group cursor-pointer"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform`}>
+                      <stat.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <span className="flex items-center gap-1 text-sm font-medium text-green-400">
+                      {stat.trend === 'up' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      {stat.change}
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
+                  <p className="text-sm text-slate-400">{stat.label}</p>
+                </div>
+              ))}
             </div>
 
             {/* Saved Searches */}
-            <div className="rounded-2xl shadow-sm p-4 sm:p-6 bg-gray-800 border border-gray-700">
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-white">Saved Searches</h3>
-                {savedSearches.length > 3 && (
-                  <button 
-                    onClick={() => {}}
-                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    View All
-                  </button>
-                )}
+                <h2 className="text-lg font-bold text-white">Saved Searches</h2>
+                <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">View All</button>
               </div>
-              
-              {loadingSearches ? (
-                <div className="flex justify-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
-                </div>
-              ) : savedSearches.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {savedSearches.slice(0, 5).map((search) => (
-                    <div 
-                      key={search.id} 
-                      className="group relative inline-flex items-center px-3 py-1.5 pr-7 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 hover:bg-purple-900/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/jobs?q=${encodeURIComponent(search.search_query)}`)}
-                    >
-                      {search.search_query}
-                      <button 
-                        className="absolute right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-purple-800/50"
-                        onClick={(e) => handleDeleteSearch(search.id, e)}
-                        title="Remove saved search"
-                      >
-                        <XIcon className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400">Your saved searches will appear here</p>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {savedSearches.map((search, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl text-sm text-white transition-all cursor-pointer group"
+                  >
+                    {search}
+                    <X className="h-3 w-3 text-slate-400 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Job Listings */}
-            <div className="rounded-2xl shadow-sm bg-gray-800 border border-gray-700">
-              <nav className="flex border-b border-gray-700 px-6 pt-6">
-                <button 
-                  onClick={() => setActiveTab('recommended')}
-                  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'recommended'
-                      ? 'border-indigo-400 text-white' 
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
-                  }`}
-                >
-                  Recommended
-                </button>
-                <button 
-                  onClick={() => setActiveTab('recent')}
-                  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'recent'
-                      ? 'border-indigo-400 text-white' 
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
-                  }`}
-                >
-                  Recent
-                </button>
-                <button 
-                  onClick={() => setActiveTab('saved')}
-                  className={`border-b-2 px-4 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'saved'
-                      ? 'border-indigo-400 text-white' 
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-400'
-                  }`}
-                >
-                  Saved
-                </button>
-              </nav>
-              
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-xl overflow-hidden">
+              {/* Tabs */}
+              <div className="border-b border-slate-800/50 px-6">
+                <div className="flex gap-1">
+                  {['recommended', 'recent', 'saved'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-6 py-4 text-sm font-medium transition-all relative ${
+                        activeTab === tab
+                          ? 'text-white'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {activeTab === tab && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content */}
               <div className="p-6">
-                {activeTab === 'saved' ? (
-                  isLoadingSavedJobs ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-                    </div>
-                  ) : savedJobs.length > 0 ? (
-                    <div className="space-y-4">
-                      {savedJobs.map((job) => (
-                        <div 
-                          key={job.id} 
-                          className="p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-purple-500/50 transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium text-white">{job.job_title}</h4>
-                              <p className="text-sm text-gray-400">{job.company_name}</p>
-                              <p className="text-xs text-gray-500 mt-1">{job.location}</p>
-                            </div>
-                            <button
-                              onClick={() => handleSaveJob(job.job_id)}
-                              className="text-purple-400 hover:text-purple-300 transition-colors"
-                              title="Remove from saved"
-                            >
-                              <BookmarkCheck className="h-5 w-5" />
-                            </button>
+                <div className="space-y-4">
+                  {recommendedJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex gap-4 flex-1">
+                          <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg">
+                            {job.logo}
                           </div>
-                          <div className="mt-2 flex justify-between items-center">
-                            <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded-full">
-                              {job.job_type || 'Full-time'}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {job.salary_min && job.salary_max ? 
-                                `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()} ${job.salary_currency || ''}`.trim() : 
-                                'Salary not specified'}
-                            </span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                                {job.title}
+                              </h3>
+                              {job.featured && (
+                                <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-lg border border-amber-500/30">
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
+                              <span className="flex items-center gap-1">
+                                <Building className="h-4 w-4" />
+                                {job.company}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {job.location}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-4 w-4" />
+                                {job.salary}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {job.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                              <span>{job.posted}</span>
+                              <span>•</span>
+                              <span>{job.applicants} applicants</span>
+                            </div>
                           </div>
                         </div>
-                      ))}
+                        
+                        <div className="flex flex-col items-end gap-3">
+                          <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
+                            <Target className="h-4 w-4" />
+                            <span className="text-sm font-medium">{job.match}% Match</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all">
+                              <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                            </button>
+                            <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all">
+                              <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
+                        <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
+                          {job.type}
+                        </span>
+                        <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2">
+                          Apply Now
+                          <ArrowUpRight className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <BookOpenText className="h-12 w-12 mx-auto text-gray-600 mb-3" />
-                      <p className="text-gray-400">No saved jobs yet</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Save jobs to view them here
-                      </p>
-                    </div>
-                  )
-                ) : (
-                  <>
-                    <p className="text-sm mb-4 text-gray-400">
-                      Find your next opportunity by browsing through our curated job listings.
-                    </p>
-                    
-                    <div className="space-y-4">
-                      {[
-                        {
-                          id: 1,
-                          title: 'Full Stack Developer',
-                          company: 'Safaricom PLC',
-                          salary: 'KSh 250,000 - 400,000/mo',
-                          postedDate: '2 days ago',
-                          description: 'Join our technology team to develop and maintain enterprise applications for East Africa\'s leading telco.',
-                          tags: ['React', 'Node.js', 'TypeScript']
-                        },
-                        {
-                          id: 2,
-                          title: 'UI/UX Designer Intern',
-                          company: 'Andela Kenya',
-                          salary: 'KSh 50,000 - 80,000/mo',
-                          postedDate: '1 day ago',
-                          description: 'Internship opportunity for creative designers to work on global projects and build their portfolio.',
-                          tags: ['Figma', 'UI/UX', 'Internship']
-                        },
-                        {
-                          id: 5,
-                          title: 'Data Science Intern',
-                          company: 'BasiGo',
-                          salary: 'KSh 40,000 - 70,000/mo',
-                          postedDate: '1 week ago',
-                          description: 'Internship for data enthusiasts to work on electric vehicle data analytics.',
-                          tags: ['Python', 'Data Analysis', 'Internship']
-                        }
-                      ].map((job) => (
-                        <JobCard
-                          key={job.id}
-                          title={job.title}
-                          company={job.company}
-                          salary={job.salary}
-                          postedDate={job.postedDate}
-                          description={job.description}
-                          tags={job.tags}
-                          onBookmark={() => console.log('Bookmarked:', job.id)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -697,4 +566,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default NextLevelDashboard;

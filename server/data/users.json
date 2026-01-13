@@ -2,1545 +2,1551 @@
   "users": [
     {
       "id": 1,
-      "name": "Paul Smith",
-      "email": "ybarnes@example.com",
+      "name": "Caleb Gonzalez",
+      "email": "imurphy@example.com",
       "role": "jobseeker",
-      "phone": "927-598-2686x806",
-      "location": "Meru",
+      "phone": "+1-331-802-4692x2728",
+      "location": "Nyeri",
       "education": {
-        "institution": "Riara University",
-        "degree": "Bachelor of Arts",
-        "field": "Computer Science",
+        "institution": "Maseno University",
+        "degree": "Bachelor of Commerce",
+        "field": "Business Administration",
         "graduationYear": 2023,
-        "gpa": 3.71
+        "gpa": 3.36
       },
       "skills": [
-        "Adaptability",
-        "Project Management",
-        "Problem Solving",
-        "Docker",
+        "CI/CD",
         "Financial Analysis",
-        "Kotlin",
-        "Team Management",
         "Customer Service",
-        "Leadership",
+        "JavaScript",
+        "Sales",
+        "Adaptability",
         "Critical Thinking"
       ],
       "experience": [
         {
-          "title": "Sales Executive",
-          "company": "Uchumi Supermarket",
+          "title": "IT Support Specialist",
+          "company": "Copia Kenya",
           "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Cybersecurity Analyst",
-          "company": "Kenya Ports Authority",
-          "duration": "2 years",
           "description": "Worked on customer support"
-        },
-        {
-          "title": "Finance Intern",
-          "company": "Airtel Kenya",
-          "duration": "3 years",
-          "description": "Worked on marketing campaigns"
         }
       ],
-      "bio": "Recent graduate from Riara University (2023) looking for opportunities in finance.",
+      "bio": "Recent graduate from Maseno University (2023) looking for opportunities in data science.",
       "resumeUrl": "/resumes/user_1.pdf",
       "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
-      "createdAt": "2026-01-12T21:37:59.897956",
-      "profileCompleted": 85,
-      "savedJobs": [
-        59
-      ],
-      "applications": []
+      "createdAt": "2026-01-14T00:32:34.616194",
+      "profileCompleted": 80,
+      "savedJobs": [],
+      "applications": [
+        33,
+        30,
+        37,
+        53
+      ]
     },
     {
       "id": 2,
-      "name": "Dawn Bailey",
-      "email": "taylor55@example.org",
-      "role": "employer",
-      "company": "Sky.Garden",
-      "position": "Recruitment Officer",
-      "phone": "001-259-721-7751x08532",
-      "location": "Eldoret",
-      "bio": "I'm a HR professional at Sky.Garden, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.898989",
-      "profileCompleted": 92
-    },
-    {
-      "id": 3,
-      "name": "Charles Patrick",
-      "email": "sbrown@example.org",
-      "role": "employer",
-      "company": "Bamburi Cement",
-      "position": "Team Lead",
-      "phone": "(258)890-3855x062",
-      "location": "Nyeri",
-      "bio": "I'm a HR professional at Bamburi Cement, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.899661",
-      "profileCompleted": 91
-    },
-    {
-      "id": 4,
-      "name": "Mrs. Deborah Martin",
-      "email": "stevensjustin@example.com",
+      "name": "Andrew Moreno",
+      "email": "nicholas88@example.com",
       "role": "jobseeker",
-      "phone": "552-885-7516",
-      "location": "Remote",
+      "phone": "001-258-431-9673",
+      "location": "Kakamega",
       "education": {
-        "institution": "Egerton University",
-        "degree": "Bachelor of Science",
-        "field": "Engineering",
-        "graduationYear": 2019,
-        "gpa": 2.53
+        "institution": "United States International University Africa",
+        "degree": "Bachelor of Arts",
+        "field": "Computer Science",
+        "graduationYear": 2021,
+        "gpa": 3.85
       },
       "skills": [
+        "Strategic Planning",
+        "Data Analysis",
+        "Java",
+        "GitHub",
+        "Ansible",
+        "Git",
         "Adaptability",
-        "C#",
-        "Team Management",
-        "Swift",
-        "Flask",
-        "Budgeting",
-        "Ruby",
-        "Leadership"
+        "Kotlin",
+        "Terraform",
+        "Laravel"
       ],
       "experience": [
         {
-          "title": "Operations Manager",
-          "company": "Kenya Revenue Authority",
+          "title": "AI Specialist",
+          "company": "Kenya Power",
           "duration": "1 years",
           "description": "Worked on web development"
-        },
-        {
-          "title": "Auditor",
-          "company": "Uchumi Supermarket",
-          "duration": "3 years",
-          "description": "Worked on marketing campaigns"
         }
       ],
-      "bio": "Recent graduate from Egerton University (2019) looking for opportunities in software development.",
+      "bio": "Recent graduate from United States International University Africa (2021) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_2.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
+      "createdAt": "2026-01-14T00:32:34.618535",
+      "profileCompleted": 45,
+      "savedJobs": [],
+      "applications": []
+    },
+    {
+      "id": 3,
+      "name": "Ricardo Pierce",
+      "email": "jortiz@example.com",
+      "role": "employer",
+      "company": "Telkom Kenya",
+      "position": "Recruitment Officer",
+      "phone": "+1-342-810-1682",
+      "location": "Eldoret",
+      "bio": "I'm a technical recruiter at Telkom Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.621322",
+      "profileCompleted": 82
+    },
+    {
+      "id": 4,
+      "name": "Omar Gonzalez",
+      "email": "jasonmarsh@example.net",
+      "role": "jobseeker",
+      "phone": "(770)604-5631x340",
+      "location": "Nyeri",
+      "education": {
+        "institution": "United States International University Africa",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationYear": 2021,
+        "gpa": 3.2
+      },
+      "skills": [
+        "Time Management",
+        "Ansible",
+        "DevOps",
+        "MongoDB",
+        "Azure",
+        "Team Management",
+        "Project Management",
+        "Oracle"
+      ],
+      "experience": [
+        {
+          "title": "Graphic Design Intern",
+          "company": "Uchumi Supermarket",
+          "duration": "2 years",
+          "description": "Worked on data analysis"
+        }
+      ],
+      "bio": "Recent graduate from United States International University Africa (2021) looking for opportunities in data science.",
       "resumeUrl": "/resumes/user_4.pdf",
       "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
-      "createdAt": "2026-01-12T21:37:59.900727",
-      "profileCompleted": 42,
+      "createdAt": "2026-01-14T00:32:34.625364",
+      "profileCompleted": 55,
       "savedJobs": [
-        50
+        42,
+        76
       ],
       "applications": [
-        13,
-        37,
-        11,
-        48,
-        69,
-        76,
-        47
+        78,
+        19,
+        33,
+        63,
+        23,
+        80,
+        7,
+        43,
+        18
       ]
     },
     {
       "id": 5,
-      "name": "Vanessa Mosley",
-      "email": "john43@example.net",
-      "role": "jobseeker",
-      "phone": "8477756108",
-      "location": "Nakuru",
-      "education": {
-        "institution": "Zetech University",
-        "degree": "Bachelor of Arts",
-        "field": "Computer Science",
-        "graduationYear": 2023,
-        "gpa": 2.67
-      },
-      "skills": [
-        "Ruby",
-        "Django",
-        "Terraform",
-        "Laravel",
-        "GitLab",
-        "REST APIs",
-        "CI/CD",
-        "Jenkins",
-        "Presentation"
-      ],
-      "experience": [
-        {
-          "title": "Administrative Assistant",
-          "company": "Cellulant",
-          "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Data Scientist",
-          "company": "M-Pesa Africa",
-          "duration": "1 years",
-          "description": "Worked on data analysis"
-        }
-      ],
-      "bio": "Recent graduate from Zetech University (2023) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_5.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
-      "createdAt": "2026-01-12T21:37:59.901568",
-      "profileCompleted": 63,
-      "savedJobs": [
-        29,
-        62,
-        86,
-        77
-      ],
-      "applications": [
-        94,
-        54
-      ]
+      "name": "Becky Craig",
+      "email": "lisa34@example.com",
+      "role": "employer",
+      "company": "Kenya Power",
+      "position": "Recruitment Officer",
+      "phone": "765-361-9258x8369",
+      "location": "Naivasha",
+      "bio": "I'm a technical recruiter at Kenya Power, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.627785",
+      "profileCompleted": 77
     },
     {
       "id": 6,
-      "name": "Beth Spencer MD",
-      "email": "patrick26@example.com",
-      "role": "employer",
-      "company": "Naivas Supermarket",
-      "position": "Department Head",
-      "phone": "822-578-0039",
-      "location": "Nairobi",
-      "bio": "I'm a technical recruiter at Naivas Supermarket, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.902553",
-      "profileCompleted": 89
-    },
-    {
-      "id": 7,
-      "name": "Amanda Howell",
-      "email": "mcbridemark@example.org",
+      "name": "Taylor Clarke",
+      "email": "stephaniemoore@example.net",
       "role": "jobseeker",
-      "phone": "001-964-642-2353",
-      "location": "Hybrid",
-      "education": {
-        "institution": "Zetech University",
-        "degree": "Bachelor of Science",
-        "field": "Business Administration",
-        "graduationYear": 2021,
-        "gpa": 3.87
-      },
-      "skills": [
-        "REST APIs",
-        "GitHub",
-        "Angular",
-        "Oracle",
-        "Time Management"
-      ],
-      "experience": [
-        {
-          "title": "DevOps Engineer",
-          "company": "Copia Kenya",
-          "duration": "1 years",
-          "description": "Worked on web development"
-        },
-        {
-          "title": "Human Resources Manager",
-          "company": "Cellulant",
-          "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Customer Success Manager",
-          "company": "Twiga Foods",
-          "duration": "3 years",
-          "description": "Worked on customer support"
-        }
-      ],
-      "bio": "Recent graduate from Zetech University (2021) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_7.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=7",
-      "createdAt": "2026-01-12T21:37:59.904018",
-      "profileCompleted": 58,
-      "savedJobs": [
-        36,
-        97
-      ],
-      "applications": [
-        56,
-        58,
-        3,
-        46,
-        2,
-        66,
-        31,
-        14
-      ]
-    },
-    {
-      "id": 8,
-      "name": "Christopher Cherry",
-      "email": "shane04@example.com",
-      "role": "jobseeker",
-      "phone": "8494022071",
+      "phone": "001-862-475-0790x0171",
       "location": "Malindi",
       "education": {
-        "institution": "Laikipia University",
+        "institution": "University of Nairobi",
         "degree": "Bachelor of Arts",
-        "field": "Computer Science",
-        "graduationYear": 2023,
-        "gpa": 3.95
+        "field": "Engineering",
+        "graduationYear": 2019,
+        "gpa": 2.58
       },
       "skills": [
-        "Critical Thinking",
-        "Ruby",
-        "Google Cloud",
-        "Python",
-        "Financial Analysis"
-      ],
-      "experience": [],
-      "bio": "Recent graduate from Laikipia University (2023) looking for opportunities in finance.",
-      "resumeUrl": "/resumes/user_8.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=8",
-      "createdAt": "2026-01-12T21:37:59.904567",
-      "profileCompleted": 62,
-      "savedJobs": [],
-      "applications": [
-        9,
-        54
-      ]
-    },
-    {
-      "id": 9,
-      "name": "Karen Dawson DDS",
-      "email": "joelwhite@example.com",
-      "role": "employer",
-      "company": "Kenya Commercial Bank (KCB)",
-      "position": "Team Lead",
-      "phone": "6618821593",
-      "location": "Kisii",
-      "bio": "I'm a hiring manager at Kenya Commercial Bank (KCB), looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.905046",
-      "profileCompleted": 75
-    },
-    {
-      "id": 10,
-      "name": "Mark Chen",
-      "email": "cindypierce@example.net",
-      "role": "employer",
-      "company": "Kenya Pipeline Company",
-      "position": "Team Lead",
-      "phone": "+1-849-726-9518x8207",
-      "location": "Remote",
-      "bio": "I'm a HR professional at Kenya Pipeline Company, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.905494",
-      "profileCompleted": 95
-    },
-    {
-      "id": 11,
-      "name": "Amanda Pratt",
-      "email": "karen08@example.net",
-      "role": "jobseeker",
-      "phone": "001-219-955-1910x28883",
-      "location": "Remote",
-      "education": {
-        "institution": "Multimedia University of Kenya",
-        "degree": "Bachelor of Arts",
-        "field": "Business Administration",
-        "graduationYear": 2024,
-        "gpa": 3.01
-      },
-      "skills": [
-        "Adaptability",
-        "Agile",
+        "Spring Boot",
+        "Communication",
         "CI/CD",
-        "Laravel",
-        "Angular",
         "Redis",
-        "Ansible"
+        "Project Management",
+        "Google Cloud",
+        "PHP"
       ],
       "experience": [
         {
-          "title": "Graduate Trainee",
-          "company": "National Bank of Kenya",
+          "title": "Research Intern",
+          "company": "Kenyatta National Hospital",
           "duration": "1 years",
-          "description": "Worked on marketing campaigns"
+          "description": "Worked on data analysis"
         },
         {
           "title": "Business Analyst",
-          "company": "Safaricom PLC",
+          "company": "Kenyatta National Hospital",
+          "duration": "3 years",
+          "description": "Worked on customer support"
+        },
+        {
+          "title": "Customer Service Representative",
+          "company": "Co-operative Bank",
           "duration": "2 years",
           "description": "Worked on data analysis"
         }
       ],
-      "bio": "Recent graduate from Multimedia University of Kenya (2024) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_11.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=11",
-      "createdAt": "2026-01-12T21:37:59.905852",
-      "profileCompleted": 82,
+      "bio": "Recent graduate from University of Nairobi (2019) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_6.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=6",
+      "createdAt": "2026-01-14T00:32:34.630476",
+      "profileCompleted": 55,
       "savedJobs": [
-        19,
-        85,
-        31,
-        77,
-        82
+        15
+      ],
+      "applications": [
+        7,
+        36,
+        92,
+        14,
+        6,
+        18,
+        39,
+        17,
+        3
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Anita Morris",
+      "email": "mreynolds@example.org",
+      "role": "employer",
+      "company": "Twiga Foods",
+      "position": "Team Lead",
+      "phone": "914.226.6918x91362",
+      "location": "Remote",
+      "bio": "I'm a hiring manager at Twiga Foods, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.632636",
+      "profileCompleted": 85
+    },
+    {
+      "id": 8,
+      "name": "Lisa Murphy",
+      "email": "colleenle@example.com",
+      "role": "employer",
+      "company": "Naivas Supermarket",
+      "position": "HR Manager",
+      "phone": "001-879-609-2627x42173",
+      "location": "Naivasha",
+      "bio": "I'm a technical recruiter at Naivas Supermarket, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.635126",
+      "profileCompleted": 100
+    },
+    {
+      "id": 9,
+      "name": "Christopher Fisher",
+      "email": "kristen51@example.org",
+      "role": "jobseeker",
+      "phone": "919-999-5900x8680",
+      "location": "Kisii",
+      "education": {
+        "institution": "KCA University",
+        "degree": "Bachelor of Arts",
+        "field": "Business Administration",
+        "graduationYear": 2018,
+        "gpa": 3.49
+      },
+      "skills": [
+        "Vue.js",
+        "Team Management",
+        "Laravel",
+        "Financial Analysis",
+        "Kubernetes",
+        "Presentation",
+        "Java",
+        "Ansible",
+        "MongoDB",
+        "PHP"
+      ],
+      "experience": [
+        {
+          "title": "UI/UX Designer",
+          "company": "Kenya Commercial Bank (KCB)",
+          "duration": "1 years",
+          "description": "Worked on data analysis"
+        },
+        {
+          "title": "Data Science Intern",
+          "company": "Twiga Foods",
+          "duration": "2 years",
+          "description": "Worked on web development"
+        }
+      ],
+      "bio": "Recent graduate from KCA University (2018) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_9.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=9",
+      "createdAt": "2026-01-14T00:32:34.637182",
+      "profileCompleted": 61,
+      "savedJobs": [
+        34
+      ],
+      "applications": [
+        42,
+        73
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Brittney Willis",
+      "email": "olivia57@example.net",
+      "role": "jobseeker",
+      "phone": "(370)559-8708",
+      "location": "Garissa",
+      "education": {
+        "institution": "Laikipia University",
+        "degree": "Bachelor of Commerce",
+        "field": "Finance",
+        "graduationYear": 2024,
+        "gpa": 2.64
+      },
+      "skills": [
+        "JavaScript",
+        "MongoDB",
+        "Git",
+        "Budgeting",
+        "Azure",
+        "Go",
+        "Kubernetes"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Laikipia University (2024) looking for opportunities in digital marketing.",
+      "resumeUrl": "/resumes/user_10.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=10",
+      "createdAt": "2026-01-14T00:32:34.639301",
+      "profileCompleted": 75,
+      "savedJobs": [
+        65,
+        56
       ],
       "applications": []
     },
     {
-      "id": 12,
-      "name": "David Reed",
-      "email": "browndavid@example.org",
-      "role": "employer",
-      "company": "East African Breweries Limited",
-      "position": "Recruitment Officer",
-      "phone": "(920)755-6933x1148",
-      "location": "Naivasha",
-      "bio": "I'm a HR professional at East African Breweries Limited, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.906307",
-      "profileCompleted": 73
-    },
-    {
-      "id": 13,
-      "name": "Erica Bennett",
-      "email": "anne91@example.com",
-      "role": "employer",
-      "company": "Copia Kenya",
-      "position": "HR Manager",
-      "phone": "(972)595-2829x832",
-      "location": "Mombasa",
-      "bio": "I'm a technical recruiter at Copia Kenya, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.906633",
-      "profileCompleted": 90
-    },
-    {
-      "id": 14,
-      "name": "Susan Thomas",
-      "email": "qbell@example.net",
-      "role": "jobseeker",
-      "phone": "(440)813-0135x361",
-      "location": "Nairobi",
-      "education": {
-        "institution": "Strathmore University",
-        "degree": "Bachelor of Science",
-        "field": "Computer Science",
-        "graduationYear": 2023,
-        "gpa": 3.57
-      },
-      "skills": [
-        "Kubernetes",
-        "SQLite",
-        "Django",
-        "Leadership",
-        "GitLab",
-        "Customer Service",
-        "Spring Boot",
-        "Ruby"
-      ],
-      "experience": [
-        {
-          "title": "Frontend Developer",
-          "company": "Naivas Supermarket",
-          "duration": "3 years",
-          "description": "Worked on data analysis"
-        }
-      ],
-      "bio": "Recent graduate from Strathmore University (2023) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_14.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=14",
-      "createdAt": "2026-01-12T21:37:59.907054",
-      "profileCompleted": 50,
-      "savedJobs": [],
-      "applications": [
-        29,
-        20,
-        24,
-        9,
-        12,
-        31,
-        84,
-        46
-      ]
-    },
-    {
-      "id": 15,
-      "name": "Jessica Schultz",
-      "email": "ajohnson@example.com",
-      "role": "jobseeker",
-      "phone": "+1-874-594-9292x6791",
-      "location": "On-site",
-      "education": {
-        "institution": "Daystar University",
-        "degree": "Bachelor of Commerce",
-        "field": "Finance",
-        "graduationYear": 2021,
-        "gpa": 3.32
-      },
-      "skills": [
-        "Spring Boot",
-        "Laravel",
-        "Redis",
-        "Flask",
-        "JavaScript"
-      ],
-      "experience": [
-        {
-          "title": "Sales Intern",
-          "company": "Equity Bank",
-          "duration": "1 years",
-          "description": "Worked on web development"
-        }
-      ],
-      "bio": "Recent graduate from Daystar University (2021) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_15.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=15",
-      "createdAt": "2026-01-12T21:37:59.907550",
-      "profileCompleted": 47,
-      "savedJobs": [
-        75,
-        97,
-        4
-      ],
-      "applications": [
-        82,
-        62,
-        63,
-        4,
-        80,
-        35,
-        22,
-        10
-      ]
-    },
-    {
-      "id": 16,
-      "name": "Luis Rice",
-      "email": "bryan10@example.net",
-      "role": "employer",
-      "company": "Bamburi Cement",
-      "position": "Recruitment Officer",
-      "phone": "+1-524-553-2023",
-      "location": "Remote",
-      "bio": "I'm a hiring manager at Bamburi Cement, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.908009",
-      "profileCompleted": 88
-    },
-    {
-      "id": 17,
-      "name": "Brandi Morrison",
-      "email": "zacharyhall@example.net",
+      "id": 11,
+      "name": "William Patterson",
+      "email": "john87@example.com",
       "role": "employer",
       "company": "Naivas Supermarket",
-      "position": "Recruitment Officer",
-      "phone": "001-382-721-5829x466",
-      "location": "Nairobi",
+      "position": "HR Manager",
+      "phone": "784.452.9909x28258",
+      "location": "Kakamega",
       "bio": "I'm a HR professional at Naivas Supermarket, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.908637",
-      "profileCompleted": 98
+      "createdAt": "2026-01-14T00:32:34.641421",
+      "profileCompleted": 99
     },
     {
-      "id": 18,
-      "name": "Brittany Hamilton",
-      "email": "michealyoung@example.net",
-      "role": "employer",
-      "company": "Sendy",
-      "position": "Team Lead",
-      "phone": "254-606-8192",
-      "location": "Remote",
-      "bio": "I'm a HR professional at Sendy, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.909077",
-      "profileCompleted": 81
-    },
-    {
-      "id": 19,
-      "name": "Vincent Simmons",
-      "email": "birdjose@example.net",
+      "id": 12,
+      "name": "Jonathan Collins",
+      "email": "sgarcia@example.net",
       "role": "jobseeker",
-      "phone": "(302)408-3608",
-      "location": "Nairobi",
+      "phone": "001-392-802-2978x27648",
+      "location": "Eldoret",
       "education": {
-        "institution": "Strathmore University",
-        "degree": "Bachelor of Arts",
-        "field": "Marketing",
-        "graduationYear": 2022,
-        "gpa": 3.69
+        "institution": "Laikipia University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationYear": 2018,
+        "gpa": 3.94
       },
       "skills": [
-        "Critical Thinking",
-        "Git",
-        "Financial Analysis",
-        "Redis",
-        "Adaptability",
-        "Marketing",
+        "Laravel",
+        "Terraform",
         "Vue.js",
-        "Problem Solving",
-        "Time Management"
+        "Scrum",
+        "Node.js"
       ],
       "experience": [
         {
           "title": "Data Scientist",
-          "company": "National Bank of Kenya",
-          "duration": "1 years",
-          "description": "Worked on web development"
-        },
-        {
-          "title": "Recruitment Officer",
           "company": "Naivas Supermarket",
           "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        }
-      ],
-      "bio": "Recent graduate from Strathmore University (2022) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_19.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=19",
-      "createdAt": "2026-01-12T21:37:59.909521",
-      "profileCompleted": 62,
-      "savedJobs": [
-        37,
-        84,
-        82,
-        30
-      ],
-      "applications": [
-        61
-      ]
-    },
-    {
-      "id": 20,
-      "name": "Tammy Schneider",
-      "email": "seandickerson@example.com",
-      "role": "employer",
-      "company": "Sky.Garden",
-      "position": "Recruitment Officer",
-      "phone": "6959816513",
-      "location": "Mombasa",
-      "bio": "I'm a hiring manager at Sky.Garden, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.910290",
-      "profileCompleted": 71
-    },
-    {
-      "id": 21,
-      "name": "Julie Wolf",
-      "email": "mooremadison@example.net",
-      "role": "employer",
-      "company": "Zumi Kenya",
-      "position": "Department Head",
-      "phone": "001-210-746-0571x403",
-      "location": "Kisii",
-      "bio": "I'm a technical recruiter at Zumi Kenya, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.911196",
-      "profileCompleted": 95
-    },
-    {
-      "id": 22,
-      "name": "Jesse Armstrong",
-      "email": "jacob12@example.com",
-      "role": "employer",
-      "company": "Andela Kenya",
-      "position": "Team Lead",
-      "phone": "(411)973-9456",
-      "location": "Malindi",
-      "bio": "I'm a technical recruiter at Andela Kenya, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.912189",
-      "profileCompleted": 92
-    },
-    {
-      "id": 23,
-      "name": "Brian Farrell",
-      "email": "cassandrabell@example.org",
-      "role": "employer",
-      "company": "Equity Bank",
-      "position": "Recruitment Officer",
-      "phone": "(741)670-8399",
-      "location": "Naivasha",
-      "bio": "I'm a hiring manager at Equity Bank, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.913023",
-      "profileCompleted": 75
-    },
-    {
-      "id": 24,
-      "name": "Gregory Hughes DDS",
-      "email": "rogersparks@example.org",
-      "role": "jobseeker",
-      "phone": "(648)575-6634x57150",
-      "location": "On-site",
-      "education": {
-        "institution": "Zetech University",
-        "degree": "Bachelor of Commerce",
-        "field": "Finance",
-        "graduationYear": 2021,
-        "gpa": 2.59
-      },
-      "skills": [
-        "Kubernetes",
-        "Sales",
-        "Financial Analysis",
-        "MySQL",
-        "Kotlin",
-        "Flask",
-        "Swift"
-      ],
-      "experience": [
-        {
-          "title": "Mobile App Developer",
-          "company": "East African Breweries Limited",
-          "duration": "2 years",
-          "description": "Worked on marketing campaigns"
-        }
-      ],
-      "bio": "Recent graduate from Zetech University (2021) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_24.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=24",
-      "createdAt": "2026-01-12T21:37:59.914346",
-      "profileCompleted": 70,
-      "savedJobs": [
-        84,
-        76,
-        15,
-        51,
-        78
-      ],
-      "applications": [
-        2,
-        4,
-        3,
-        87,
-        8,
-        28,
-        84,
-        49,
-        22
-      ]
-    },
-    {
-      "id": 25,
-      "name": "Heather Barnes",
-      "email": "dharrington@example.org",
-      "role": "employer",
-      "company": "Telkom Kenya",
-      "position": "HR Manager",
-      "phone": "001-658-613-7609",
-      "location": "Nanyuki",
-      "bio": "I'm a HR professional at Telkom Kenya, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.916507",
-      "profileCompleted": 96
-    },
-    {
-      "id": 26,
-      "name": "Danielle Johnson",
-      "email": "kenneth62@example.com",
-      "role": "jobseeker",
-      "phone": "(488)855-7733x96602",
-      "location": "Thika",
-      "education": {
-        "institution": "Meru University of Science and Technology",
-        "degree": "Bachelor of Commerce",
-        "field": "Computer Science",
-        "graduationYear": 2021,
-        "gpa": 3.47
-      },
-      "skills": [
-        "Microservices",
-        "Customer Service",
-        "C#",
-        "GitLab",
-        "Time Management",
-        "Presentation",
-        "CI/CD",
-        "Kubernetes",
-        "Google Cloud",
-        "REST APIs"
-      ],
-      "experience": [],
-      "bio": "Recent graduate from Meru University of Science and Technology (2021) looking for opportunities in software development.",
-      "resumeUrl": "/resumes/user_26.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=26",
-      "createdAt": "2026-01-12T21:37:59.917599",
-      "profileCompleted": 53,
-      "savedJobs": [
-        87,
-        85,
-        82,
-        15,
-        96
-      ],
-      "applications": [
-        58,
-        37,
-        93,
-        92,
-        14,
-        87,
-        35,
-        52,
-        27,
-        54
-      ]
-    },
-    {
-      "id": 27,
-      "name": "Bryan Mckee",
-      "email": "brandonjohns@example.net",
-      "role": "employer",
-      "company": "Marketforce",
-      "position": "Department Head",
-      "phone": "259-903-0032x8999",
-      "location": "Meru",
-      "bio": "I'm a HR professional at Marketforce, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.919599",
-      "profileCompleted": 84
-    },
-    {
-      "id": 28,
-      "name": "Emily Jennings",
-      "email": "williamvilla@example.org",
-      "role": "employer",
-      "company": "Nation Media Group",
-      "position": "Recruitment Officer",
-      "phone": "704.572.0586",
-      "location": "Eldoret",
-      "bio": "I'm a HR professional at Nation Media Group, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.920948",
-      "profileCompleted": 100
-    },
-    {
-      "id": 29,
-      "name": "Mary Wright",
-      "email": "juliabrown@example.com",
-      "role": "employer",
-      "company": "Kenya Railways",
-      "position": "Team Lead",
-      "phone": "(696)360-1479x627",
-      "location": "Hybrid",
-      "bio": "I'm a technical recruiter at Kenya Railways, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.922172",
-      "profileCompleted": 70
-    },
-    {
-      "id": 30,
-      "name": "Chelsea Jackson",
-      "email": "stephanie81@example.org",
-      "role": "employer",
-      "company": "Marketforce",
-      "position": "Recruitment Officer",
-      "phone": "743.498.2147",
-      "location": "Malindi",
-      "bio": "I'm a HR professional at Marketforce, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.923008",
-      "profileCompleted": 87
-    },
-    {
-      "id": 31,
-      "name": "David Hill",
-      "email": "paul67@example.org",
-      "role": "employer",
-      "company": "Kenya Commercial Bank (KCB)",
-      "position": "Recruitment Officer",
-      "phone": "+1-752-745-0284x1841",
-      "location": "Remote",
-      "bio": "I'm a HR professional at Kenya Commercial Bank (KCB), looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.923613",
-      "profileCompleted": 100
-    },
-    {
-      "id": 32,
-      "name": "Joshua Jennings",
-      "email": "underwoodmatthew@example.org",
-      "role": "jobseeker",
-      "phone": "4146060674",
-      "location": "Mombasa",
-      "education": {
-        "institution": "Multimedia University of Kenya",
-        "degree": "Bachelor of Science",
-        "field": "Business Administration",
-        "graduationYear": 2020,
-        "gpa": 2.83
-      },
-      "skills": [
-        "REST APIs",
-        "Kubernetes",
-        "Redis",
-        "GitLab",
-        "Agile",
-        "Critical Thinking"
-      ],
-      "experience": [],
-      "bio": "Recent graduate from Multimedia University of Kenya (2020) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_32.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=32",
-      "createdAt": "2026-01-12T21:37:59.924193",
-      "profileCompleted": 76,
-      "savedJobs": [
-        39,
-        85,
-        58,
-        76,
-        43
-      ],
-      "applications": [
-        24,
-        54,
-        76,
-        74,
-        28,
-        41,
-        12,
-        67,
-        84,
-        75
-      ]
-    },
-    {
-      "id": 33,
-      "name": "Margaret King",
-      "email": "edwardrivers@example.org",
-      "role": "jobseeker",
-      "phone": "658-381-4548x8535",
-      "location": "Meru",
-      "education": {
-        "institution": "Zetech University",
-        "degree": "Bachelor of Arts",
-        "field": "Business Administration",
-        "graduationYear": 2023,
-        "gpa": 3.46
-      },
-      "skills": [
-        "Flask",
-        "Kotlin",
-        "Spring Boot",
-        "Angular",
-        "Node.js",
-        "GitLab",
-        "SQLite",
-        "Time Management"
-      ],
-      "experience": [
-        {
-          "title": "Account Manager",
-          "company": "Equity Bank",
-          "duration": "3 years",
-          "description": "Worked on customer support"
-        },
-        {
-          "title": "Research Intern",
-          "company": "Kenya Revenue Authority",
-          "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        }
-      ],
-      "bio": "Recent graduate from Zetech University (2023) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_33.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=33",
-      "createdAt": "2026-01-12T21:37:59.924837",
-      "profileCompleted": 71,
-      "savedJobs": [
-        48
-      ],
-      "applications": [
-        95,
-        26
-      ]
-    },
-    {
-      "id": 34,
-      "name": "Janice Nielsen",
-      "email": "david96@example.com",
-      "role": "employer",
-      "company": "Equity Bank",
-      "position": "HR Manager",
-      "phone": "+1-679-809-0745x032",
-      "location": "Kitale",
-      "bio": "I'm a technical recruiter at Equity Bank, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.925227",
-      "profileCompleted": 93
-    },
-    {
-      "id": 35,
-      "name": "Douglas Sanchez",
-      "email": "kflores@example.com",
-      "role": "jobseeker",
-      "phone": "242.878.8700",
-      "location": "Nairobi",
-      "education": {
-        "institution": "Technical University of Kenya",
-        "degree": "Bachelor of Commerce",
-        "field": "Finance",
-        "graduationYear": 2020,
-        "gpa": 3.48
-      },
-      "skills": [
-        "Budgeting",
-        "GraphQL",
-        "Strategic Planning",
-        "Ansible",
-        "Laravel",
-        "Project Management"
-      ],
-      "experience": [],
-      "bio": "Recent graduate from Technical University of Kenya (2020) looking for opportunities in software development.",
-      "resumeUrl": "/resumes/user_35.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=35",
-      "createdAt": "2026-01-12T21:37:59.925766",
-      "profileCompleted": 69,
-      "savedJobs": [],
-      "applications": [
-        7,
-        26,
-        4,
-        40,
-        28,
-        38
-      ]
-    },
-    {
-      "id": 36,
-      "name": "Pedro Hill",
-      "email": "reginaldbaker@example.com",
-      "role": "jobseeker",
-      "phone": "+1-706-638-9767x698",
-      "location": "Malindi",
-      "education": {
-        "institution": "Karatina University",
-        "degree": "Bachelor of Arts",
-        "field": "Computer Science",
-        "graduationYear": 2019,
-        "gpa": 2.71
-      },
-      "skills": [
-        "DevOps",
-        "Scrum",
-        "Angular",
-        "CI/CD",
-        "PHP",
-        "Communication",
-        "Flask",
-        "Terraform",
-        "Go"
-      ],
-      "experience": [
-        {
-          "title": "Frontend Developer",
-          "company": "Telkom Kenya",
-          "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Scrum Master",
-          "company": "Marketforce",
-          "duration": "3 years",
-          "description": "Worked on web development"
-        }
-      ],
-      "bio": "Recent graduate from Karatina University (2019) looking for opportunities in finance.",
-      "resumeUrl": "/resumes/user_36.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=36",
-      "createdAt": "2026-01-12T21:37:59.926688",
-      "profileCompleted": 51,
-      "savedJobs": [
-        76,
-        86,
-        4
-      ],
-      "applications": []
-    },
-    {
-      "id": 37,
-      "name": "Sara Russell",
-      "email": "moniqueanderson@example.com",
-      "role": "jobseeker",
-      "phone": "868-602-8384x591",
-      "location": "Remote",
-      "education": {
-        "institution": "Strathmore University",
-        "degree": "Bachelor of Commerce",
-        "field": "Business Administration",
-        "graduationYear": 2024,
-        "gpa": 3.78
-      },
-      "skills": [
-        "REST APIs",
-        "Java",
-        "Presentation",
-        "Laravel",
-        "Adaptability",
-        "Sales",
-        "Go"
-      ],
-      "experience": [
-        {
-          "title": "Social Media Coordinator",
-          "company": "Telkom Kenya",
-          "duration": "1 years",
           "description": "Worked on data analysis"
-        },
-        {
-          "title": "Cloud Engineer",
-          "company": "Safaricom PLC",
-          "duration": "2 years",
-          "description": "Worked on customer support"
         }
       ],
-      "bio": "Recent graduate from Strathmore University (2024) looking for opportunities in finance.",
-      "resumeUrl": "/resumes/user_37.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=37",
-      "createdAt": "2026-01-12T21:37:59.927159",
-      "profileCompleted": 82,
+      "bio": "Recent graduate from Laikipia University (2018) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_12.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=12",
+      "createdAt": "2026-01-14T00:32:34.643830",
+      "profileCompleted": 67,
       "savedJobs": [
-        92
-      ],
-      "applications": [
-        61,
-        72
-      ]
-    },
-    {
-      "id": 38,
-      "name": "Christopher Davis",
-      "email": "allen00@example.com",
-      "role": "jobseeker",
-      "phone": "8347502529",
-      "location": "Thika",
-      "education": {
-        "institution": "Mount Kenya University",
-        "degree": "Bachelor of Science",
-        "field": "Marketing",
-        "graduationYear": 2022,
-        "gpa": 3.43
-      },
-      "skills": [
-        "Financial Analysis",
-        "Market Research",
-        "Vue.js",
-        "Azure",
-        "Agile"
-      ],
-      "experience": [
-        {
-          "title": "Content Writer",
-          "company": "Kenya Pipeline Company",
-          "duration": "2 years",
-          "description": "Worked on web development"
-        },
-        {
-          "title": "Account Manager",
-          "company": "Africa's Talking",
-          "duration": "3 years",
-          "description": "Worked on web development"
-        }
-      ],
-      "bio": "Recent graduate from Mount Kenya University (2022) looking for opportunities in software development.",
-      "resumeUrl": "/resumes/user_38.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=38",
-      "createdAt": "2026-01-12T21:37:59.927708",
-      "profileCompleted": 81,
-      "savedJobs": [
-        40
-      ],
-      "applications": [
-        65,
-        16,
-        99,
-        87,
-        96,
-        24,
-        34,
-        69,
-        5,
-        23
-      ]
-    },
-    {
-      "id": 39,
-      "name": "Keith Clark",
-      "email": "sherryrodriguez@example.net",
-      "role": "jobseeker",
-      "phone": "+1-923-618-4789x9678",
-      "location": "Thika",
-      "education": {
-        "institution": "KCA University",
-        "degree": "Bachelor of Arts",
-        "field": "Marketing",
-        "graduationYear": 2022,
-        "gpa": 3.06
-      },
-      "skills": [
-        "Go",
-        "Project Management",
-        "Laravel",
-        "Negotiation",
-        "Presentation",
-        "Google Cloud",
-        "Time Management"
-      ],
-      "experience": [
-        {
-          "title": "Human Resources Intern",
-          "company": "Copia Kenya",
-          "duration": "1 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Data Science Intern",
-          "company": "Co-operative Bank",
-          "duration": "2 years",
-          "description": "Worked on marketing campaigns"
-        }
-      ],
-      "bio": "Recent graduate from KCA University (2022) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_39.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=39",
-      "createdAt": "2026-01-12T21:37:59.928184",
-      "profileCompleted": 40,
-      "savedJobs": [
+        50,
+        35,
         19,
-        29
+        96,
+        1
       ],
       "applications": [
-        86
+        42,
+        16,
+        11,
+        38,
+        90,
+        80
       ]
     },
     {
-      "id": 40,
-      "name": "Jeff Hughes",
-      "email": "richardsonroberto@example.com",
+      "id": 13,
+      "name": "Jose Green",
+      "email": "smithjames@example.net",
       "role": "jobseeker",
-      "phone": "001-431-656-3442x588",
-      "location": "Nyeri",
+      "phone": "001-535-865-0755x254",
+      "location": "Kitale",
       "education": {
-        "institution": "Kisii University",
-        "degree": "Bachelor of Arts",
-        "field": "Finance",
-        "graduationYear": 2024,
-        "gpa": 2.6
+        "institution": "Jomo Kenyatta University of Agriculture and Technology",
+        "degree": "Bachelor of Commerce",
+        "field": "Marketing",
+        "graduationYear": 2022,
+        "gpa": 3.31
       },
       "skills": [
-        "Ansible",
-        "Data Analysis",
-        "React",
-        "Budgeting",
-        "Presentation",
-        "Angular"
-      ],
-      "experience": [
-        {
-          "title": "Frontend Developer",
-          "company": "Cellulant",
-          "duration": "3 years",
-          "description": "Worked on marketing campaigns"
-        },
-        {
-          "title": "Accountant",
-          "company": "Kenya Revenue Authority",
-          "duration": "2 years",
-          "description": "Worked on web development"
-        }
-      ],
-      "bio": "Recent graduate from Kisii University (2024) looking for opportunities in software development.",
-      "resumeUrl": "/resumes/user_40.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=40",
-      "createdAt": "2026-01-12T21:37:59.928647",
-      "profileCompleted": 77,
-      "savedJobs": [
-        88
-      ],
-      "applications": []
-    },
-    {
-      "id": 41,
-      "name": "Mr. Joseph Harris",
-      "email": "urodriguez@example.com",
-      "role": "employer",
-      "company": "Sky.Garden",
-      "position": "Recruitment Officer",
-      "phone": "001-406-292-3808x11799",
-      "location": "Nyeri",
-      "bio": "I'm a technical recruiter at Sky.Garden, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.929422",
-      "profileCompleted": 74
-    },
-    {
-      "id": 42,
-      "name": "Kenneth Howard",
-      "email": "dylan87@example.com",
-      "role": "jobseeker",
-      "phone": "540.892.2891x528",
-      "location": "Meru",
-      "education": {
-        "institution": "Meru University of Science and Technology",
-        "degree": "Bachelor of Science",
-        "field": "Business Administration",
-        "graduationYear": 2019,
-        "gpa": 3.75
-      },
-      "skills": [
-        "Node.js",
-        "CI/CD",
-        "Terraform",
-        "Customer Service",
-        "Project Management",
-        "Jenkins",
-        "Angular",
-        "Microservices",
-        "PHP",
+        "Git",
+        "PostgreSQL",
+        "Ruby",
+        "Java",
+        "C#",
+        "Financial Analysis",
         "JavaScript"
       ],
       "experience": [
         {
-          "title": "Auditor",
-          "company": "Kenya Ports Authority",
-          "duration": "2 years",
-          "description": "Worked on data analysis"
-        },
-        {
-          "title": "Accountant",
-          "company": "Kenyatta National Hospital",
-          "duration": "3 years",
-          "description": "Worked on customer support"
+          "title": "Account Manager",
+          "company": "M-Pesa Africa",
+          "duration": "1 years",
+          "description": "Worked on web development"
         }
       ],
-      "bio": "Recent graduate from Meru University of Science and Technology (2019) looking for opportunities in data science.",
-      "resumeUrl": "/resumes/user_42.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=42",
-      "createdAt": "2026-01-12T21:37:59.930197",
-      "profileCompleted": 79,
-      "savedJobs": [],
+      "bio": "Recent graduate from Jomo Kenyatta University of Agriculture and Technology (2022) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_13.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=13",
+      "createdAt": "2026-01-14T00:32:34.646831",
+      "profileCompleted": 89,
+      "savedJobs": [
+        23,
+        59,
+        5
+      ],
       "applications": [
-        98,
-        16
+        11,
+        32
       ]
     },
     {
-      "id": 43,
-      "name": "Mitchell Franco",
-      "email": "bryancynthia@example.com",
+      "id": 14,
+      "name": "Emily Li",
+      "email": "adam86@example.org",
       "role": "employer",
-      "company": "Sendy",
-      "position": "Team Lead",
-      "phone": "001-250-524-5642x19972",
-      "location": "Kitale",
-      "bio": "I'm a hiring manager at Sendy, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.931236",
-      "profileCompleted": 88
+      "company": "National Bank of Kenya",
+      "position": "Department Head",
+      "phone": "553.802.6170",
+      "location": "Malindi",
+      "bio": "I'm a HR professional at National Bank of Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.648695",
+      "profileCompleted": 90
     },
     {
-      "id": 44,
-      "name": "Rebecca Bautista PhD",
-      "email": "lindseyeric@example.org",
+      "id": 15,
+      "name": "Jeremy Hines",
+      "email": "qsanders@example.org",
       "role": "jobseeker",
-      "phone": "7926935198",
-      "location": "Meru",
+      "phone": "(701)588-3356x533",
+      "location": "Kakamega",
       "education": {
-        "institution": "Kenyatta University",
-        "degree": "Bachelor of Commerce",
-        "field": "Finance",
-        "graduationYear": 2022,
-        "gpa": 3.4
+        "institution": "Daystar University",
+        "degree": "Bachelor of Science",
+        "field": "Business Administration",
+        "graduationYear": 2019,
+        "gpa": 3.08
       },
       "skills": [
-        "Financial Analysis",
-        "Budgeting",
-        "GitHub",
         "React",
         "Market Research",
-        "Strategic Planning"
+        "Marketing",
+        "Team Management",
+        "Adaptability",
+        "Problem Solving",
+        "Project Management"
       ],
       "experience": [
         {
-          "title": "Finance Manager",
+          "title": "Cybersecurity Analyst",
+          "company": "Uchumi Supermarket",
+          "duration": "3 years",
+          "description": "Worked on customer support"
+        },
+        {
+          "title": "Sales Executive",
+          "company": "Kenya Pipeline Company",
+          "duration": "3 years",
+          "description": "Worked on data analysis"
+        },
+        {
+          "title": "Marketing Intern",
           "company": "Kenya Railways",
           "duration": "1 years",
           "description": "Worked on data analysis"
         }
       ],
-      "bio": "Recent graduate from Kenyatta University (2022) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_44.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=44",
-      "createdAt": "2026-01-12T21:37:59.932311",
-      "profileCompleted": 53,
+      "bio": "Recent graduate from Daystar University (2019) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_15.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=15",
+      "createdAt": "2026-01-14T00:32:34.650755",
+      "profileCompleted": 40,
       "savedJobs": [
-        66,
-        33
+        39,
+        15,
+        11
       ],
       "applications": [
-        99,
-        84,
-        97,
-        23,
-        29
+        47,
+        29,
+        93,
+        33,
+        22,
+        35,
+        45
       ]
     },
     {
-      "id": 45,
-      "name": "Cheryl Hernandez",
-      "email": "anthonyphillips@example.org",
+      "id": 16,
+      "name": "Elizabeth White",
+      "email": "rebecca82@example.net",
+      "role": "employer",
+      "company": "Africa's Talking",
+      "position": "HR Manager",
+      "phone": "+1-805-924-9516x314",
+      "location": "Remote",
+      "bio": "I'm a technical recruiter at Africa's Talking, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.653292",
+      "profileCompleted": 76
+    },
+    {
+      "id": 17,
+      "name": "Jason Campbell",
+      "email": "dianajohnson@example.org",
       "role": "jobseeker",
-      "phone": "916-669-6160x61636",
-      "location": "Nyeri",
+      "phone": "001-328-505-6380x784",
+      "location": "Malindi",
       "education": {
-        "institution": "Strathmore University",
+        "institution": "Multimedia University of Kenya",
+        "degree": "Bachelor of Commerce",
+        "field": "Business Administration",
+        "graduationYear": 2019,
+        "gpa": 3.15
+      },
+      "skills": [
+        "Node.js",
+        "GitHub",
+        "Strategic Planning",
+        "Project Management",
+        "Spring Boot",
+        "Scrum"
+      ],
+      "experience": [
+        {
+          "title": "Product Manager",
+          "company": "Africa's Talking",
+          "duration": "2 years",
+          "description": "Worked on marketing campaigns"
+        },
+        {
+          "title": "Operations Manager",
+          "company": "Safaricom PLC",
+          "duration": "2 years",
+          "description": "Worked on marketing campaigns"
+        }
+      ],
+      "bio": "Recent graduate from Multimedia University of Kenya (2019) looking for opportunities in finance.",
+      "resumeUrl": "/resumes/user_17.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=17",
+      "createdAt": "2026-01-14T00:32:34.655807",
+      "profileCompleted": 84,
+      "savedJobs": [
+        2,
+        69,
+        27
+      ],
+      "applications": [
+        46,
+        11,
+        14,
+        41,
+        95,
+        10
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Bruce Stewart",
+      "email": "garcianicole@example.com",
+      "role": "employer",
+      "company": "Kenya Power",
+      "position": "Department Head",
+      "phone": "7658990027",
+      "location": "Kisumu",
+      "bio": "I'm a HR professional at Kenya Power, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.658739",
+      "profileCompleted": 72
+    },
+    {
+      "id": 19,
+      "name": "Christopher Osborn",
+      "email": "fpope@example.com",
+      "role": "jobseeker",
+      "phone": "795-245-3898",
+      "location": "Nanyuki",
+      "education": {
+        "institution": "Riara University",
+        "degree": "Bachelor of Arts",
+        "field": "Computer Science",
+        "graduationYear": 2022,
+        "gpa": 2.89
+      },
+      "skills": [
+        "Problem Solving",
+        "Spring Boot",
+        "CI/CD",
+        "Critical Thinking",
+        "Git"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Riara University (2022) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_19.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=19",
+      "createdAt": "2026-01-14T00:32:34.661182",
+      "profileCompleted": 70,
+      "savedJobs": [
+        14,
+        30,
+        75
+      ],
+      "applications": [
+        93,
+        21
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Aaron Alexander",
+      "email": "smithethan@example.net",
+      "role": "employer",
+      "company": "Andela Kenya",
+      "position": "Department Head",
+      "phone": "499-794-2323x7980",
+      "location": "Garissa",
+      "bio": "I'm a technical recruiter at Andela Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.664013",
+      "profileCompleted": 79
+    },
+    {
+      "id": 21,
+      "name": "Karen Hoover",
+      "email": "sandra83@example.org",
+      "role": "jobseeker",
+      "phone": "+1-252-377-7254x460",
+      "location": "Mombasa",
+      "education": {
+        "institution": "Zetech University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationYear": 2023,
+        "gpa": 3.06
+      },
+      "skills": [
+        "CI/CD",
+        "Git",
+        "Financial Analysis",
+        "Negotiation",
+        "Customer Service",
+        "GitLab",
+        "Project Management",
+        "Google Cloud",
+        "Ansible"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Zetech University (2023) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_21.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=21",
+      "createdAt": "2026-01-14T00:32:34.666593",
+      "profileCompleted": 85,
+      "savedJobs": [
+        81,
+        1,
+        99,
+        6
+      ],
+      "applications": [
+        47,
+        9,
+        13,
+        84
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Joseph Blair",
+      "email": "derek50@example.org",
+      "role": "employer",
+      "company": "Kenya Wildlife Service",
+      "position": "Team Lead",
+      "phone": "727-807-9500",
+      "location": "Nairobi",
+      "bio": "I'm a HR professional at Kenya Wildlife Service, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.668635",
+      "profileCompleted": 73
+    },
+    {
+      "id": 23,
+      "name": "Anne Chan",
+      "email": "taylor71@example.com",
+      "role": "jobseeker",
+      "phone": "+1-873-464-4776x789",
+      "location": "Mombasa",
+      "education": {
+        "institution": "Karatina University",
+        "degree": "Bachelor of Arts",
+        "field": "Marketing",
+        "graduationYear": 2019,
+        "gpa": 2.59
+      },
+      "skills": [
+        "Vue.js",
+        "PHP",
+        "Flask",
+        "Microservices",
+        "GitLab"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Karatina University (2019) looking for opportunities in digital marketing.",
+      "resumeUrl": "/resumes/user_23.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=23",
+      "createdAt": "2026-01-14T00:32:34.670520",
+      "profileCompleted": 75,
+      "savedJobs": [
+        77
+      ],
+      "applications": [
+        56,
+        92
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Steven Rodriguez",
+      "email": "cathy62@example.net",
+      "role": "jobseeker",
+      "phone": "7703157575",
+      "location": "Thika",
+      "education": {
+        "institution": "Multimedia University of Kenya",
+        "degree": "Bachelor of Commerce",
+        "field": "Engineering",
+        "graduationYear": 2022,
+        "gpa": 3.77
+      },
+      "skills": [
+        "Laravel",
+        "Go",
+        "Negotiation",
+        "Communication",
+        "Ansible"
+      ],
+      "experience": [
+        {
+          "title": "Data Science Intern",
+          "company": "Airtel Kenya",
+          "duration": "2 years",
+          "description": "Worked on customer support"
+        },
+        {
+          "title": "DevOps Engineer",
+          "company": "Kenyatta National Hospital",
+          "duration": "2 years",
+          "description": "Worked on marketing campaigns"
+        }
+      ],
+      "bio": "Recent graduate from Multimedia University of Kenya (2022) looking for opportunities in finance.",
+      "resumeUrl": "/resumes/user_24.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=24",
+      "createdAt": "2026-01-14T00:32:34.672536",
+      "profileCompleted": 48,
+      "savedJobs": [],
+      "applications": [
+        31,
+        14,
+        74,
+        96
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Mark Gomez",
+      "email": "ataylor@example.org",
+      "role": "jobseeker",
+      "phone": "(448)439-4343x655",
+      "location": "Garissa",
+      "education": {
+        "institution": "Technical University of Kenya",
+        "degree": "Bachelor of Commerce",
+        "field": "Computer Science",
+        "graduationYear": 2024,
+        "gpa": 3.36
+      },
+      "skills": [
+        "PostgreSQL",
+        "Ruby",
+        "GitHub",
+        "Flask",
+        "Time Management"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Technical University of Kenya (2024) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_25.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=25",
+      "createdAt": "2026-01-14T00:32:34.675328",
+      "profileCompleted": 76,
+      "savedJobs": [
+        88,
+        65,
+        10,
+        41
+      ],
+      "applications": [
+        42,
+        67,
+        61,
+        58,
+        76,
+        55,
+        25
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Paul Pitts",
+      "email": "hudsonmisty@example.net",
+      "role": "employer",
+      "company": "Sendy",
+      "position": "Recruitment Officer",
+      "phone": "001-321-514-9136x427",
+      "location": "Nakuru",
+      "bio": "I'm a hiring manager at Sendy, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.677881",
+      "profileCompleted": 80
+    },
+    {
+      "id": 27,
+      "name": "Pamela Callahan",
+      "email": "alexandervega@example.com",
+      "role": "employer",
+      "company": "Kenya Airways",
+      "position": "HR Manager",
+      "phone": "454-883-3542x18119",
+      "location": "Kakamega",
+      "bio": "I'm a technical recruiter at Kenya Airways, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.680514",
+      "profileCompleted": 75
+    },
+    {
+      "id": 28,
+      "name": "Jeremy Munoz",
+      "email": "cobbdawn@example.net",
+      "role": "jobseeker",
+      "phone": "225.527.1824",
+      "location": "Thika",
+      "education": {
+        "institution": "Maseno University",
         "degree": "Bachelor of Arts",
         "field": "Finance",
         "graduationYear": 2020,
-        "gpa": 3.88
+        "gpa": 3.11
       },
       "skills": [
+        "DevOps",
+        "Kubernetes",
+        "React",
+        "Financial Analysis",
+        "Leadership",
+        "GitHub",
         "Ruby",
-        "Azure",
-        "Git",
-        "Go",
-        "Angular",
-        "JavaScript"
+        "Redis",
+        "Angular"
       ],
-      "experience": [],
-      "bio": "Recent graduate from Strathmore University (2020) looking for opportunities in finance.",
-      "resumeUrl": "/resumes/user_45.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=45",
-      "createdAt": "2026-01-12T21:37:59.933741",
-      "profileCompleted": 64,
+      "experience": [
+        {
+          "title": "Supply Chain Manager",
+          "company": "Kenya Ports Authority",
+          "duration": "1 years",
+          "description": "Worked on web development"
+        },
+        {
+          "title": "Graphic Design Intern",
+          "company": "Telkom Kenya",
+          "duration": "1 years",
+          "description": "Worked on marketing campaigns"
+        },
+        {
+          "title": "Digital Marketing Specialist",
+          "company": "Airtel Kenya",
+          "duration": "2 years",
+          "description": "Worked on marketing campaigns"
+        }
+      ],
+      "bio": "Recent graduate from Maseno University (2020) looking for opportunities in digital marketing.",
+      "resumeUrl": "/resumes/user_28.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=28",
+      "createdAt": "2026-01-14T00:32:34.683297",
+      "profileCompleted": 62,
       "savedJobs": [
-        35,
-        44,
-        84,
-        85,
-        34
+        20,
+        13
       ],
       "applications": [
-        48,
-        40,
-        18,
-        23,
-        16,
-        51,
-        86,
-        91
+        58,
+        26,
+        1
       ]
     },
     {
-      "id": 46,
-      "name": "Gary Miles",
-      "email": "pbrown@example.org",
+      "id": 29,
+      "name": "Suzanne King",
+      "email": "michael18@example.net",
       "role": "employer",
-      "company": "Zumi Kenya",
+      "company": "Cellulant",
       "position": "Recruitment Officer",
-      "phone": "858-529-9198",
-      "location": "Nairobi",
-      "bio": "I'm a technical recruiter at Zumi Kenya, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.934716",
+      "phone": "+1-600-828-4962",
+      "location": "Thika",
+      "bio": "I'm a HR professional at Cellulant, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.685420",
+      "profileCompleted": 87
+    },
+    {
+      "id": 30,
+      "name": "Justin Johnson",
+      "email": "nunezchristopher@example.org",
+      "role": "employer",
+      "company": "Kenya Revenue Authority",
+      "position": "HR Manager",
+      "phone": "001-329-433-4373",
+      "location": "Mombasa",
+      "bio": "I'm a HR professional at Kenya Revenue Authority, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.688224",
+      "profileCompleted": 76
+    },
+    {
+      "id": 31,
+      "name": "Tracie Frank",
+      "email": "rodgerskylie@example.org",
+      "role": "jobseeker",
+      "phone": "+1-668-277-1764x9640",
+      "location": "Kitale",
+      "education": {
+        "institution": "Laikipia University",
+        "degree": "Bachelor of Commerce",
+        "field": "Business Administration",
+        "graduationYear": 2020,
+        "gpa": 2.96
+      },
+      "skills": [
+        "Flask",
+        "PostgreSQL",
+        "MySQL",
+        "Django",
+        "Time Management",
+        "Sales",
+        "Team Management",
+        "GitLab"
+      ],
+      "experience": [
+        {
+          "title": "Graphic Design Intern",
+          "company": "Kenyatta National Hospital",
+          "duration": "2 years",
+          "description": "Worked on customer support"
+        },
+        {
+          "title": "Account Manager",
+          "company": "East African Breweries Limited",
+          "duration": "3 years",
+          "description": "Worked on data analysis"
+        }
+      ],
+      "bio": "Recent graduate from Laikipia University (2020) looking for opportunities in digital marketing.",
+      "resumeUrl": "/resumes/user_31.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=31",
+      "createdAt": "2026-01-14T00:32:34.691070",
+      "profileCompleted": 44,
+      "savedJobs": [
+        21,
+        33,
+        53,
+        7,
+        75
+      ],
+      "applications": [
+        47
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Diane Jackson",
+      "email": "pmorgan@example.org",
+      "role": "employer",
+      "company": "Kenya Pipeline Company",
+      "position": "Team Lead",
+      "phone": "001-851-383-9877x46356",
+      "location": "Kisumu",
+      "bio": "I'm a technical recruiter at Kenya Pipeline Company, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.693301",
+      "profileCompleted": 82
+    },
+    {
+      "id": 33,
+      "name": "Jordan Sanchez",
+      "email": "ocruz@example.net",
+      "role": "employer",
+      "company": "Africa's Talking",
+      "position": "Recruitment Officer",
+      "phone": "654.835.0455",
+      "location": "Nakuru",
+      "bio": "I'm a technical recruiter at Africa's Talking, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.695512",
+      "profileCompleted": 76
+    },
+    {
+      "id": 34,
+      "name": "Ian Cervantes",
+      "email": "frankayala@example.com",
+      "role": "employer",
+      "company": "Kenya Airways",
+      "position": "Team Lead",
+      "phone": "(401)279-2420x104",
+      "location": "Nanyuki",
+      "bio": "I'm a hiring manager at Kenya Airways, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.698117",
+      "profileCompleted": 90
+    },
+    {
+      "id": 35,
+      "name": "Michael Martinez",
+      "email": "qgardner@example.com",
+      "role": "jobseeker",
+      "phone": "720-366-2326",
+      "location": "Naivasha",
+      "education": {
+        "institution": "Chuka University",
+        "degree": "Bachelor of Commerce",
+        "field": "Business Administration",
+        "graduationYear": 2023,
+        "gpa": 3.6
+      },
+      "skills": [
+        "Data Analysis",
+        "Microservices",
+        "Scrum",
+        "JavaScript",
+        "Project Management",
+        "GitHub",
+        "Azure"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Chuka University (2023) looking for opportunities in digital marketing.",
+      "resumeUrl": "/resumes/user_35.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=35",
+      "createdAt": "2026-01-14T00:32:34.700638",
+      "profileCompleted": 72,
+      "savedJobs": [
+        68
+      ],
+      "applications": [
+        79,
+        35,
+        5,
+        49,
+        81
+      ]
+    },
+    {
+      "id": 36,
+      "name": "John Brown",
+      "email": "biancagonzales@example.net",
+      "role": "jobseeker",
+      "phone": "+1-821-956-5184x123",
+      "location": "Kisii",
+      "education": {
+        "institution": "Daystar University",
+        "degree": "Bachelor of Science",
+        "field": "Engineering",
+        "graduationYear": 2019,
+        "gpa": 2.52
+      },
+      "skills": [
+        "AWS",
+        "Ruby",
+        "Flask",
+        "Budgeting",
+        "Ansible",
+        "Terraform",
+        "Time Management",
+        "Google Cloud"
+      ],
+      "experience": [],
+      "bio": "Recent graduate from Daystar University (2019) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_36.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=36",
+      "createdAt": "2026-01-14T00:32:34.703226",
+      "profileCompleted": 48,
+      "savedJobs": [
+        21,
+        20
+      ],
+      "applications": [
+        39,
+        52,
+        8,
+        20,
+        51
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Tamara Anderson",
+      "email": "rayrobinson@example.net",
+      "role": "employer",
+      "company": "Andela Kenya",
+      "position": "HR Manager",
+      "phone": "+1-315-625-8567x1891",
+      "location": "Eldoret",
+      "bio": "I'm a hiring manager at Andela Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.705742",
+      "profileCompleted": 75
+    },
+    {
+      "id": 38,
+      "name": "Luis Gutierrez",
+      "email": "owencarolyn@example.com",
+      "role": "jobseeker",
+      "phone": "914.924.9118",
+      "location": "Naivasha",
+      "education": {
+        "institution": "Riara University",
+        "degree": "Bachelor of Science",
+        "field": "Finance",
+        "graduationYear": 2018,
+        "gpa": 3.02
+      },
+      "skills": [
+        "React",
+        "MySQL",
+        "Django",
+        "Financial Analysis",
+        "Angular",
+        "Leadership",
+        "Communication"
+      ],
+      "experience": [
+        {
+          "title": "Data Scientist",
+          "company": "Kenya Railways",
+          "duration": "3 years",
+          "description": "Worked on web development"
+        },
+        {
+          "title": "Accountant",
+          "company": "Sendy",
+          "duration": "2 years",
+          "description": "Worked on data analysis"
+        },
+        {
+          "title": "Data Analyst",
+          "company": "Kenya Commercial Bank (KCB)",
+          "duration": "1 years",
+          "description": "Worked on customer support"
+        }
+      ],
+      "bio": "Recent graduate from Riara University (2018) looking for opportunities in finance.",
+      "resumeUrl": "/resumes/user_38.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=38",
+      "createdAt": "2026-01-14T00:32:34.708353",
+      "profileCompleted": 43,
+      "savedJobs": [
+        16,
+        12,
+        64
+      ],
+      "applications": []
+    },
+    {
+      "id": 39,
+      "name": "Jane Robinson",
+      "email": "zosborne@example.com",
+      "role": "employer",
+      "company": "Kenya Ports Authority",
+      "position": "Recruitment Officer",
+      "phone": "(207)871-7712",
+      "location": "Remote",
+      "bio": "I'm a technical recruiter at Kenya Ports Authority, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.712804",
+      "profileCompleted": 84
+    },
+    {
+      "id": 40,
+      "name": "Debbie Beard",
+      "email": "rlong@example.org",
+      "role": "employer",
+      "company": "Kenya Pipeline Company",
+      "position": "Department Head",
+      "phone": "+1-623-267-6284x3597",
+      "location": "Thika",
+      "bio": "I'm a hiring manager at Kenya Pipeline Company, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.715091",
+      "profileCompleted": 81
+    },
+    {
+      "id": 41,
+      "name": "Jerry Thomas",
+      "email": "jonathanbaker@example.org",
+      "role": "jobseeker",
+      "phone": "(372)770-2263x2431",
+      "location": "Thika",
+      "education": {
+        "institution": "Egerton University",
+        "degree": "Bachelor of Science",
+        "field": "Marketing",
+        "graduationYear": 2023,
+        "gpa": 2.51
+      },
+      "skills": [
+        "Kubernetes",
+        "Azure",
+        "Ansible",
+        "Agile",
+        "Budgeting",
+        "Python",
+        "Presentation"
+      ],
+      "experience": [
+        {
+          "title": "Data Analyst",
+          "company": "Twiga Foods",
+          "duration": "1 years",
+          "description": "Worked on marketing campaigns"
+        },
+        {
+          "title": "Sales Intern",
+          "company": "Uchumi Supermarket",
+          "duration": "1 years",
+          "description": "Worked on web development"
+        }
+      ],
+      "bio": "Recent graduate from Egerton University (2023) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_41.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=41",
+      "createdAt": "2026-01-14T00:32:34.718353",
+      "profileCompleted": 64,
+      "savedJobs": [
+        14,
+        42,
+        67
+      ],
+      "applications": [
+        5,
+        75,
+        51,
+        12,
+        31,
+        2,
+        80,
+        89,
+        14
+      ]
+    },
+    {
+      "id": 42,
+      "name": "Connor Moore",
+      "email": "victoriasmith@example.org",
+      "role": "employer",
+      "company": "Kenya Railways",
+      "position": "Team Lead",
+      "phone": "(506)228-2657",
+      "location": "Mombasa",
+      "bio": "I'm a hiring manager at Kenya Railways, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.721104",
+      "profileCompleted": 89
+    },
+    {
+      "id": 43,
+      "name": "Lisa Gross",
+      "email": "kristin53@example.com",
+      "role": "employer",
+      "company": "Naivas Supermarket",
+      "position": "Team Lead",
+      "phone": "993.213.0696",
+      "location": "Kakamega",
+      "bio": "I'm a hiring manager at Naivas Supermarket, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.723125",
+      "profileCompleted": 98
+    },
+    {
+      "id": 44,
+      "name": "Whitney Thompson",
+      "email": "ebutler@example.org",
+      "role": "employer",
+      "company": "Naivas Supermarket",
+      "position": "HR Manager",
+      "phone": "(426)442-4086x34270",
+      "location": "Remote",
+      "bio": "I'm a technical recruiter at Naivas Supermarket, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.725109",
+      "profileCompleted": 98
+    },
+    {
+      "id": 45,
+      "name": "Paul Vasquez",
+      "email": "toni58@example.com",
+      "role": "employer",
+      "company": "Kenyatta National Hospital",
+      "position": "Recruitment Officer",
+      "phone": "(604)845-9002x688",
+      "location": "Nyeri",
+      "bio": "I'm a HR professional at Kenyatta National Hospital, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.726806",
       "profileCompleted": 86
     },
     {
-      "id": 47,
-      "name": "Brenda Tran",
-      "email": "timothymartinez@example.com",
-      "role": "employer",
-      "company": "Bamburi Cement",
-      "position": "Team Lead",
-      "phone": "366.947.3168",
-      "location": "Naivasha",
-      "bio": "I'm a HR professional at Bamburi Cement, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.935795",
-      "profileCompleted": 97
-    },
-    {
-      "id": 48,
-      "name": "Kayla Fisher",
-      "email": "jamesbaker@example.org",
-      "role": "employer",
-      "company": "Twiga Foods",
-      "position": "Team Lead",
-      "phone": "392.916.5792x2770",
-      "location": "Nanyuki",
-      "bio": "I'm a hiring manager at Twiga Foods, looking for talented individuals to join our team.",
-      "createdAt": "2026-01-12T21:37:59.936724",
-      "profileCompleted": 99
-    },
-    {
-      "id": 49,
-      "name": "Andrew Anderson",
-      "email": "dnorton@example.com",
+      "id": 46,
+      "name": "Scott Thomas",
+      "email": "matthew84@example.com",
       "role": "jobseeker",
-      "phone": "6998194237",
-      "location": "Meru",
+      "phone": "001-210-383-7025x1211",
+      "location": "Eldoret",
       "education": {
         "institution": "Meru University of Science and Technology",
         "degree": "Bachelor of Arts",
         "field": "Business Administration",
-        "graduationYear": 2022,
-        "gpa": 2.68
+        "graduationYear": 2024,
+        "gpa": 2.55
       },
       "skills": [
-        "REST APIs",
-        "CI/CD",
-        "Marketing",
+        "GitHub",
         "PostgreSQL",
-        "Data Analysis",
-        "Ruby",
-        "Adaptability",
-        "Scrum",
-        "Market Research"
-      ],
-      "experience": [],
-      "bio": "Recent graduate from Meru University of Science and Technology (2022) looking for opportunities in software development.",
-      "resumeUrl": "/resumes/user_49.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=49",
-      "createdAt": "2026-01-12T21:37:59.937576",
-      "profileCompleted": 56,
-      "savedJobs": [
-        72
-      ],
-      "applications": [
-        76,
-        45,
-        87,
-        40,
-        30,
-        19,
-        86
-      ]
-    },
-    {
-      "id": 50,
-      "name": "Denise Shaw",
-      "email": "megan46@example.net",
-      "role": "jobseeker",
-      "phone": "+1-424-949-9876",
-      "location": "Nanyuki",
-      "education": {
-        "institution": "Karatina University",
-        "degree": "Bachelor of Arts",
-        "field": "Engineering",
-        "graduationYear": 2020,
-        "gpa": 3.55
-      },
-      "skills": [
-        "Git",
-        "Terraform",
-        "Strategic Planning",
+        "Node.js",
+        "CI/CD",
         "Java",
-        "Vue.js"
+        "Google Cloud",
+        "Spring Boot",
+        "JavaScript",
+        "Git"
       ],
       "experience": [
         {
           "title": "UI/UX Designer",
-          "company": "Kenyatta National Hospital",
-          "duration": "2 years",
-          "description": "Worked on web development"
+          "company": "Kenya Railways",
+          "duration": "1 years",
+          "description": "Worked on marketing campaigns"
         },
         {
-          "title": "Software Engineering Intern",
-          "company": "Airtel Kenya",
-          "duration": "2 years",
-          "description": "Worked on web development"
+          "title": "Backend Engineer",
+          "company": "Co-operative Bank",
+          "duration": "3 years",
+          "description": "Worked on data analysis"
         },
         {
-          "title": "Data Scientist",
+          "title": "Software Developer",
+          "company": "Cellulant",
+          "duration": "1 years",
+          "description": "Worked on customer support"
+        }
+      ],
+      "bio": "Recent graduate from Meru University of Science and Technology (2024) looking for opportunities in data science.",
+      "resumeUrl": "/resumes/user_46.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=46",
+      "createdAt": "2026-01-14T00:32:34.729322",
+      "profileCompleted": 53,
+      "savedJobs": [
+        33,
+        24,
+        31,
+        73
+      ],
+      "applications": [
+        38,
+        58,
+        44,
+        20,
+        4,
+        86,
+        52,
+        61
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Spencer Ibarra",
+      "email": "lsanchez@example.com",
+      "role": "jobseeker",
+      "phone": "9972655688",
+      "location": "Malindi",
+      "education": {
+        "institution": "Moi University",
+        "degree": "Bachelor of Arts",
+        "field": "Engineering",
+        "graduationYear": 2021,
+        "gpa": 2.56
+      },
+      "skills": [
+        "Team Management",
+        "AWS",
+        "Kubernetes",
+        "Market Research",
+        "Angular"
+      ],
+      "experience": [
+        {
+          "title": "Junior Software Developer",
           "company": "Kenya Ports Authority",
+          "duration": "2 years",
+          "description": "Worked on web development"
+        },
+        {
+          "title": "Operations Manager",
+          "company": "Zumi Kenya",
+          "duration": "3 years",
+          "description": "Worked on data analysis"
+        },
+        {
+          "title": "Graphic Design Intern",
+          "company": "Telkom Kenya",
           "duration": "1 years",
           "description": "Worked on data analysis"
         }
       ],
-      "bio": "Recent graduate from Karatina University (2020) looking for opportunities in digital marketing.",
-      "resumeUrl": "/resumes/user_50.pdf",
-      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=50",
-      "createdAt": "2026-01-12T21:37:59.938637",
-      "profileCompleted": 47,
+      "bio": "Recent graduate from Moi University (2021) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_47.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=47",
+      "createdAt": "2026-01-14T00:32:34.732279",
+      "profileCompleted": 56,
       "savedJobs": [
-        28,
-        63
+        35,
+        10,
+        81,
+        85,
+        30
       ],
       "applications": [
-        52
+        79,
+        65,
+        89,
+        35,
+        33,
+        85
       ]
+    },
+    {
+      "id": 48,
+      "name": "Joel Jones",
+      "email": "andrew53@example.com",
+      "role": "jobseeker",
+      "phone": "(585)957-0546x6875",
+      "location": "Eldoret",
+      "education": {
+        "institution": "Karatina University",
+        "degree": "Bachelor of Arts",
+        "field": "Computer Science",
+        "graduationYear": 2021,
+        "gpa": 3.64
+      },
+      "skills": [
+        "AWS",
+        "Java",
+        "Vue.js",
+        "Terraform",
+        "Go",
+        "Communication",
+        "PHP",
+        "Financial Analysis",
+        "Microservices"
+      ],
+      "experience": [
+        {
+          "title": "Operations Intern",
+          "company": "Co-operative Bank",
+          "duration": "1 years",
+          "description": "Worked on web development"
+        },
+        {
+          "title": "DevOps Engineer",
+          "company": "Andela Kenya",
+          "duration": "2 years",
+          "description": "Worked on marketing campaigns"
+        }
+      ],
+      "bio": "Recent graduate from Karatina University (2021) looking for opportunities in software development.",
+      "resumeUrl": "/resumes/user_48.pdf",
+      "profilePicture": "https://api.dicebear.com/7.x/avataaars/svg?seed=48",
+      "createdAt": "2026-01-14T00:32:34.734584",
+      "profileCompleted": 63,
+      "savedJobs": [
+        43,
+        45,
+        9,
+        22,
+        83
+      ],
+      "applications": [
+        96,
+        59,
+        65,
+        13,
+        78,
+        29
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Bryan Curry",
+      "email": "craig65@example.org",
+      "role": "employer",
+      "company": "National Bank of Kenya",
+      "position": "Recruitment Officer",
+      "phone": "(667)981-0559x5571",
+      "location": "Naivasha",
+      "bio": "I'm a technical recruiter at National Bank of Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.736487",
+      "profileCompleted": 86
+    },
+    {
+      "id": 50,
+      "name": "Laura Edwards",
+      "email": "fordbrenda@example.net",
+      "role": "employer",
+      "company": "Telkom Kenya",
+      "position": "HR Manager",
+      "phone": "001-790-392-3873x28714",
+      "location": "Meru",
+      "bio": "I'm a HR professional at Telkom Kenya, looking for talented individuals to join our team.",
+      "createdAt": "2026-01-14T00:32:34.738917",
+      "profileCompleted": 87
     }
   ],
   "count": 50
