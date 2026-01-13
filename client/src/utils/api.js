@@ -5,7 +5,9 @@ const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api`,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: true, // Important for cookies and credentials
   timeout: 10000, // 10 second timeout
 });
 
@@ -28,6 +30,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.status, error.message);
+    if (error.response?.status === 401) {
+      // Handle unauthorized errors (e.g., token expired)
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

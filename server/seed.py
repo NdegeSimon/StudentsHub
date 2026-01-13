@@ -185,8 +185,10 @@ def generate_job_description(job_title, company):
 def generate_job(id):
     """Generate a single job listing"""
     job_type = random.choice(["Full-time", "Part-time", "Contract", "Internship"])
+    company = random.choice(KENYAN_COMPANIES)
+    job_title = random.choice(JOB_TITLES)
     
-    # Determine experience level based on job type
+    # Determine experience level based on job type and title
     if job_type == "Internship":
         experience_level = "Entry Level"
         min_exp = 0
@@ -214,9 +216,6 @@ def generate_job(id):
     salary = f"KSh {base_salary:,}/month"
     if job_type == "Contract":
         salary = f"KSh {base_salary * 12:,}/year (Contract)"
-    
-    company = random.choice(KENYAN_COMPANIES)
-    job_title = random.choice(JOB_TITLES)
     
     # Generate tags based on job type
     if "Developer" in job_title or "Engineer" in job_title:
@@ -445,9 +444,9 @@ def seed_database():
         "totalUsers": len(users),
         "totalApplications": len(applications),
         "totalCourses": len(courses),
-        "jobTypes": {job["type"] for job in jobs},
-        "locations": {job["location"] for job in jobs},
-        "companies": {job["company"] for job in jobs},
+        "jobTypes": list({job["type"] for job in jobs}),
+        "locations": list({job["location"] for job in jobs}),
+        "companies": list({job["company"] for job in jobs}),
         "generatedAt": datetime.now().isoformat()
     }
     

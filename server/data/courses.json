@@ -1,0 +1,377 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "title": "Data Science Fundamentals",
+      "provider": "IBM SkillsBuild",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "12 weeks",
+      "level": "Advanced",
+      "price": "Free",
+      "rating": 3.8,
+      "enrolled": 9769,
+      "certificate": false,
+      "tags": [
+        "Customer Service",
+        "Agile",
+        "Budgeting",
+        "PHP",
+        "Communication"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Python for Beginners",
+      "provider": "Coursera",
+      "description": "Learn digital marketing through this comprehensive course.",
+      "duration": "12 weeks",
+      "level": "Intermediate",
+      "price": "KSh 30,000",
+      "rating": 4.7,
+      "enrolled": 5068,
+      "certificate": false,
+      "tags": [
+        "Jenkins",
+        "Swift",
+        "Redis",
+        "React",
+        "Google Cloud"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Project Management Professional (PMP)",
+      "provider": "Udacity",
+      "description": "Learn digital marketing through this comprehensive course.",
+      "duration": "5 weeks",
+      "level": "Beginner",
+      "price": "KSh 5,000",
+      "rating": 4.7,
+      "enrolled": 1999,
+      "certificate": false,
+      "tags": [
+        "Adaptability",
+        "Critical Thinking",
+        "Azure",
+        "Time Management",
+        "Laravel"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Project Management Professional (PMP)",
+      "provider": "Moringa School",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "8 weeks",
+      "level": "Intermediate",
+      "price": "KSh 15,000",
+      "rating": 4.2,
+      "enrolled": 7666,
+      "certificate": true,
+      "tags": [
+        "Time Management",
+        "Ansible",
+        "Kubernetes",
+        "Azure"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Web Development Bootcamp",
+      "provider": "Andela Learning Community",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "8 weeks",
+      "level": "Intermediate",
+      "price": "KSh 5,000",
+      "rating": 4.2,
+      "enrolled": 2500,
+      "certificate": false,
+      "tags": [
+        "MongoDB",
+        "Laravel",
+        "Redis",
+        "Angular",
+        "Ruby",
+        "DevOps"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "AWS Cloud Practitioner",
+      "provider": "Pluralsight",
+      "description": "Learn cloud computing through this comprehensive course.",
+      "duration": "5 weeks",
+      "level": "Intermediate",
+      "price": "Free",
+      "rating": 4.2,
+      "enrolled": 8333,
+      "certificate": false,
+      "tags": [
+        "PHP",
+        "Problem Solving",
+        "Terraform"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Project Management Professional (PMP)",
+      "provider": "Moringa School",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "9 weeks",
+      "level": "Advanced",
+      "price": "KSh 15,000",
+      "rating": 4.9,
+      "enrolled": 6344,
+      "certificate": false,
+      "tags": [
+        "REST APIs",
+        "Redis",
+        "Ansible"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Financial Analysis Essentials",
+      "provider": "Coursera",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "7 weeks",
+      "level": "Advanced",
+      "price": "KSh 15,000",
+      "rating": 4.1,
+      "enrolled": 718,
+      "certificate": true,
+      "tags": [
+        "Swift",
+        "Team Management",
+        "Oracle",
+        "Git",
+        "Financial Analysis"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Web Development Bootcamp",
+      "provider": "LinkedIn Learning",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "10 weeks",
+      "level": "Beginner",
+      "price": "KSh 5,000",
+      "rating": 4.1,
+      "enrolled": 1414,
+      "certificate": true,
+      "tags": [
+        "AWS",
+        "Financial Analysis",
+        "Oracle",
+        "Vue.js",
+        "Node.js",
+        "Google Cloud"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Data Science Fundamentals",
+      "provider": "Udacity",
+      "description": "Learn cloud computing through this comprehensive course.",
+      "duration": "7 weeks",
+      "level": "Beginner",
+      "price": "Free",
+      "rating": 4.6,
+      "enrolled": 2435,
+      "certificate": false,
+      "tags": [
+        "Python",
+        "Adaptability",
+        "Customer Service"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Project Management Professional (PMP)",
+      "provider": "Andela Learning Community",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "8 weeks",
+      "level": "Advanced",
+      "price": "KSh 15,000",
+      "rating": 3.7,
+      "enrolled": 1222,
+      "certificate": false,
+      "tags": [
+        "Leadership",
+        "Adaptability",
+        "Git",
+        "PHP",
+        "Scrum",
+        "Critical Thinking"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "AWS Cloud Practitioner",
+      "provider": "LinkedIn Learning",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "6 weeks",
+      "level": "Advanced",
+      "price": "KSh 30,000",
+      "rating": 4.5,
+      "enrolled": 6027,
+      "certificate": false,
+      "tags": [
+        "Azure",
+        "DevOps",
+        "Data Analysis",
+        "CI/CD",
+        "Project Management"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Financial Analysis Essentials",
+      "provider": "IBM SkillsBuild",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "12 weeks",
+      "level": "Advanced",
+      "price": "KSh 5,000",
+      "rating": 4.7,
+      "enrolled": 2197,
+      "certificate": false,
+      "tags": [
+        "MySQL",
+        "GitHub",
+        "Git",
+        "Project Management",
+        "MongoDB",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Web Development Bootcamp",
+      "provider": "Andela Learning Community",
+      "description": "Learn cloud computing through this comprehensive course.",
+      "duration": "12 weeks",
+      "level": "Intermediate",
+      "price": "KSh 15,000",
+      "rating": 4.3,
+      "enrolled": 1201,
+      "certificate": true,
+      "tags": [
+        "DevOps",
+        "Angular",
+        "Ansible",
+        "Problem Solving",
+        "PHP"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "AWS Cloud Practitioner",
+      "provider": "Coursera",
+      "description": "Learn web development through this comprehensive course.",
+      "duration": "10 weeks",
+      "level": "Intermediate",
+      "price": "KSh 30,000",
+      "rating": 4.8,
+      "enrolled": 5977,
+      "certificate": false,
+      "tags": [
+        "SQLite",
+        "C#",
+        "Go",
+        "Sales"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Machine Learning with Python",
+      "provider": "IBM SkillsBuild",
+      "description": "Learn digital marketing through this comprehensive course.",
+      "duration": "5 weeks",
+      "level": "Intermediate",
+      "price": "KSh 15,000",
+      "rating": 5.0,
+      "enrolled": 2379,
+      "certificate": true,
+      "tags": [
+        "Negotiation",
+        "Microservices",
+        "Azure",
+        "AWS"
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Financial Analysis Essentials",
+      "provider": "Microsoft Learn",
+      "description": "Learn digital marketing through this comprehensive course.",
+      "duration": "9 weeks",
+      "level": "Beginner",
+      "price": "Free",
+      "rating": 4.3,
+      "enrolled": 9806,
+      "certificate": true,
+      "tags": [
+        "Team Management",
+        "Jenkins",
+        "PHP",
+        "Project Management"
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Digital Marketing Mastery",
+      "provider": "IBM SkillsBuild",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "9 weeks",
+      "level": "Intermediate",
+      "price": "KSh 5,000",
+      "rating": 4.5,
+      "enrolled": 1362,
+      "certificate": false,
+      "tags": [
+        "Node.js",
+        "Customer Service",
+        "Problem Solving",
+        "JavaScript",
+        "MongoDB"
+      ]
+    },
+    {
+      "id": 19,
+      "title": "UI/UX Design Principles",
+      "provider": "Andela Learning Community",
+      "description": "Learn cloud computing through this comprehensive course.",
+      "duration": "5 weeks",
+      "level": "Intermediate",
+      "price": "Free",
+      "rating": 4.3,
+      "enrolled": 8058,
+      "certificate": true,
+      "tags": [
+        "Python",
+        "Node.js",
+        "Budgeting"
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Web Development Bootcamp",
+      "provider": "Andela Learning Community",
+      "description": "Learn data science through this comprehensive course.",
+      "duration": "11 weeks",
+      "level": "Beginner",
+      "price": "KSh 15,000",
+      "rating": 4.7,
+      "enrolled": 9928,
+      "certificate": true,
+      "tags": [
+        "Marketing",
+        "Flask",
+        "MySQL",
+        "Go",
+        "Django"
+      ]
+    }
+  ],
+  "count": 20
+}
