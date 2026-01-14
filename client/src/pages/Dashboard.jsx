@@ -7,15 +7,62 @@ import {
   MapPin, DollarSign, Sparkles, Phone, Mail, Link as LinkIcon,
   Building, Plus, Filter, Download, Share2, Flame, Crown, Rocket
 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const NextLevelDashboard = () => {
   const [activeTab, setActiveTab] = useState('recommended');
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Profile fetching useEffect
+  useEffect(() => {
+    // Mock profile data - replace with actual API call
+    const mockProfile = {
+      first_name: "John",
+      last_name: "Doe",
+      title: "Software Developer",
+      membership_type: "premium"
+    };
+    
+    // Uncomment this for actual API call
+    /*
+    fetch('/api/user/profile', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      },
+      credentials: 'include'
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch profile');
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data.success) {
+          setProfile(data.user || data.profile);
+        } else {
+          console.warn('Profile fetch returned error:', data.message);
+          setProfile(mockProfile);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching profile:', err);
+        setProfile(mockProfile);
+      });
+    */
+    
+    // For now, use mock data
+    setProfile(mockProfile);
   }, []);
 
   const getGreeting = () => {
@@ -110,34 +157,6 @@ const NextLevelDashboard = () => {
     }
   ];
 
-  const recentApplications = [
-    { 
-      id: 1,
-      company: 'Google', 
-      position: 'Software Engineer',
-      status: 'interviewing',
-      date: '2025-01-10',
-      nextStep: 'Technical Interview',
-      nextDate: '2025-01-20'
-    },
-    { 
-      id: 2,
-      company: 'Microsoft', 
-      position: 'Product Manager',
-      status: 'reviewing',
-      date: '2025-01-08',
-      nextStep: 'Pending Review'
-    },
-    { 
-      id: 3,
-      company: 'Amazon', 
-      position: 'Cloud Engineer',
-      status: 'applied',
-      date: '2025-01-05',
-      nextStep: 'Application Submitted'
-    }
-  ];
-
   const notifications = [
     { id: 1, type: 'interview', message: 'Interview scheduled with Google', time: '2 hours ago', unread: true },
     { id: 2, type: 'application', message: 'Application viewed by Amazon', time: '5 hours ago', unread: true },
@@ -151,16 +170,6 @@ const NextLevelDashboard = () => {
     'Software Engineer',
     'Data Scientist NYC'
   ];
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'interviewing': return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
-      case 'reviewing': return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
-      case 'applied': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
-      case 'offered': return 'bg-green-500/20 text-green-400 border-green-500/50';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
@@ -178,9 +187,6 @@ const NextLevelDashboard = () => {
             {/* Logo */}
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Rocket className="h-6 w-6 text-white" />
-                </div>
                 <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Studex
                 </span>
@@ -188,16 +194,13 @@ const NextLevelDashboard = () => {
 
               {/* Navigation */}
               <nav className="hidden md:flex items-center gap-1">
-                <a href="#" className="px-4 py-2 rounded-xl text-white font-medium bg-slate-800/50 hover:bg-slate-800 transition-all">
-                  Dashboard
-                </a>
-                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <a href="/jobs" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Jobs
                 </a>
-                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <a href="/myapplications" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Applications
                 </a>
-                <a href="#" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <a href="/messages" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Messages
                 </a>
               </nav>
@@ -258,11 +261,27 @@ const NextLevelDashboard = () => {
               {/* Profile */}
               <div className="flex items-center gap-3 pl-3 border-l border-slate-700/50">
                 <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium text-white">John Doe</p>
-                  <p className="text-xs text-slate-400">Premium Member</p>
+                  <p className="text-sm font-medium text-white">
+                    {profile?.first_name || 'John'} {profile?.last_name || 'Doe'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {profile?.membership_type === 'premium' ? 'Premium Member' : 'Basic Member'}
+                  </p>
                 </div>
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <User className="h-6 w-6 text-white" />
+                <div 
+                  className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform" 
+                  onClick={() => navigate('/profile')}
+                  title="View Profile"
+                >
+                  {profile?.profile_picture ? (
+                    <img 
+                      src={profile.profile_picture} 
+                      alt="Profile" 
+                      className="w-full h-full rounded-xl object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-white" />
+                  )}
                 </div>
               </div>
             </div>
@@ -284,8 +303,10 @@ const NextLevelDashboard = () => {
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-900"></div>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">John Doe</h3>
-                <p className="text-sm text-slate-400 mb-4">Software Developer</p>
+                <h3 className="text-lg font-bold text-white mb-1">
+                  {profile?.first_name || 'John'} {profile?.last_name || 'Doe'}
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">{profile?.title || 'Software Developer'}</p>
                 
                 {/* Profile Stats */}
                 <div className="w-full space-y-3 mb-4">
@@ -357,6 +378,63 @@ const NextLevelDashboard = () => {
               </div>
             </div>
 
+            {/* Resources Section */}
+            <div className="rounded-lg p-6 bg-slate-900/50 shadow-lg border border-slate-800/50">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-white">Resources</h3>
+                <Link 
+                  to="/resources" 
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View All
+                </Link>
+              </div>
+              
+              <div className="space-y-3">
+                <Link 
+                  to="/interview-prep"
+                  className="flex items-center p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <Mic className="h-5 w-5 text-purple-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Interview Prep</p>
+                    <p className="text-xs text-slate-400">Practice common questions</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-slate-500 group-hover:text-white transition-colors" />
+                </Link>
+
+                <Link 
+                  to="/resume-builder"
+                  className="flex items-center p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Resume Builder</p>
+                    <p className="text-xs text-slate-400">Create an ATS-friendly resume</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-slate-500 group-hover:text-white transition-colors" />
+                </Link>
+
+                <Link 
+                  to="/career-tips"
+                  className="flex items-center p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/80 transition-colors group"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-green-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Career Tips</p>
+                    <p className="text-xs text-slate-400">Boost your job search</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 ml-auto text-slate-500 group-hover:text-white transition-colors" />
+                </Link>
+              </div>
+            </div>
+
             {/* Premium Banner */}
             <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-2xl p-6 shadow-xl">
               <div className="flex items-start gap-3 mb-4">
@@ -381,7 +459,7 @@ const NextLevelDashboard = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <h1 className="text-3xl font-bold text-white mb-2">
-                      {getGreeting()}, John! 👋
+                      {getGreeting()}, {profile?.first_name || 'John'}!
                     </h1>
                     <p className="text-blue-100 mb-6">
                       You have 3 interviews scheduled this week. Keep up the great work!
