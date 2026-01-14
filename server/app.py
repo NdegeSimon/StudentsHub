@@ -8,7 +8,7 @@ import os
 import eventlet
 
 # Import extensions from extensions.py
-from extensions import db, jwt, migrate, bcrypt, socketio
+from extensions import db, jwt, migrate, bcrypt, socketio, mail
 
 def create_app():
     app = Flask(__name__)
@@ -34,6 +34,14 @@ def create_app():
         # For file uploads
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
         UPLOAD_FOLDER=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'),
+        # Email configuration
+        MAIL_SERVER=os.getenv('MAIL_SERVER', 'smtp.gmail.com'),
+        MAIL_PORT=int(os.getenv('MAIL_PORT', 587)),
+        MAIL_USE_TLS=os.getenv('MAIL_USE_TLS', 'true').lower() == 'true',
+        MAIL_USE_SSL=os.getenv('MAIL_USE_SSL', 'false').lower() == 'true',
+        MAIL_USERNAME=os.getenv('MAIL_USERNAME'),
+        MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
+        MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
     )
 
     # Ensure upload directory exists
@@ -44,6 +52,7 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
+    mail.init_app(app)
     
     # Initialize SocketIO with CORS support
     socketio.init_app(app, 
@@ -130,6 +139,11 @@ def create_app():
         from routes.upload_routes import upload_bp
         app.register_blueprint(upload_bp, url_prefix='/api/uploads')
         print("✅ Upload routes blueprint registered")
+        
+        # Import and register dashboard routes
+        from routes.dashboard_routes import dashboard_bp
+        app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+        print("✅ Dashboard routes blueprint registered")
         
         # Test route
         @app.route('/api/test', methods=['GET'])

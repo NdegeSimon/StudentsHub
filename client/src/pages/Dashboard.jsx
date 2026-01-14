@@ -181,7 +181,40 @@ const NextLevelDashboard = () => {
       try {
         const statsResponse = await dashboardAPI.getStats();
         if (statsResponse?.data) {
-          setStats(statsResponse.data);
+          setStats([
+            { 
+              label: 'Applications', 
+              value: statsResponse.data.applications?.toString() || '0',
+              change: statsResponse.data.applications_change || '+0%',
+              icon: FileText, 
+              color: 'from-blue-500 to-cyan-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Active Jobs', 
+              value: statsResponse.data.active_jobs?.toString() || '0',
+              change: statsResponse.data.jobs_change || '+0%',
+              icon: Briefcase, 
+              color: 'from-purple-500 to-pink-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Interviews', 
+              value: statsResponse.data.interviews?.toString() || '0',
+              change: statsResponse.data.interviews_change || '+0',
+              icon: Calendar, 
+              color: 'from-amber-500 to-orange-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Profile Views', 
+              value: statsResponse.data.profile_views?.toString() || '0',
+              change: statsResponse.data.views_change || '+0%',
+              icon: Eye, 
+              color: 'from-green-500 to-emerald-500',
+              trend: 'up'
+            }
+          ]);
         }
       } catch (statsError) {
         console.warn('Error fetching dashboard stats:', statsError);
@@ -197,24 +230,24 @@ const NextLevelDashboard = () => {
           },
           { 
             label: 'Active Jobs', 
-            value: statsResponse.data.active_jobs?.toString() || '0', 
-            change: statsResponse.data.jobs_change || '+0%', 
+            value: '0', 
+            change: '+0%', 
             icon: Briefcase, 
             color: 'from-purple-500 to-pink-500',
             trend: 'up'
           },
           { 
             label: 'Interviews', 
-            value: statsResponse.data.upcoming_interviews?.toString() || '0', 
-            change: statsResponse.data.interview_change || '+0', 
+            value: '0', 
+            change: '+0', 
             icon: Calendar, 
             color: 'from-amber-500 to-orange-500',
             trend: 'up'
           },
           { 
             label: 'Profile Views', 
-            value: statsResponse.data.profile_views?.toString() || '0', 
-            change: statsResponse.data.views_change || '+0%', 
+            value: '0', 
+            change: '+0%', 
             icon: Eye, 
             color: 'from-green-500 to-emerald-500',
             trend: 'up'
@@ -222,16 +255,18 @@ const NextLevelDashboard = () => {
         ]);
       }
 
-      // Fetch upcoming deadlines
-      const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
-      if (deadlinesResponse.data) {
-        const deadlines = deadlinesResponse.data.map(deadline => ({
-          title: deadline.jobTitle || deadline.job_title || 'Job Application',
-          daysLeft: deadline.days_remaining || 
-                   Math.max(0, Math.ceil((new Date(deadline.deadline) - new Date()) / (1000 * 60 * 60 * 24))),
-          urgent: (deadline.days_remaining || deadline.days_left) <= 3
-        }));
-        setUpcomingDeadlines(deadlines);
+      // Try to fetch upcoming deadlines with error handling
+      try {
+        const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
+        if (Array.isArray(deadlinesResponse?.data)) {
+          setUpcomingDeadlines(deadlinesResponse.data);
+        } else {
+          console.warn('Unexpected response format for upcoming deadlines:', deadlinesResponse);
+          setUpcomingDeadlines([]);
+        }
+      } catch (deadlinesError) {
+        console.warn('Error fetching upcoming deadlines:', deadlinesError);
+        setUpcomingDeadlines([]);
       }
 
       // Fetch recommended jobs
@@ -413,46 +448,8 @@ const NextLevelDashboard = () => {
   const handleApplyJob = async (jobId, e) => {
     e?.stopPropagation();
     
-    // If already applied, navigate to job details
-    if (appliedJobs.has(jobId)) {
-      navigate(`/job/${jobId}`);
-      return;
-    }
-    
-    try {
-      // Check if we need a cover letter
-      const needsCoverLetter = true; // You can make this dynamic based on job requirements
-      let coverLetter = '';
-      
-      if (needsCoverLetter) {
-        // In a real app, you might show a modal to enter a cover letter
-        const coverLetterResponse = window.prompt('Please enter your cover letter:');
-        if (coverLetterResponse === null) return; // User cancelled
-        coverLetter = coverLetterResponse;
-      }
-      
-      // Submit the application
-      const response = await smartAPI.applications.applyToJob(jobId, { 
-        cover_letter: coverLetter 
-      });
-      
-      // Update UI
-      setAppliedJobs(prev => new Set([...prev, jobId]));
-      
-      // Show success message with application ID if available
-      const appId = response.data?.application_id || '';
-      toast.success(`Application submitted successfully! ${appId ? `(ID: ${appId})` : ''}`);
-      
-    } catch (error) {
-      console.error('Error applying to job:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to apply to job';
-      toast.error(errorMessage);
-      
-      // If the error is because the job is already applied to, update the UI
-      if (errorMessage.toLowerCase().includes('already applied')) {
-        setAppliedJobs(prev => new Set([...prev, jobId]));
-      }
-    }
+    // Navigate to job details page where the user can apply
+    navigate(`/job/${jobId}`);
   };
 
   const navigateToJobDetails = (jobId) => {
