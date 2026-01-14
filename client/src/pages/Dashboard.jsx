@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, Bell, Settings, HelpCircle, User, BookOpen, Briefcase, Clock, 
+  Search, Bell, Settings, User, BookOpen, Briefcase, Clock, 
   Star, Sun, Moon, Menu, X, FileText, Mic, Zap, TrendingUp, Award, 
   UserCheck, ChevronRight, Bookmark, BookmarkCheck, Calendar, Target,
   ArrowUpRight, TrendingDown, Activity, CheckCircle, XCircle, Eye,
@@ -8,8 +8,10 @@ import {
   Building, Plus, Filter, Download, Share2, Flame, Crown, Rocket
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { smartAPI, userAPI, dashboardAPI } from '../utils/api';
+import { getCurrentUser } from '../utils/auth';
 
-// Profile completion calculation function - OPTIMIZED VERSION
+// Profile completion calculation function
 const calculateProfileCompletion = (profile) => {
   if (!profile) return 0;
   
@@ -47,6 +49,47 @@ const NextLevelDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   
+  // Data states
+  const [stats, setStats] = useState([
+    { 
+      label: 'Applications', 
+      value: '0', 
+      change: '+0%', 
+      icon: FileText, 
+      color: 'from-blue-500 to-cyan-500',
+      trend: 'up'
+    },
+    { 
+      label: 'Active Jobs', 
+      value: '0', 
+      change: '+0%', 
+      icon: Briefcase, 
+      color: 'from-purple-500 to-pink-500',
+      trend: 'up'
+    },
+    { 
+      label: 'Interviews', 
+      value: '0', 
+      change: '+0', 
+      icon: Calendar, 
+      color: 'from-amber-500 to-orange-500',
+      trend: 'up'
+    },
+    { 
+      label: 'Profile Views', 
+      value: '0', 
+      change: '+0%', 
+      icon: Eye, 
+      color: 'from-green-500 to-emerald-500',
+      trend: 'up'
+    }
+  ]);
+  
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [loadingSearches, setLoadingSearches] = useState(false);
+  
   // Popular searches
   const popularSearches = [
     'Frontend Developer',
@@ -65,47 +108,57 @@ const NextLevelDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Profile fetching effect - IMPROVED VERSION
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder="Search jobs, companies..."]');
+        if (searchInput) {
+          searchInput.focus();
+          setShowSearchDropdown(true);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Profile fetching effect
   useEffect(() => {
     const fetchProfile = async () => {
       setIsLoading(true);
-      const mockProfile = {
-        first_name: "John",
-        last_name: "Doe",
-        title: "Software Developer",
-        membership_type: "premium",
-        email: "john@example.com",
-        phone: "+1234567890",
-        bio: "Passionate software developer with 5+ years of experience",
-        location: "San Francisco, CA",
-        skills: ["React", "TypeScript", "Node.js"],
-        experience: [{ company: "Tech Corp" }],
-        education: [{ degree: "BSc Computer Science" }],
-        profile_picture: null
-      };
-
+      
       try {
-        const response = await fetch('/api/user/profile', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data?.success && (data.user || data.profile)) {
-            setProfile(data.user || data.profile);
-          } else {
-            setProfile(mockProfile);
-          }
+        // Try to get current user from auth first
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          setProfile(currentUser);
         } else {
-          throw new Error('Profile fetch failed');
+          // Fetch profile from API
+          const response = await userAPI.getProfile();
+          if (response.data) {
+            setProfile(response.data);
+          }
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        // Fallback to mock profile
+        const mockProfile = {
+          first_name: "John",
+          last_name: "Doe",
+          title: "Software Developer",
+          membership_type: "premium",
+          email: "john@example.com",
+          phone: "+1234567890",
+          bio: "Passionate software developer with 5+ years of experience",
+          location: "San Francisco, CA",
+          skills: ["React", "TypeScript", "Node.js"],
+          experience: [{ company: "Tech Corp" }],
+          education: [{ degree: "BSc Computer Science" }],
+          profile_picture: null
+        };
         setProfile(mockProfile);
       } finally {
         setIsLoading(false);
@@ -113,6 +166,158 @@ const NextLevelDashboard = () => {
     };
 
     fetchProfile();
+  }, []);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch stats
+        const statsResponse = await dashboardAPI.getStats();
+        if (statsResponse.data) {
+          setStats([
+            { 
+              label: 'Applications', 
+              value: statsResponse.data.total_applications?.toString() || '0', 
+              change: statsResponse.data.application_change || '+0%', 
+              icon: FileText, 
+              color: 'from-blue-500 to-cyan-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Active Jobs', 
+              value: statsResponse.data.active_jobs?.toString() || '0', 
+              change: statsResponse.data.jobs_change || '+0%', 
+              icon: Briefcase, 
+              color: 'from-purple-500 to-pink-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Interviews', 
+              value: statsResponse.data.upcoming_interviews?.toString() || '0', 
+              change: statsResponse.data.interview_change || '+0', 
+              icon: Calendar, 
+              color: 'from-amber-500 to-orange-500',
+              trend: 'up'
+            },
+            { 
+              label: 'Profile Views', 
+              value: statsResponse.data.profile_views?.toString() || '0', 
+              change: statsResponse.data.views_change || '+0%', 
+              icon: Eye, 
+              color: 'from-green-500 to-emerald-500',
+              trend: 'up'
+            }
+          ]);
+        }
+
+        // Fetch upcoming deadlines
+        const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
+        if (deadlinesResponse.data) {
+          const deadlines = deadlinesResponse.data.map(deadline => ({
+            title: deadline.jobTitle || deadline.job_title || 'Job Application',
+            daysLeft: deadline.days_remaining || 
+                     Math.max(0, Math.ceil((new Date(deadline.deadline) - new Date()) / (1000 * 60 * 60 * 24))),
+            urgent: (deadline.days_remaining || deadline.days_left) <= 3
+          }));
+          setUpcomingDeadlines(deadlines);
+        }
+
+        // Fetch recommended jobs
+        const jobsResponse = await smartAPI.jobs.getAllJobs();
+        if (jobsResponse.data && jobsResponse.data.length > 0) {
+          const jobs = jobsResponse.data.slice(0, 3).map(job => ({
+            id: job.id,
+            title: job.title,
+            company: job.company || job.company_name || 'Company',
+            location: job.location || 'Remote',
+            type: job.type || job.job_type || 'Full-time',
+            salary: job.salary || job.salary_range || '$80,000 - $120,000',
+            logo: job.company ? job.company.charAt(0) : 'J',
+            posted: job.posted_date ? `${Math.floor((new Date() - new Date(job.posted_date)) / (1000 * 60 * 60 * 24))} days ago` : 'Recently',
+            applicants: job.applicants_count || Math.floor(Math.random() * 100),
+            match: job.match_score || Math.floor(Math.random() * 20) + 80,
+            tags: job.skills || job.tags || ['React', 'JavaScript', 'CSS'],
+            featured: job.featured || false
+          }));
+          setRecommendedJobs(jobs);
+        }
+
+        // Fetch saved searches
+        setLoadingSearches(true);
+        const searchesResponse = await smartAPI.searches.getSavedSearches();
+        if (searchesResponse.data) {
+          const searches = searchesResponse.data.map(search => 
+            search.query || search.search_query || 'Search query'
+          );
+          setSavedSearches(searches);
+        }
+        setLoadingSearches(false);
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        
+        // Fallback mock data
+        setUpcomingDeadlines([
+          { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
+          { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
+          { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
+        ]);
+        
+        setRecommendedJobs([
+          {
+            id: 1,
+            title: 'Senior Frontend Developer',
+            company: 'TechCorp Inc.',
+            location: 'San Francisco, CA',
+            type: 'Full-time',
+            salary: '$120k - $180k',
+            logo: 'T',
+            posted: '2 days ago',
+            applicants: 45,
+            match: 95,
+            tags: ['React', 'TypeScript', 'Next.js'],
+            featured: true
+          },
+          {
+            id: 2,
+            title: 'Full Stack Engineer',
+            company: 'StartupXYZ',
+            location: 'Remote',
+            type: 'Full-time',
+            salary: '$90k - $140k',
+            logo: 'S',
+            posted: '1 day ago',
+            applicants: 23,
+            match: 88,
+            tags: ['Node.js', 'MongoDB', 'AWS']
+          },
+          {
+            id: 3,
+            title: 'UI/UX Designer',
+            company: 'Design Studio',
+            location: 'New York, NY',
+            type: 'Contract',
+            salary: '$80/hour',
+            logo: 'D',
+            posted: '3 days ago',
+            applicants: 67,
+            match: 82,
+            tags: ['Figma', 'Sketch', 'Prototyping']
+          }
+        ]);
+        
+        setSavedSearches([
+          'Frontend Developer Remote',
+          'UX Designer San Francisco',
+          'Product Manager',
+          'Software Engineer',
+          'Data Scientist NYC'
+        ]);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const getGreeting = () => {
@@ -134,7 +339,35 @@ const NextLevelDashboard = () => {
     setShowSearchDropdown(true);
 
     try {
-      // Mock data for now - replace with actual API call
+      const response = await smartAPI.jobs.getAllJobs();
+      
+      if (response.data) {
+        // Filter jobs based on search query
+        const filteredResults = response.data
+          .filter(job =>
+            job.title?.toLowerCase().includes(query.toLowerCase()) ||
+            job.company?.toLowerCase().includes(query.toLowerCase()) ||
+            job.location?.toLowerCase().includes(query.toLowerCase()) ||
+            job.skills?.some(skill => skill.toLowerCase().includes(query.toLowerCase()))
+          )
+          .slice(0, 5) // Limit to 5 results for dropdown
+          .map(job => ({
+            id: job.id,
+            title: job.title,
+            company: job.company || job.company_name,
+            type: job.type || job.job_type,
+            location: job.location,
+            salary: job.salary || job.salary_range,
+            match: job.match_score || Math.floor(Math.random() * 20) + 80
+          }));
+        
+        setSearchResults(filteredResults);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      // Mock fallback search results
       const mockResults = [
         { 
           id: 1, 
@@ -164,18 +397,14 @@ const NextLevelDashboard = () => {
           match: 82 
         }
       ];
-
-      // Filter based on query
-      const filteredResults = mockResults.filter(job =>
+      
+      const filteredMockResults = mockResults.filter(job =>
         job.title.toLowerCase().includes(query.toLowerCase()) ||
         job.company.toLowerCase().includes(query.toLowerCase()) ||
         job.location.toLowerCase().includes(query.toLowerCase())
       );
-
-      setSearchResults(filteredResults);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
+      
+      setSearchResults(filteredMockResults);
     } finally {
       setIsSearching(false);
     }
@@ -191,103 +420,11 @@ const NextLevelDashboard = () => {
                           completionPercentage >= 60 ? 'from-yellow-500 to-amber-500' : 
                           'from-red-500 to-orange-500';
 
-  // Mock data
-  const stats = [
-    { 
-      label: 'Applications', 
-      value: '24', 
-      change: '+12%', 
-      icon: FileText, 
-      color: 'from-blue-500 to-cyan-500',
-      trend: 'up'
-    },
-    { 
-      label: 'Active Jobs', 
-      value: '8', 
-      change: '+5%', 
-      icon: Briefcase, 
-      color: 'from-purple-500 to-pink-500',
-      trend: 'up'
-    },
-    { 
-      label: 'Interviews', 
-      value: '3', 
-      change: '+2', 
-      icon: Calendar, 
-      color: 'from-amber-500 to-orange-500',
-      trend: 'up'
-    },
-    { 
-      label: 'Profile Views', 
-      value: '156', 
-      change: '+23%', 
-      icon: Eye, 
-      color: 'from-green-500 to-emerald-500',
-      trend: 'up'
-    }
-  ];
-
-  const upcomingDeadlines = [
-    { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
-    { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
-    { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
-  ];
-
-  const recommendedJobs = [
-    {
-      id: 1,
-      title: 'Senior Frontend Developer',
-      company: 'TechCorp Inc.',
-      location: 'San Francisco, CA',
-      type: 'Full-time',
-      salary: '$120k - $180k',
-      logo: 'T',
-      posted: '2 days ago',
-      applicants: 45,
-      match: 95,
-      tags: ['React', 'TypeScript', 'Next.js'],
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Full Stack Engineer',
-      company: 'StartupXYZ',
-      location: 'Remote',
-      type: 'Full-time',
-      salary: '$90k - $140k',
-      logo: 'S',
-      posted: '1 day ago',
-      applicants: 23,
-      match: 88,
-      tags: ['Node.js', 'MongoDB', 'AWS']
-    },
-    {
-      id: 3,
-      title: 'UI/UX Designer',
-      company: 'Design Studio',
-      location: 'New York, NY',
-      type: 'Contract',
-      salary: '$80/hour',
-      logo: 'D',
-      posted: '3 days ago',
-      applicants: 67,
-      match: 82,
-      tags: ['Figma', 'Sketch', 'Prototyping']
-    }
-  ];
-
+  // Mock notifications (replace with real API when available)
   const notifications = [
     { id: 1, type: 'interview', message: 'Interview scheduled with Google', time: '2 hours ago', unread: true },
     { id: 2, type: 'application', message: 'Application viewed by Amazon', time: '5 hours ago', unread: true },
     { id: 3, type: 'recommendation', message: 'New job matches your profile', time: '1 day ago', unread: false }
-  ];
-
-  const savedSearches = [
-    'Frontend Developer Remote',
-    'UX Designer San Francisco',
-    'Product Manager',
-    'Software Engineer',
-    'Data Scientist NYC'
   ];
 
   return (
@@ -545,7 +682,7 @@ const NextLevelDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Profile Card - FIXED VERSION */}
+            {/* Profile Card */}
             <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-4">
@@ -658,21 +795,28 @@ const NextLevelDashboard = () => {
                 <Flame className="h-5 w-5 text-orange-500" />
               </div>
               <div className="space-y-3">
-                {upcomingDeadlines.map((deadline, index) => (
-                  <div key={index} className={`flex items-center gap-3 p-3 rounded-xl ${deadline.urgent ? 'bg-red-500/10 border border-red-500/30' : 'bg-slate-800/50'} hover:scale-[1.02] transition-transform`}>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${deadline.urgent ? 'bg-red-500/20' : 'bg-blue-500/20'}`}>
-                      <span className={`text-lg font-bold ${deadline.urgent ? 'text-red-400' : 'text-blue-400'}`}>
-                        {deadline.daysLeft}
-                      </span>
+                {upcomingDeadlines.length > 0 ? (
+                  upcomingDeadlines.map((deadline, index) => (
+                    <div key={index} className={`flex items-center gap-3 p-3 rounded-xl ${deadline.urgent ? 'bg-red-500/10 border border-red-500/30' : 'bg-slate-800/50'} hover:scale-[1.02] transition-transform`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${deadline.urgent ? 'bg-red-500/20' : 'bg-blue-500/20'}`}>
+                        <span className={`text-lg font-bold ${deadline.urgent ? 'text-red-400' : 'text-blue-400'}`}>
+                          {deadline.daysLeft}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{deadline.title}</p>
+                        <p className="text-xs text-slate-400">
+                          {deadline.daysLeft} day{deadline.daysLeft !== 1 ? 's' : ''} left
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{deadline.title}</p>
-                      <p className="text-xs text-slate-400">
-                        {deadline.daysLeft} day{deadline.daysLeft !== 1 ? 's' : ''} left
-                      </p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-slate-400">No upcoming deadlines</p>
+                    <p className="text-xs text-slate-500 mt-1">Apply to jobs to see deadlines</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -760,7 +904,8 @@ const NextLevelDashboard = () => {
                       {getGreeting()}, {isLoading ? 'there' : profile?.first_name || 'John'}! 👋
                     </h1>
                     <p className="text-blue-100 mb-6">
-                      {isLoading ? 'Loading your dashboard...' : 'You have 3 interviews scheduled this week. Keep up the great work!'}
+                      {isLoading ? 'Loading your dashboard...' : 
+                       `You have ${stats[2].value} interview${stats[2].value === '1' ? '' : 's'} scheduled this week. Keep up the great work!`}
                     </p>
                     <div className="flex gap-3">
                       <button 
@@ -818,17 +963,28 @@ const NextLevelDashboard = () => {
                 <h2 className="text-lg font-bold text-white">Saved Searches</h2>
                 <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">View All</button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {savedSearches.map((search, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl text-sm text-white transition-all cursor-pointer group hover:scale-105"
-                  >
-                    {search}
-                    <X className="h-3 w-3 text-slate-400 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
-                  </span>
-                ))}
-              </div>
+              {loadingSearches ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : savedSearches.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {savedSearches.map((search, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl text-sm text-white transition-all cursor-pointer group hover:scale-105"
+                    >
+                      {search}
+                      <X className="h-3 w-3 text-slate-400 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-slate-400">No saved searches yet</p>
+                  <p className="text-xs text-slate-500 mt-1">Save searches to see them here</p>
+                </div>
+              )}
             </div>
 
             {/* Job Listings */}
@@ -858,86 +1014,96 @@ const NextLevelDashboard = () => {
               {/* Content */}
               <div className="p-6">
                 <div className="space-y-4">
-                  {recommendedJobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex gap-4 flex-1">
-                          <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform">
-                            {job.logo}
+                  {recommendedJobs.length > 0 ? (
+                    recommendedJobs.map((job) => (
+                      <div
+                        key={job.id}
+                        className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex gap-4 flex-1">
+                            <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform">
+                              {job.logo}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                                  {job.title}
+                                </h3>
+                                {job.featured && (
+                                  <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-lg border border-amber-500/30">
+                                    Featured
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
+                                <span className="flex items-center gap-1">
+                                  <Building className="h-4 w-4" />
+                                  {job.company}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {job.location}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="h-4 w-4" />
+                                  {job.salary}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {job.tags.map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 hover:scale-105 transition-transform"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                                <span>{job.posted}</span>
+                                <span>•</span>
+                                <span>{job.applicants} applicants</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                                {job.title}
-                              </h3>
-                              {job.featured && (
-                                <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-lg border border-amber-500/30">
-                                  Featured
-                                </span>
-                              )}
+                          
+                          <div className="flex flex-col items-end gap-3">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
+                              <Target className="h-4 w-4" />
+                              <span className="text-sm font-medium">{job.match}% Match</span>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
-                              <span className="flex items-center gap-1">
-                                <Building className="h-4 w-4" />
-                                {job.company}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {job.location}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="h-4 w-4" />
-                                {job.salary}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {job.tags.map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 hover:scale-105 transition-transform"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span>{job.posted}</span>
-                              <span>•</span>
-                              <span>{job.applicants} applicants</span>
+                            <div className="flex gap-2">
+                              <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
+                                <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                              </button>
+                              <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
+                                <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
+                              </button>
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col items-end gap-3">
-                          <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
-                            <Target className="h-4 w-4" />
-                            <span className="text-sm font-medium">{job.match}% Match</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
-                              <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
-                            </button>
-                            <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
-                              <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
-                        <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
-                          {job.type}
-                        </span>
-                        <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105">
-                          Apply Now
-                          <ArrowUpRight className="h-4 w-4" />
-                        </button>
+                        <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
+                          <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
+                            {job.type}
+                          </span>
+                          <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105">
+                            Apply Now
+                            <ArrowUpRight className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Briefcase className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <p className="text-slate-400">No recommended jobs available</p>
+                      <p className="text-sm text-slate-500 mt-1">Check back later for new opportunities</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

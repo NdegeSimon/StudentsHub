@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from './api'; // Import the main api instance, not individual APIs
@@ -184,57 +184,6 @@ export const register = async (userData, rememberMe = true) => {
   }
 };
 
-// Protected route wrapper
-export const withAuth = (Component, roles = []) => {
-  const WrappedComponent = (props) => {
-    const navigate = useNavigate();
-    const [verified, setVerified] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-      const checkAuth = async () => {
-        const isAuth = await verifyToken();
-        
-        if (!isAuth) {
-          toast.error('Please log in to access this page');
-          navigate('/login', { state: { from: props.location?.pathname || '/' } });
-          return;
-        }
-
-        const user = getCurrentUser();
-        if (roles.length > 0 && !roles.includes(user.role)) {
-          toast.error('You do not have permission to access this page');
-          navigate('/unauthorized');
-          return;
-        }
-
-        setVerified(true);
-        setLoading(false);
-      };
-
-      checkAuth();
-    }, [navigate, props.location]);
-
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
-        </div>
-      );
-    }
-
-    return verified ? <Component {...props} /> : null;
-  };
-
-  // Set display name for debugging
-  WrappedComponent.displayName = `withAuth(${Component.displayName || Component.name || 'Component'})`;
-  
-  return WrappedComponent;
-};
-
 // Simple hook for authentication
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -282,6 +231,26 @@ export const useAuth = () => {
   };
 };
 
+// Simple auth check function (non-JSX version)
+export const requireAuth = async (navigate, roles = []) => {
+  const isAuth = await verifyToken();
+  
+  if (!isAuth) {
+    toast.error('Please log in to access this page');
+    navigate('/login');
+    return false;
+  }
+
+  const user = getCurrentUser();
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    toast.error('You do not have permission to access this page');
+    navigate('/unauthorized');
+    return false;
+  }
+
+  return true;
+};
+
 // Export everything
 export default {
   getAuthToken,
@@ -293,6 +262,6 @@ export default {
   verifyToken,
   login,
   register,
-  withAuth,
-  useAuth
+  useAuth,
+  requireAuth
 };
