@@ -1,0 +1,52 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<h1>Interview Invitation</h1>
+
+<p>Hello {{ application.student.user.first_name }},</p>
+
+<p>Congratulations! You've been invited to interview for the position of <strong>{{ application.job.title }}</strong> at <strong>{{ application.job.company_name }}</strong>.</p>
+
+<div class="card">
+  <h3>Interview Details</h3>
+  <p><strong>Date & Time:</strong> {{ interview.scheduled_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</p>
+  
+  {% if interview.location %}
+  <p><strong>Location:</strong> {{ interview.location }}</p>
+  {% endif %}
+  
+  {% if interview.video_link %}
+  <p><strong>Video Call Link:</strong> <a href="{{ interview.video_link }}">Join Interview</a></p>
+  {% endif %}
+  
+  <p><strong>Duration:</strong> {{ interview.duration }} minutes</p>
+  
+  {% if interview.notes %}
+  <div style="margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #eee;">
+    <p><strong>Additional Notes:</strong></p>
+    <p>{{ interview.notes|nl2br }}</p>
+  </div>
+  {% endif %}
+  
+  {% if interview.contact_person %}
+  <p><strong>Contact Person:</strong> {{ interview.contact_person.name }} ({{ interview.contact_person.email }})</p>
+  {% endif %}
+</div>
+
+{% if interview.requires_confirmation %}
+<p>Please confirm your availability for this interview:</p>
+<div style="margin: 20px 0;">
+  <a href="{{ url_for('interviews.confirm', interview_id=interview.id, status='accepted', _external=True) }}" class="button" style="background-color: #4CAF50;">Accept</a>
+  <a href="{{ url_for('interviews.decline', interview_id=interview.id, _external=True) }}" class="button" style="background-color: #f44336; margin-left: 10px;">Decline</a>
+</div>
+{% endif %}
+
+<p>If you have any questions or need to reschedule, please contact the employer directly.</p>
+
+<p>Best regards,<br>The {{ config.APP_NAME }} Team</p>
+
+<p style="font-size: 12px; color: #777; margin-top: 20px;">
+  Interview ID: {{ interview.id }}<br>
+  Job ID: {{ application.job.id }}
+</p>
+{% endblock %}

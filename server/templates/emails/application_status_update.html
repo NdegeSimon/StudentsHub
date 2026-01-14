@@ -1,0 +1,44 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<h1>Application Status Update</h1>
+
+<p>Hello {{ application.student.user.first_name }},</p>
+
+<p>The status of your application for <strong>{{ application.job.title }}</strong> at <strong>{{ application.job.company_name }}</strong> has been updated.</p>
+
+<div class="card">
+  <h3>Application Update</h3>
+  <p><strong>Position:</strong> {{ application.job.title }}</p>
+  <p><strong>Company:</strong> {{ application.job.company_name }}</p>
+  <p><strong>Previous Status:</strong> {{ old_status|title }}</p>
+  <p><strong>New Status:</strong> <strong>{{ new_status|title }}</strong></p>
+  <p><strong>Last Updated:</strong> {{ application.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+  
+  {% if application.notes %}
+  <div style="margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #eee;">
+    <p><strong>Note from the employer:</strong></p>
+    <p>{{ application.notes }}</p>
+  </div>
+  {% endif %}
+</div>
+
+{% if new_status == 'shortlisted' %}
+  <p>Congratulations! Your application has been shortlisted. The employer may contact you soon for next steps.</p>
+{% elif new_status == 'interview' %}
+  <p>Great news! The employer would like to schedule an interview with you. Please check your dashboard for available time slots.</p>
+  <a href="{{ url_for('dashboard.interviews', _external=True) }}" class="button">View Interview Details</a>
+{% elif new_status == 'hired' %}
+  <p>Congratulations! You've been selected for this position. The employer will contact you with further details.</p>
+{% elif new_status == 'rejected' %}
+  <p>Thank you for your interest in this position. Unfortunately, your application was not selected to move forward.</p>
+  <p>Don't be discouraged - we encourage you to apply to other positions that match your skills and experience.</p>
+  <a href="{{ url_for('jobs.browse', _external=True) }}" class="button">Browse Jobs</a>
+{% endif %}
+
+<p>You can view the details of this application by logging into your account.</p>
+
+<a href="{{ url_for('dashboard.applications', application_id=application.id, _external=True) }}" class="button">View Application</a>
+
+<p>Best regards,<br>The {{ config.APP_NAME }} Team</p>
+{% endblock %}

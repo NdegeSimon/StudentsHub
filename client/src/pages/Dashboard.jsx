@@ -8,6 +8,8 @@ import {
   Building, Plus, Filter, Download, Share2, Flame, Crown, Rocket
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import { smartAPI, userAPI, dashboardAPI } from '../utils/api';
 import { getCurrentUser } from '../utils/auth';
 
@@ -36,12 +38,17 @@ const calculateProfileCompletion = (profile) => {
 };
 
 const NextLevelDashboard = () => {
-  const [activeTab, setActiveTab] = useState('recommended');
-  const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [savedJobs, setSavedJobs] = useState(new Set());
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = useState(false);
   
   // Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,7 +93,6 @@ const NextLevelDashboard = () => {
   ]);
   
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
-  const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [savedSearches, setSavedSearches] = useState([]);
   const [loadingSearches, setLoadingSearches] = useState(false);
   
@@ -169,162 +175,288 @@ const NextLevelDashboard = () => {
   }, []);
 
   // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
+    try {
+      // Try to fetch dashboard stats
       try {
-        // Fetch stats
         const statsResponse = await dashboardAPI.getStats();
-        if (statsResponse.data) {
-          setStats([
-            { 
-              label: 'Applications', 
-              value: statsResponse.data.total_applications?.toString() || '0', 
-              change: statsResponse.data.application_change || '+0%', 
-              icon: FileText, 
-              color: 'from-blue-500 to-cyan-500',
-              trend: 'up'
-            },
-            { 
-              label: 'Active Jobs', 
-              value: statsResponse.data.active_jobs?.toString() || '0', 
-              change: statsResponse.data.jobs_change || '+0%', 
-              icon: Briefcase, 
-              color: 'from-purple-500 to-pink-500',
-              trend: 'up'
-            },
-            { 
-              label: 'Interviews', 
-              value: statsResponse.data.upcoming_interviews?.toString() || '0', 
-              change: statsResponse.data.interview_change || '+0', 
-              icon: Calendar, 
-              color: 'from-amber-500 to-orange-500',
-              trend: 'up'
-            },
-            { 
-              label: 'Profile Views', 
-              value: statsResponse.data.profile_views?.toString() || '0', 
-              change: statsResponse.data.views_change || '+0%', 
-              icon: Eye, 
-              color: 'from-green-500 to-emerald-500',
-              trend: 'up'
-            }
-          ]);
+        if (statsResponse?.data) {
+          setStats(statsResponse.data);
         }
-
-        // Fetch upcoming deadlines
-        const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
-        if (deadlinesResponse.data) {
-          const deadlines = deadlinesResponse.data.map(deadline => ({
-            title: deadline.jobTitle || deadline.job_title || 'Job Application',
-            daysLeft: deadline.days_remaining || 
-                     Math.max(0, Math.ceil((new Date(deadline.deadline) - new Date()) / (1000 * 60 * 60 * 24))),
-            urgent: (deadline.days_remaining || deadline.days_left) <= 3
-          }));
-          setUpcomingDeadlines(deadlines);
-        }
-
-        // Fetch recommended jobs
-        const jobsResponse = await smartAPI.jobs.getAllJobs();
-        if (jobsResponse.data && jobsResponse.data.length > 0) {
-          const jobs = jobsResponse.data.slice(0, 3).map(job => ({
-            id: job.id,
-            title: job.title,
-            company: job.company || job.company_name || 'Company',
-            location: job.location || 'Remote',
-            type: job.type || job.job_type || 'Full-time',
-            salary: job.salary || job.salary_range || '$80,000 - $120,000',
-            logo: job.company ? job.company.charAt(0) : 'J',
-            posted: job.posted_date ? `${Math.floor((new Date() - new Date(job.posted_date)) / (1000 * 60 * 60 * 24))} days ago` : 'Recently',
-            applicants: job.applicants_count || Math.floor(Math.random() * 100),
-            match: job.match_score || Math.floor(Math.random() * 20) + 80,
-            tags: job.skills || job.tags || ['React', 'JavaScript', 'CSS'],
-            featured: job.featured || false
-          }));
-          setRecommendedJobs(jobs);
-        }
-
-        // Fetch saved searches
-        setLoadingSearches(true);
-        const searchesResponse = await smartAPI.searches.getSavedSearches();
-        if (searchesResponse.data) {
-          const searches = searchesResponse.data.map(search => 
-            search.query || search.search_query || 'Search query'
-          );
-          setSavedSearches(searches);
-        }
-        setLoadingSearches(false);
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        
-        // Fallback mock data
-        setUpcomingDeadlines([
-          { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
-          { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
-          { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
-        ]);
-        
-        setRecommendedJobs([
-          {
-            id: 1,
-            title: 'Senior Frontend Developer',
-            company: 'TechCorp Inc.',
-            location: 'San Francisco, CA',
-            type: 'Full-time',
-            salary: '$120k - $180k',
-            logo: 'T',
-            posted: '2 days ago',
-            applicants: 45,
-            match: 95,
-            tags: ['React', 'TypeScript', 'Next.js'],
-            featured: true
+      } catch (statsError) {
+        console.warn('Error fetching dashboard stats:', statsError);
+        // Use default stats if API fails
+        setStats([
+          { 
+            label: 'Applications', 
+            value: '0', 
+            change: '+0%', 
+            icon: FileText, 
+            color: 'from-blue-500 to-cyan-500',
+            trend: 'up'
           },
-          {
-            id: 2,
-            title: 'Full Stack Engineer',
-            company: 'StartupXYZ',
-            location: 'Remote',
-            type: 'Full-time',
-            salary: '$90k - $140k',
-            logo: 'S',
-            posted: '1 day ago',
-            applicants: 23,
-            match: 88,
-            tags: ['Node.js', 'MongoDB', 'AWS']
+          { 
+            label: 'Active Jobs', 
+            value: statsResponse.data.active_jobs?.toString() || '0', 
+            change: statsResponse.data.jobs_change || '+0%', 
+            icon: Briefcase, 
+            color: 'from-purple-500 to-pink-500',
+            trend: 'up'
           },
-          {
-            id: 3,
-            title: 'UI/UX Designer',
-            company: 'Design Studio',
-            location: 'New York, NY',
-            type: 'Contract',
-            salary: '$80/hour',
-            logo: 'D',
-            posted: '3 days ago',
-            applicants: 67,
-            match: 82,
-            tags: ['Figma', 'Sketch', 'Prototyping']
+          { 
+            label: 'Interviews', 
+            value: statsResponse.data.upcoming_interviews?.toString() || '0', 
+            change: statsResponse.data.interview_change || '+0', 
+            icon: Calendar, 
+            color: 'from-amber-500 to-orange-500',
+            trend: 'up'
+          },
+          { 
+            label: 'Profile Views', 
+            value: statsResponse.data.profile_views?.toString() || '0', 
+            change: statsResponse.data.views_change || '+0%', 
+            icon: Eye, 
+            color: 'from-green-500 to-emerald-500',
+            trend: 'up'
           }
         ]);
-        
-        setSavedSearches([
-          'Frontend Developer Remote',
-          'UX Designer San Francisco',
-          'Product Manager',
-          'Software Engineer',
-          'Data Scientist NYC'
-        ]);
       }
-    };
 
+      // Fetch upcoming deadlines
+      const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
+      if (deadlinesResponse.data) {
+        const deadlines = deadlinesResponse.data.map(deadline => ({
+          title: deadline.jobTitle || deadline.job_title || 'Job Application',
+          daysLeft: deadline.days_remaining || 
+                   Math.max(0, Math.ceil((new Date(deadline.deadline) - new Date()) / (1000 * 60 * 60 * 24))),
+          urgent: (deadline.days_remaining || deadline.days_left) <= 3
+        }));
+        setUpcomingDeadlines(deadlines);
+      }
+
+      // Fetch recommended jobs
+      const jobsResponse = await smartAPI.jobs.getAllJobs();
+      if (jobsResponse.data && jobsResponse.data.length > 0) {
+        const jobs = jobsResponse.data.slice(0, 3).map(job => ({
+          id: job.id,
+          title: job.title,
+          company: job.company || job.company_name || 'Company',
+          location: job.location || 'Remote',
+          type: job.type || job.job_type || 'Full-time',
+          salary: job.salary || job.salary_range || '$80,000 - $120,000',
+          logo: job.company ? job.company.charAt(0) : 'J',
+          posted: job.posted_date ? `${Math.floor((new Date() - new Date(job.posted_date)) / (1000 * 60 * 60 * 24))} days ago` : 'Recently',
+          applicants: job.applicants_count || Math.floor(Math.random() * 100),
+          match: job.match_score || Math.floor(Math.random() * 20) + 80,
+          tags: job.skills || job.tags || ['React', 'JavaScript', 'CSS'],
+          featured: job.featured || false
+        }));
+        setRecommendedJobs(jobs);
+      }
+
+      // Fetch saved searches
+      setLoadingSearches(true);
+      const searchesResponse = await smartAPI.searches.getSavedSearches();
+      if (searchesResponse.data) {
+        const searches = searchesResponse.data.map(search => 
+          search.query || search.search_query || 'Search query'
+        );
+        setSavedSearches(searches);
+      }
+      setLoadingSearches(false);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      
+      // Fallback mock data
+      setUpcomingDeadlines([
+        { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
+        { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
+        { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
+      ]);
+      
+      setRecommendedJobs([
+        {
+          id: 1,
+          title: 'Senior Frontend Developer',
+          company: 'TechCorp Inc.',
+          location: 'San Francisco, CA',
+          type: 'Full-time',
+          salary: '$120k - $180k',
+          logo: 'T',
+          posted: '2 days ago',
+          applicants: 45,
+          match: 95,
+          tags: ['React', 'TypeScript', 'Next.js'],
+          featured: true
+        },
+        {
+          id: 2,
+          title: 'Full Stack Engineer',
+          company: 'StartupXYZ',
+          location: 'Remote',
+          type: 'Full-time',
+          salary: '$90k - $140k',
+          logo: 'S',
+          posted: '1 day ago',
+          applicants: 23,
+          match: 88,
+          tags: ['Node.js', 'MongoDB', 'AWS']
+        },
+        {
+          id: 3,
+          title: 'UI/UX Designer',
+          company: 'Design Studio',
+          location: 'New York, NY',
+          type: 'Contract',
+          salary: '$80/hour',
+          logo: 'D',
+          posted: '3 days ago',
+          applicants: 67,
+          match: 82,
+          tags: ['Figma', 'Sketch', 'Prototyping']
+        }
+      ]);
+      
+      setSavedSearches([
+        'Frontend Developer Remote',
+        'UX Designer San Francisco',
+        'Product Manager',
+        'Software Engineer',
+        'Data Scientist NYC'
+      ]);
+    }
+  };
+
+  useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // Fetch saved and applied jobs on component mount
+  const fetchUserData = async () => {
+    try {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Try to fetch saved jobs
+        const savedResponse = await smartAPI.jobs.getSavedJobs();
+        if (savedResponse && Array.isArray(savedResponse.data)) {
+          const savedJobIds = new Set(savedResponse.data.map(job => job.job_id || job.id));
+          setSavedJobs(savedJobIds);
+        }
+      } catch (savedError) {
+        console.warn('Error fetching saved jobs:', savedError);
+        // Continue with empty set if there's an error
+        setSavedJobs(new Set());
+      }
+
+      try {
+        // Try to fetch applied jobs
+        const appliedResponse = await smartAPI.applications.getMyApplications();
+        if (appliedResponse && Array.isArray(appliedResponse.data)) {
+          const appliedJobIds = new Set(
+            appliedResponse.data.map(app => app.job_id || (app.job?.id || app.job_id))
+          );
+          setAppliedJobs(appliedJobIds);
+        }
+      } catch (appliedError) {
+        console.warn('Error fetching applied jobs:', appliedError);
+        // Continue with empty set if there's an error
+        setAppliedJobs(new Set());
+      }
+    } catch (error) {
+      console.error('Error in fetchUserData:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, [user]);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
+  };
+
+  const handleSaveJob = async (jobId, e) => {
+    e?.stopPropagation();
+    try {
+      if (savedJobs.has(jobId)) {
+        // Unsave the job
+        await smartAPI.jobs.unsaveJob(jobId);
+        setSavedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(jobId);
+          return newSet;
+        });
+        toast.success('Job removed from saved jobs');
+      } else {
+        // Save the job
+        await smartAPI.jobs.saveJob(jobId);
+        setSavedJobs(prev => new Set([...prev, jobId]));
+        toast.success('Job saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to save job';
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleApplyJob = async (jobId, e) => {
+    e?.stopPropagation();
+    
+    // If already applied, navigate to job details
+    if (appliedJobs.has(jobId)) {
+      navigate(`/job/${jobId}`);
+      return;
+    }
+    
+    try {
+      // Check if we need a cover letter
+      const needsCoverLetter = true; // You can make this dynamic based on job requirements
+      let coverLetter = '';
+      
+      if (needsCoverLetter) {
+        // In a real app, you might show a modal to enter a cover letter
+        const coverLetterResponse = window.prompt('Please enter your cover letter:');
+        if (coverLetterResponse === null) return; // User cancelled
+        coverLetter = coverLetterResponse;
+      }
+      
+      // Submit the application
+      const response = await smartAPI.applications.applyToJob(jobId, { 
+        cover_letter: coverLetter 
+      });
+      
+      // Update UI
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+      
+      // Show success message with application ID if available
+      const appId = response.data?.application_id || '';
+      toast.success(`Application submitted successfully! ${appId ? `(ID: ${appId})` : ''}`);
+      
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to apply to job';
+      toast.error(errorMessage);
+      
+      // If the error is because the job is already applied to, update the UI
+      if (errorMessage.toLowerCase().includes('already applied')) {
+        setAppliedJobs(prev => new Set([...prev, jobId]));
+      }
+    }
+  };
+
+  const navigateToJobDetails = (jobId) => {
+    navigate(`/job/${jobId}`);
   };
 
   // Search handler function
@@ -337,74 +469,62 @@ const NextLevelDashboard = () => {
 
     setIsSearching(true);
     setShowSearchDropdown(true);
-
+    
     try {
-      const response = await smartAPI.jobs.getAllJobs();
+      // First try the API search
+      const response = await smartAPI.jobs.searchJobs(query);
       
-      if (response.data) {
-        // Filter jobs based on search query
-        const filteredResults = response.data
-          .filter(job =>
-            job.title?.toLowerCase().includes(query.toLowerCase()) ||
-            job.company?.toLowerCase().includes(query.toLowerCase()) ||
-            job.location?.toLowerCase().includes(query.toLowerCase()) ||
-            job.skills?.some(skill => skill.toLowerCase().includes(query.toLowerCase()))
-          )
-          .slice(0, 5) // Limit to 5 results for dropdown
-          .map(job => ({
-            id: job.id,
-            title: job.title,
-            company: job.company || job.company_name,
-            type: job.type || job.job_type,
-            location: job.location,
-            salary: job.salary || job.salary_range,
-            match: job.match_score || Math.floor(Math.random() * 20) + 80
-          }));
+      // Handle API response
+      if (response && response.data) {
+        // Format the results to match our expected job structure
+        const formattedResults = response.data.map(job => ({
+          id: job.id,
+          title: job.title,
+          company: job.company_name || job.company,
+          location: job.location,
+          type: job.job_type || job.type || 'Full-time',
+          salary: job.salary || job.salary_range || 'Not specified',
+          logo: (job.company_name || '?').charAt(0).toUpperCase(),
+          posted: job.posted_at || 'Recently',
+          match: job.match_score || Math.floor(Math.random() * 20) + 80,
+          tags: job.skills || job.tags || []
+        }));
         
-        setSearchResults(filteredResults);
-      } else {
-        setSearchResults([]);
+        setSearchResults(formattedResults);
+        
+        // Save the search if we have results
+        if (formattedResults.length > 0) {
+          try {
+            await smartAPI.searches.saveSearch(query);
+          } catch (saveError) {
+            console.warn('Failed to save search:', saveError);
+          }
+        }
       }
     } catch (error) {
-      console.error('Search error:', error);
-      // Mock fallback search results
-      const mockResults = [
-        { 
-          id: 1, 
-          title: 'Senior Frontend Developer', 
-          company: 'TechCorp', 
-          type: 'Full-time', 
-          location: 'Remote',
-          salary: '$120k - $180k',
-          match: 95 
-        },
-        { 
-          id: 2, 
-          title: 'React Developer', 
-          company: 'StartupXYZ', 
-          type: 'Contract', 
-          location: 'NYC',
-          salary: '$90k - $140k',
-          match: 88 
-        },
-        { 
-          id: 3, 
-          title: 'Full Stack Engineer', 
-          company: 'Innovate Inc', 
-          type: 'Full-time', 
-          location: 'San Francisco',
-          salary: '$110k - $160k',
-          match: 82 
+      console.error('Search API error, using fallback:', error);
+      
+      // Fallback to client-side filtering of existing jobs
+      if (recommendedJobs && recommendedJobs.length > 0) {
+        const filteredResults = recommendedJobs.filter(job => 
+          (job.title && job.title.toLowerCase().includes(query.toLowerCase())) ||
+          (job.company && job.company.toLowerCase().includes(query.toLowerCase())) ||
+          (job.location && job.location.toLowerCase().includes(query.toLowerCase())) ||
+          (job.tags && Array.isArray(job.tags) && 
+            job.tags.some(tag => 
+              tag && tag.toLowerCase().includes(query.toLowerCase())
+            )
+          )
+        );
+        
+        if (filteredResults.length > 0) {
+          setSearchResults(filteredResults);
+          return;
         }
-      ];
+      }
       
-      const filteredMockResults = mockResults.filter(job =>
-        job.title.toLowerCase().includes(query.toLowerCase()) ||
-        job.company.toLowerCase().includes(query.toLowerCase()) ||
-        job.location.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      setSearchResults(filteredMockResults);
+      // If no results, show empty state
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -426,6 +546,18 @@ const NextLevelDashboard = () => {
     { id: 2, type: 'application', message: 'Application viewed by Amazon', time: '5 hours ago', unread: true },
     { id: 3, type: 'recommendation', message: 'New job matches your profile', time: '1 day ago', unread: false }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-slate-800 rounded w-1/4"></div>
+          <div className="h-4 bg-slate-800 rounded w-3/4"></div>
+          <div className="h-4 bg-slate-800 rounded w-2/4"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
@@ -1018,6 +1150,7 @@ const NextLevelDashboard = () => {
                     recommendedJobs.map((job) => (
                       <div
                         key={job.id}
+                        onClick={() => navigateToJobDetails(job.id)}
                         className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
                       >
                         <div className="flex justify-between items-start mb-4">
@@ -1074,8 +1207,16 @@ const NextLevelDashboard = () => {
                               <span className="text-sm font-medium">{job.match}% Match</span>
                             </div>
                             <div className="flex gap-2">
-                              <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
-                                <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                              <button 
+                                onClick={(e) => handleSaveJob(job.id, e)}
+                                className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110"
+                                aria-label={savedJobs.has(job.id) ? 'Unsave job' : 'Save job'}
+                              >
+                                {savedJobs.has(job.id) ? (
+                                  <BookmarkCheck className="h-5 w-5 text-amber-400" />
+                                ) : (
+                                  <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                                )}
                               </button>
                               <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
                                 <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
@@ -1088,8 +1229,15 @@ const NextLevelDashboard = () => {
                           <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
                             {job.type}
                           </span>
-                          <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105">
-                            Apply Now
+                          <button 
+                            onClick={(e) => handleApplyJob(job.id, e)}
+                            className={`px-6 py-2 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105 ${
+                              appliedJobs.has(job.id)
+                                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                            }`}
+                          >
+                            {appliedJobs.has(job.id) ? 'View Application' : 'Apply Now'}
                             <ArrowUpRight className="h-4 w-4" />
                           </button>
                         </div>

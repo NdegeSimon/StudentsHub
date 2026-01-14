@@ -61,6 +61,10 @@ export const jobAPI = {
   createJob: (jobData) => api.post('/jobs', jobData),
   applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
   searchJobs: (filters) => api.get('/jobs/search', { params: filters }),
+  saveJob: (jobId) => api.post(`/jobs/${jobId}/save`),
+  unsaveJob: (jobId) => api.delete(`/jobs/${jobId}/save`),
+  getSavedJobs: () => api.get('/saved-jobs'),
+  checkSaved: (jobId) => api.get(`/saved-jobs/check/${jobId}`)
 };
 
 // Course API
@@ -88,14 +92,15 @@ export const uploadAPI = {
   },
 };
 
-// Application API - ADD THE MISSING FUNCTION
+// Application API
 export const applicationAPI = {
-  getMyApplications: () => api.get('/applications/me'),
+  getMyApplications: () => api.get('/applications'),
   getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
-  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
+  applyToJob: (jobId, applicationData) => api.post(`/applications`, { jobId, ...applicationData }),
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
   updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
-  getUpcomingDeadlines: () => api.get('/applications/upcoming-deadlines'), // ADD THIS LINE
+  getUpcomingDeadlines: () => api.get('/applications/deadlines'),
+  checkApplicationStatus: (jobId) => api.get('/applications/status/check', { params: { job_id: jobId } })
 };
 
 // Search API
@@ -208,10 +213,56 @@ export const smartAPI = {
   jobs: {
     getAllJobs: async () => {
       try {
-        return await jobAPI.getAllJobs();
+        const response = await jobAPI.getAllJobs();
+        return response;
       } catch (error) {
-        console.log('Using mock jobs data');
-        return await mockAPI.jobs.getAllJobs();
+        console.log('Using mock data for jobs:', error.message);
+        return { data: mockAPI.jobs.getAllJobs() };
+      }
+    },
+    saveJob: async (jobId) => {
+      try {
+        const response = await jobAPI.saveJob(jobId);
+        return response;
+      } catch (error) {
+        console.error('Error saving job:', error.message);
+        throw error;
+      }
+    },
+    unsaveJob: async (jobId) => {
+      try {
+        const response = await jobAPI.unsaveJob(jobId);
+        return response;
+      } catch (error) {
+        console.error('Error unsaving job:', error.message);
+        throw error;
+      }
+    },
+    getSavedJobs: async () => {
+      try {
+        const response = await jobAPI.getSavedJobs();
+        return response;
+      } catch (error) {
+        console.error('Using mock data for saved jobs:', error.message);
+        return { data: [] };
+      }
+    },
+    checkSaved: async (jobId) => {
+      try {
+        const response = await jobAPI.checkSaved(jobId);
+        return response;
+      } catch (error) {
+        console.error('Error checking saved status:', error.message);
+        return { data: { is_saved: false } };
+      }
+    },
+    searchJobs: async (query) => {
+      try {
+        const response = await jobAPI.searchJobs({ q: query });
+        return response;
+      } catch (error) {
+        console.error('Error searching jobs:', error.message);
+        return { data: [] };
       }
     }
   },
@@ -219,19 +270,38 @@ export const smartAPI = {
   applications: {
     getUpcomingDeadlines: async () => {
       try {
-        return await applicationAPI.getUpcomingDeadlines();
+        const response = await applicationAPI.getUpcomingDeadlines();
+        return response;
       } catch (error) {
-        console.log('Using mock deadlines data');
-        return await mockAPI.applications.getUpcomingDeadlines();
+        console.error('Using mock data for deadlines:', error.message);
+        return { data: mockAPI.applications.getUpcomingDeadlines() };
       }
     },
-    
     getMyApplications: async () => {
       try {
-        return await applicationAPI.getMyApplications();
+        const response = await applicationAPI.getMyApplications();
+        return response;
       } catch (error) {
-        console.log('Using mock applications data');
-        return await mockAPI.applications.getMyApplications();
+        console.error('Using mock data for applications:', error.message);
+        return { data: mockAPI.applications.getMyApplications() };
+      }
+    },
+    applyToJob: async (jobId, data) => {
+      try {
+        const response = await applicationAPI.applyToJob(jobId, data);
+        return response;
+      } catch (error) {
+        console.error('Error applying to job:', error.message);
+        throw error;
+      }
+    },
+    checkStatus: async (jobId) => {
+      try {
+        const response = await applicationAPI.checkApplicationStatus(jobId);
+        return response;
+      } catch (error) {
+        console.error('Error checking application status:', error.message);
+        return { data: { has_applied: false, can_apply: true } };
       }
     }
   },
@@ -239,10 +309,20 @@ export const smartAPI = {
   searches: {
     getSavedSearches: async () => {
       try {
-        return await searchAPI.getSavedSearches();
+        const response = await searchAPI.getSavedSearches();
+        return response;
       } catch (error) {
-        console.log('Using mock searches data');
-        return await mockAPI.searches.getSavedSearches();
+        console.error('Using mock data for saved searches:', error.message);
+        return { data: mockAPI.searches.getSavedSearches() };
+      }
+    },
+    saveSearch: async (query) => {
+      try {
+        const response = await searchAPI.saveSearch({ query });
+        return response;
+      } catch (error) {
+        console.error('Error saving search:', error.message);
+        throw error;
       }
     }
   }
