@@ -364,3 +364,86 @@ def delete_job(job_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+# routes/jobs.py or similar
+@job_bp.route('/api/jobs/<int:job_id>/apply', methods=['POST'])
+@jwt_required()
+def apply_to_job(job_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user or user.role != 'student':
+        return jsonify({"error": "Only students can apply to jobs"}), 403
+    
+    student = Student.query.filter_by(user_id=user_id).first()
+    job = Job.query.get(job_id)
+    
+    if not student:
+        return jsonify({"error": "Student profile not found"}), 404
+    
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    
+    data = request.get_json()
+    cover_letter = data.get('cover_letter', '')
+    resume_url = data.get('resume_url')
+    
+    application, message = job.apply(student, cover_letter, resume_url)
+    
+    if application:
+        return jsonify({
+            "success": True,
+            "message": message,
+            "application_id": application.id
+        }), 201
+    else:
+        return jsonify({"error": message}), 400
+
+@job_bp.route('/api/jobs/<int:job_id>/save', methods=['POST'])
+@jwt_required()
+def save_job(job_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user or user.role != 'student':
+        return jsonify({"error": "Only students can save jobs"}), 403
+    
+    student = Student.query.filter_by(user_id=user_id).first()
+    job = Job.query.get(job_id)
+    
+    if not student:
+        return jsonify({"error": "Student profile not found"}), 404
+    
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    
+    success, message = student.save_job(job)
+    
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"error": message}), 400
+
+@job_bp.route('/api/students/<int:student_id>/save', methods=['POST'])
+@jwt_required()
+def save_candidate(student_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user or user.role != 'company':
+        return jsonify({"error": "Only companies can save candidates"}), 403
+    
+    company = Company.query.filter_by(user_id=user_id).first()
+    student = Student.query.get(student_id)
+    
+    if not company:
+        return jsonify({"error": "Company profile not found"}), 404
+    
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+    
+    success, message = company.save_candidate(student)
+    
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"error": message}), 400

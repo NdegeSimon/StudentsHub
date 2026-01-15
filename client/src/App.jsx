@@ -23,11 +23,13 @@ import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
 import Resources from "./pages/resources/Resources.jsx";
 import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import CareerTips from "./pages/resources/CareerTips.jsx";
+import JobDetails from "./pages/JobDetails.jsx";
 import NotFound from "./pages/NotFound.jsx";
+
 
 // New Components
 import CompanyProfile from "./pages/company/CompanyProfile.jsx";
-import JobDetails from "./pages/JobDetails.jsx";
+
 import ApplicationsList from "./pages/ApplicationsList.jsx";
 import CompanyJobs from "./pages/company/CompanyJobs.jsx";
 
@@ -157,9 +159,9 @@ const App = () => {
 
                     {/* Public */}
                     <Route path="/jobs" element={<JobsPage />} />
-                    <Route path="/job" element={<JobCard />} />
+                    
                     <Route path="/messages" element={<MessagingSystem />} />
-
+                    <Route path="/jobs/:jobId" element={<JobDetails />} /> 
                     {/* Resources */}
                     <Route 
                       path="/resources" 

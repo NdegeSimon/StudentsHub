@@ -123,7 +123,58 @@ class Student(db.Model):
             'preferred_job_types': self.preferred_job_types,
             'availability': self.availability
         }
-
+    def save_job(self, job):
+        """Save a job for later"""
+        from models import SavedJob  # Import here to avoid circular import
+        
+        # Check if already saved
+        existing_saved = SavedJob.query.filter_by(
+            student_id=self.id,
+            job_id=job.id
+        ).first()
+        
+        if existing_saved:
+            return False, "Job already saved"
+        
+        saved_job = SavedJob(
+            student_id=self.id,
+            job_id=job.id,
+            saved_at=datetime.utcnow()
+        )
+        
+        db.session.add(saved_job)
+        
+        try:
+            db.session.commit()
+            return True, "Job saved successfully"
+        except Exception as e:
+            db.session.rollback()
+            return False, str(e)
+    
+    def unsave_job(self, job):
+        """Remove a saved job"""
+        from models import SavedJob
+        
+        saved_job = SavedJob.query.filter_by(
+            student_id=self.id,
+            job_id=job.id
+        ).first()
+        
+        if saved_job:
+            db.session.delete(saved_job)
+            db.session.commit()
+            return True, "Job removed from saved list"
+        return False, "Job not found in saved list"
+    
+    def get_saved_jobs(self):
+        """Get all saved jobs for this student"""
+        from models import SavedJob
+        
+        saved_jobs = SavedJob.query.filter_by(
+            student_id=self.id
+        ).order_by(SavedJob.saved_at.desc()).all()
+        
+        return [sj.job.to_dict() for sj in saved_jobs if sj.job]
 
 class Company(db.Model):
     __tablename__ = 'companies'
@@ -173,6 +224,34 @@ class Company(db.Model):
             'benefits': self.benefits,
             'culture_values': self.culture_values
         }
+        
+    def save_candidate(self, student):
+        """Save a candidate for future reference"""
+        from models import SavedCandidate
+        
+        # Check if already saved
+        existing_saved = SavedCandidate.query.filter_by(
+            company_id=self.id,
+            student_id=student.id
+        ).first()
+        
+        if existing_saved:
+            return False, "Candidate already saved"
+        
+        saved_candidate = SavedCandidate(
+            company_id=self.id,
+            student_id=student.id,
+            saved_at=datetime.utcnow()
+        )
+        
+        db.session.add(saved_candidate)
+        
+        try:
+            db.session.commit()
+            return True, "Candidate saved successfully"
+        except Exception as e:
+            db.session.rollback()
+            return False, str(e)
 
 
 class Job(db.Model):
@@ -246,6 +325,69 @@ class Job(db.Model):
             }
         
         return data
+    def apply(self, student, cover_letter="", resume_url=None):
+        """Create an application for this job"""
+        from models import Application  # Import here to avoid circular import
+        
+        # Check if student has already applied
+        existing_application = Application.query.filter_by(
+            job_id=self.id,
+            student_id=student.id
+        ).first()
+        
+        if existing_application:
+            return None, "You have already applied to this job"
+        
+        # Create new application
+        application = Application(
+            job_id=self.id,
+            student_id=student.id,
+            cover_letter=cover_letter,
+            resume_url=resume_url or student.resume_url,
+            status="pending",
+            applied_at=datetime.utcnow()
+        )
+        
+        db.session.add(application)
+        
+        # Create notification for company
+        notification = Notification(
+            user_id=self.company.user_id,
+            notification_type="new_application",
+            title="New Job Application",
+            message=f"{student.user.first_name} applied for {self.title}",
+            link_url=f"/company/jobs/{self.id}/applications",
+            notification_metadata={
+                "job_id": self.id,
+                "job_title": self.title,
+                "student_id": student.id,
+                "student_name": f"{student.user.first_name} {student.user.last_name or ''}"
+            }
+        )
+        db.session.add(notification)
+        
+        # Update job analytics
+        analytics = JobAnalytics.query.filter_by(
+            job_id=self.id,
+            date=datetime.utcnow().date()
+        ).first()
+        
+        if analytics:
+            analytics.applications += 1
+        else:
+            analytics = JobAnalytics(
+                job_id=self.id,
+                date=datetime.utcnow().date(),
+                applications=1
+            )
+            db.session.add(analytics)
+        
+        try:
+            db.session.commit()
+            return application, "Application submitted successfully"
+        except Exception as e:
+            db.session.rollback()
+            return None, str(e)
 
 
 class Application(db.Model):
