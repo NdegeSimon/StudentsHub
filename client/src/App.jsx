@@ -24,6 +24,12 @@ import Resources from "./pages/resources/Resources.jsx";
 import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import CareerTips from "./pages/resources/CareerTips.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import PremiumPayment from "./pages/PremiumPayment.jsx";
+// Add this import at the top
+
+
+// Add this route inside your Routes component
+
 
 // New Components
 import CompanyProfile from "./pages/company/CompanyProfile.jsx";
@@ -159,7 +165,8 @@ const App = () => {
                     <Route path="/jobs" element={<JobsPage />} />
                     <Route path="/job" element={<JobCard />} />
                     <Route path="/messages" element={<MessagingSystem />} />
-
+                    <Route path="/premium-payment" element={<PremiumPayment />} />
+                    <Route path="/jobs/:id" element={<JobDetails />} />      
                     {/* Resources */}
                     <Route 
                       path="/resources" 

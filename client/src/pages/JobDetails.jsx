@@ -1,280 +1,171 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import api from '../utils/api';
-import { toast } from 'react-toastify';
-import moment from 'moment';
+import { ArrowLeft, MapPin, Building, DollarSign, Clock, Calendar, Bookmark, Share2, Mail, ExternalLink } from 'lucide-react';
 
-const JobDetails = () => {
+export default function JobDetails() {
   const { id } = useParams();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [applicationStatus, setApplicationStatus] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchJob = async () => {
+    const fetchJobDetails = async () => {
       try {
-        const [jobRes, savedRes] = await Promise.all([
-          api.get(`/api/jobs/${id}`),
-          user ? api.get(`/api/saved-jobs/check/${id}`).catch(() => null) : Promise.resolve(null)
-        ]);
-        
-        setJob(jobRes.data);
-        setSaved(savedRes?.data?.saved || false);
-        
-        // Check if user has already applied
-        if (user) {
-          try {
-            const appRes = await api.get(`/api/applications/check/${id}`);
-            setApplicationStatus(appRes.data.status || 'applied');
-          } catch (error) {
-            // Not applied yet
-            setApplicationStatus(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching job:', error);
-        toast.error('Failed to load job details');
+        const response = await api.get(`/jobs/${id}`);
+        setJob(response.data);
+      } catch (err) {
+        setError('Failed to load job details');
+        console.error('Error fetching job:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJob();
-  }, [id, user]);
+    fetchJobDetails();
+  }, [id]);
 
-  const handleSaveJob = async () => {
-    if (!user) {
-      toast.info('Please log in to save jobs');
-      navigate('/login', { state: { from: `/jobs/${id}` } });
-      return;
-    }
-
-    try {
-      if (saved) {
-        await api.delete(`/api/saved-jobs/${id}`);
-        setSaved(false);
-        toast.success('Job removed from saved jobs');
-      } else {
-        await api.post('/api/saved-jobs', { job_id: id });
-        setSaved(true);
-        toast.success('Job saved successfully');
-      }
-    } catch (error) {
-      console.error('Error saving job:', error);
-      toast.error('Failed to save job');
-    }
-  };
-
-  const handleApply = async () => {
-    if (!user) {
-      toast.info('Please log in to apply for this job');
-      navigate('/login', { state: { from: `/jobs/${id}` } });
-      return;
-    }
-
-    if (user.role === 'company') {
-      toast.error('Companies cannot apply for jobs');
-      return;
-    }
-
-    setApplying(true);
-    try {
-      await api.post('/api/applications', { job_id: id });
-      setApplicationStatus('applied');
-      toast.success('Application submitted successfully!');
-    } catch (error) {
-      console.error('Error applying for job:', error);
-      toast.error(error.response?.data?.error || 'Failed to apply for job');
-    } finally {
-      setApplying(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (!job) {
-    return <div className="text-center py-10">Job not found</div>;
-  }
-
-  const formatDate = (dateString) => {
-    return moment(dateString).format('MMMM D, YYYY');
-  };
-
-  const isExpired = job.application_deadline && new Date(job.application_deadline) < new Date();
+  if (loading) return <div className="text-center py-20">Loading job details...</div>;
+  if (error) return <div className="text-center py-20 text-red-400">{error}</div>;
+  if (!job) return <div className="text-center py-20">Job not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
-            <div className="flex items-center text-gray-400 text-sm mb-4">
-              <Link 
-                to={`/companies/${job.company.id}`}
-                className="text-blue-400 hover:underline"
-              >
-                {job.company.company_name}
-              </Link>
-              <span className="mx-2">•</span>
-              <span>{job.location || 'Remote'}</span>
-              <span className="mx-2">•</span>
-              <span>{job.job_type || 'Full-time'}</span>
-            </div>
-          </div>
-          
-          <div className="flex space-x-3">
-            <button
-              onClick={handleSaveJob}
-              className={`px-4 py-2 rounded-md flex items-center ${
-                saved 
-                  ? 'bg-yellow-600 hover:bg-yellow-700' 
-                  : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-            >
-              {saved ? 'Saved' : 'Save'}
-            </button>
-            
-            {user?.role === 'student' && (
-              <button
-                onClick={handleApply}
-                disabled={!!applicationStatus || isExpired || applying}
-                className={`px-6 py-2 rounded-md ${
-                  applicationStatus
-                    ? 'bg-green-600 cursor-default'
-                    : isExpired
-                    ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {applying ? (
-                  'Applying...'
-                ) : applicationStatus ? (
-                  applicationStatus.charAt(0).toUpperCase() + applicationStatus.slice(1)
-                ) : isExpired ? (
-                  'Expired'
-                ) : (
-                  'Apply Now'
-                )}
-              </button>
-            )}
-          </div>
-        </div>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-blue-400 hover:text-blue-300 transition-colors mb-6"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Jobs
+        </button>
 
-        {isExpired && (
-          <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-2 rounded-md mb-4">
-            This job posting has expired and is no longer accepting applications.
-          </div>
-        )}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-2xl font-bold text-white">
+                  {job.company[0]}
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">{job.title}</h1>
+                  <div className="flex items-center gap-4 mt-1 text-slate-300">
+                    <span className="flex items-center gap-1">
+                      <Building className="w-4 h-4" />
+                      {job.company}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {job.location}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-gray-700/50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-400 mb-1">Job Type</h3>
-            <p>{job.job_type || 'Not specified'}</p>
-          </div>
-          <div className="bg-gray-700/50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-400 mb-1">Experience Level</h3>
-            <p>{job.experience_level || 'Not specified'}</p>
-          </div>
-          <div className="bg-gray-700/50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-400 mb-1">Application Deadline</h3>
-            <p>{job.application_deadline ? formatDate(job.application_deadline) : 'Not specified'}</p>
-          </div>
-        </div>
-
-        {job.salary_min && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Salary</h3>
-            <p>
-              {job.salary_currency || '$'}{job.salary_min.toLocaleString()}
-              {job.salary_max ? ` - ${job.salary_currency || '$'}${job.salary_max.toLocaleString()}` : '+'}
-              {job.salary_period ? ` per ${job.salary_period}` : ''}
-            </p>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-2">Job Description</h3>
-          <div className="prose prose-invert max-w-none">
-            {job.description}
-          </div>
-        </div>
-
-        {job.requirements && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Requirements</h3>
-            <div className="prose prose-invert max-w-none">
-              {job.requirements}
-            </div>
-          </div>
-        )}
-
-        {job.responsibilities && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Responsibilities</h3>
-            <div className="prose prose-invert max-w-none">
-              {job.responsibilities}
-            </div>
-          </div>
-        )}
-
-        {(job.required_skills?.length > 0) && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Required Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {job.required_skills.map((skill, index) => (
-                <span 
-                  key={index} 
-                  className="px-3 py-1 bg-blue-900/50 text-blue-200 rounded-full text-sm"
-                >
-                  {skill}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="px-3 py-1 bg-blue-500/10 text-blue-400 text-sm font-medium rounded-lg border border-blue-500/30">
+                  {job.type}
                 </span>
-              ))}
+                <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-sm font-medium rounded-lg border border-purple-500/30">
+                  {job.category}
+                </span>
+                {job.isRemote && (
+                  <span className="px-3 py-1 bg-green-500/10 text-green-400 text-sm font-medium rounded-lg border border-green-500/30">
+                    Remote
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                  <div className="text-slate-400 text-sm mb-1">Experience</div>
+                  <div className="text-white font-medium">{job.experience || 'Not specified'}</div>
+                </div>
+                <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                  <div className="text-slate-400 text-sm mb-1">Salary</div>
+                  <div className="text-white font-medium flex items-center">
+                    <DollarSign className="w-4 h-4 mr-1" />
+                    {job.salary || 'Negotiable'}
+                  </div>
+                </div>
+                <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                  <div className="text-slate-400 text-sm mb-1">Posted</div>
+                  <div className="text-white font-medium flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {new Date(job.postedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 w-full md:w-auto">
+              <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                Apply Now
+                <ExternalLink className="w-4 h-4" />
+              </button>
+              <div className="flex gap-2">
+                <button className="flex-1 p-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center">
+                  <Bookmark className="w-5 h-5 text-slate-300" />
+                </button>
+                <button className="flex-1 p-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center">
+                  <Share2 className="w-5 h-5 text-slate-300" />
+                </button>
+                <button className="flex-1 p-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-slate-300" />
+                </button>
+              </div>
             </div>
           </div>
-        )}
 
-        {(job.benefits?.length > 0) && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Benefits</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {job.benefits.map((benefit, index) => (
-                <li key={index}>{benefit}</li>
-              ))}
-            </ul>
+          <div className="border-t border-slate-700/50 pt-8">
+            <h2 className="text-xl font-bold text-white mb-4">Job Description</h2>
+            <div 
+              className="prose prose-invert max-w-none text-slate-300"
+              dangerouslySetInnerHTML={{ __html: job.description }}
+            />
+
+            {job.requirements && (
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-white mb-3">Requirements</h3>
+                <ul className="list-disc pl-5 space-y-2 text-slate-300">
+                  {job.requirements.map((req, index) => (
+                    <li key={index}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {job.responsibilities && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-white mb-3">Responsibilities</h3>
+                <ul className="list-disc pl-5 space-y-2 text-slate-300">
+                  {job.responsibilities.map((resp, index) => (
+                    <li key={index}>{resp}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="mt-8 pt-6 border-t border-slate-700/50">
+              <h3 className="text-lg font-semibold text-white mb-4">About {job.company}</h3>
+              <p className="text-slate-300 mb-4">{job.companyDescription || 'No company description available.'}</p>
+              
+              {job.companyWebsite && (
+                <a
+                  href={job.companyWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Visit company website
+                  <ExternalLink className="w-4 h-4 ml-1" />
+                </a>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-bold mb-4">About {job.company.company_name}</h2>
-        <div className="prose prose-invert max-w-none">
-          {job.company.description || 'No company description available.'}
-        </div>
-        <div className="mt-4">
-          <Link 
-            to={`/companies/${job.company.id}`}
-            className="text-blue-400 hover:underline inline-flex items-center"
-          >
-            View Company Profile
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
         </div>
       </div>
     </div>
   );
-};
-
-export default JobDetails;
+}
