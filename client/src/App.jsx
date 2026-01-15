@@ -16,7 +16,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
-import MyApplications from "./pages/MyApplications.jsx";
+
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
 import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
@@ -146,12 +146,12 @@ const App = () => {
                     />
                     
                     {/* Redirect old route to new one for backward compatibility */}
-                    <Route 
+                    {/* <Route 
                       path="/myapplications"
                       element={
                         <Navigate to="/my-applications" replace />}
                     />
-                    
+                     */}
                     <Route
                       path="/jobpostings"
                       element={
