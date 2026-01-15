@@ -19,13 +19,15 @@ def get_applications():
     - page: Page number
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_user = get_jwt_identity()
+        # Handle case where identity might be a dict or direct ID
+        user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
         status = request.args.get('status')
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('limit', 10))
         
         # Base query
-        query = Application.query.filter_by(student_id=current_user_id)
+        query = Application.query.filter_by(student_id=user_id)
         
         # Apply status filter if provided
         if status:
@@ -36,15 +38,16 @@ def get_applications():
             Application.updated_at.desc()
         ).paginate(page=page, per_page=per_page, error_out=False)
         
-        # Prepare response
-        response = {
-            'applications': [app.to_dict() for app in paginated_applications.items],
-            'total': paginated_applications.total,
-            'pages': paginated_applications.pages,
-            'current_page': page
-        }
-        
-        return jsonify(response), 200
+        # Prepare standardized response
+        return jsonify({
+            "status": "success",
+            "data": [app.to_dict() for app in paginated_applications.items],
+            "meta": {
+                "total": paginated_applications.total,
+                "pages": paginated_applications.pages,
+                "current_page": page
+            }
+        }), 200
     except Exception as e:
         current_app.logger.error(f"Error fetching applications: {str(e)}")
         return jsonify({"error": "Failed to fetch applications"}), 500

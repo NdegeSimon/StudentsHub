@@ -280,10 +280,23 @@ export const smartAPI = {
     getMyApplications: async () => {
       try {
         const response = await applicationAPI.getMyApplications();
-        return response;
+        // Ensure the response has the expected format
+        if (response && response.data) {
+          // If data is already in the expected format, return as is
+          if (response.data.data || response.data.applications || Array.isArray(response.data)) {
+            return response;
+          }
+          // If data is an array, wrap it in the standard format
+          if (Array.isArray(response.data)) {
+            return { data: { data: response.data } };
+          }
+        }
+        // If we get here, the response format is unexpected
+        console.warn('Unexpected API response format:', response);
+        return { data: { data: response?.data || [] } };
       } catch (error) {
         console.error('Using mock data for applications:', error.message);
-        return { data: mockAPI.applications.getMyApplications() };
+        return { data: { data: mockAPI.applications.getMyApplications() } };
       }
     },
     applyToJob: async (jobId, data) => {

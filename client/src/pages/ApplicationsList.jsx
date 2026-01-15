@@ -114,21 +114,34 @@ const MyApplicationsDashboard = () => {
     try {
       const response = await smartAPI.applications.getMyApplications(filters);
       
-      if (response.data && response.data.applications) {
-        setApplications(response.data.applications);
-        setFilteredApplications(response.data.applications);
-        
-        // Update stats if provided
-        if (response.data.stats) {
-          setStats(response.data.stats);
+      // Handle the new API response format with data and meta
+      if (response.data) {
+        // Check if the response has the new format with data and meta
+        if (response.data.data && Array.isArray(response.data.data)) {
+          setApplications(response.data.data);
+          setFilteredApplications(response.data.data);
+          
+          // Calculate stats from the data array
+          calculateStats(response.data.data);
+        } 
+        // Handle the old format for backward compatibility
+        else if (response.data.applications) {
+          setApplications(response.data.applications);
+          setFilteredApplications(response.data.applications);
+          
+          // Update stats if provided
+          if (response.data.stats) {
+            setStats(response.data.stats);
+          } else {
+            calculateStats(response.data.applications);
+          }
+        } 
+        // Handle direct array response (legacy)
+        else if (Array.isArray(response.data)) {
+          setApplications(response.data);
+          setFilteredApplications(response.data);
+          calculateStats(response.data);
         }
-      } else if (response.data) {
-        // Handle array response
-        setApplications(response.data);
-        setFilteredApplications(response.data);
-        
-        // Calculate stats from data
-        calculateStats(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch applications:', error);

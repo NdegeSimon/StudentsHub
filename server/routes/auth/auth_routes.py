@@ -110,9 +110,9 @@ def register():
 
         db.session.commit()
 
-        # Generate tokens
-        access_token = create_access_token(identity=user)
-        refresh_token = create_refresh_token(identity=user)
+        # Generate tokens with user ID only
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
 
         # Send verification email
         try:
@@ -182,9 +182,9 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
 
-        # Create tokens
-        access_token = create_access_token(identity=user)
-        refresh_token = create_refresh_token(identity=user)
+        # Create tokens with user ID only
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
 
         # Get user data
         user_data = {
@@ -232,7 +232,9 @@ def login():
 def refresh():
     try:
         current_user = get_jwt_identity()
-        new_token = create_access_token(identity=current_user)
+        # Extract user ID from current_user (handling both dict and direct ID cases)
+        user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
+        new_token = create_access_token(identity=user_id)
         
         return jsonify({
             "status": "success",
