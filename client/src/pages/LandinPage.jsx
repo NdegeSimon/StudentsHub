@@ -105,10 +105,7 @@ const LandingPage = () => {
               { name: "ICT Jobs", href: "#jobs" },
               { name: "HR & Admin", href: "#jobs" },
               { name: "Finance", href: "#jobs" },
-              { name: "Procurement", href: "#jobs" },
-              { name: "Engineering", href: "#jobs" },
-              { name: "Marketing", href: "#jobs" },
-              { name: "Sales", href: "#jobs" },
+             
               { name: "Internships", href: "#jobs" },
               { name: "Part-Time", href: "#jobs" },
               { name: "Remote Jobs", href: "#jobs" },
@@ -172,14 +169,14 @@ const LandingPage = () => {
                 <span className="text-sm text-purple-300">Trusted by 50,000+ students</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              <h1 className=" font-Backsteal text-5xl md:text-6xl font-bold mb-6 leading-tight">
                 Land Your Dream
                 <span className="block bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                   Student Job or Internship
                 </span>
               </h1>
               
-              <p className="text-xl text-gray-400 mb-8 leading-relaxed">
+              <p className=" font-TimesNewRoman font-bold text-xl text-gray-400 mb-8 leading-relaxed">
                 Connect with top Kenyan companies hiring students and recent graduates. 
                 Start your career journey with opportunities tailored just for you.
               </p>
