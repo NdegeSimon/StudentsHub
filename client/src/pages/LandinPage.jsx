@@ -87,6 +87,13 @@ const LandingPage = () => {
   "/logos/meta.png",
   "/logos/netflix.png",
   "/logos/safaricom.png",
+  "/logos/equity.png",
+  "/logos/kcb.png",
+  "/logos/andela.png",
+  "/logos/m-kopa.png",
+  "/logos/twiga.png",
+  "/logos/flutterwave.png",
+  "/logos/ncba.png",
 ];
 
 
