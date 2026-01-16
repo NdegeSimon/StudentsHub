@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
+import LandingPage from "./pages/LandinPage.jsx";
 
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
@@ -99,8 +100,8 @@ const App = () => {
                 <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[100vw]">
                   <Routes>
 
-                    {/* Redirect root */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    {/* Landing Page */}
+                    <Route path="/" element={<LandingPage />} />
 
                     {/* Auth */}
                     <Route path="/login" element={<Login />} />
