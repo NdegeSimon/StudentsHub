@@ -81,8 +81,14 @@ const LandingPage = () => {
   ];
 
   const companies = [
-    "Safaricom", "Equity Bank", "KCB", "Andela", "M-KOPA", "Twiga Foods", "Flutterwave", "NCBA"
-  ];
+  "/logos/google.png",
+  "/logos/microsoft.png",
+  "/logos/amazon.png",
+  "/logos/meta.png",
+  "/logos/netflix.png",
+  "/logos/safaricom.png",
+];
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -218,7 +224,7 @@ const LandingPage = () => {
                         🚀
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white">Software Engineer Intern</h3>
+                        <h3 className="font-bold text-white">Software Engineer Intern</h3>
                         <p className="text-sm text-gray-400">Safaricom PLC • Nairobi</p>
                         <div className="flex items-center mt-2 space-x-2">
                           <span className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded text-xs">React</span>
@@ -234,7 +240,7 @@ const LandingPage = () => {
                         💼
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white">Data Analyst</h3>
+                        <h3 className="font-bold text-white">Data Analyst</h3>
                         <p className="text-sm text-gray-400">Equity Bank • Remote</p>
                         <div className="flex items-center mt-2 space-x-2">
                           <span className="px-2 py-1 bg-green-600/20 text-green-300 rounded text-xs">Python</span>
@@ -250,7 +256,7 @@ const LandingPage = () => {
                         🎨
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white">UI/UX Designer</h3>
+                        <h3 className="font-bold text-white">UI/UX Designer</h3>
                         <p className="text-sm text-gray-400">Andela • Hybrid</p>
                         <div className="flex items-center mt-2 space-x-2">
                           <span className="px-2 py-1 bg-pink-600/20 text-pink-300 rounded text-xs">Figma</span>
@@ -292,7 +298,7 @@ const LandingPage = () => {
                 Launch Your Career
               </span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className=" font-TimesNewRoman text-xl text-gray-400 max-w-2xl mx-auto">
               Powerful features designed to help students find opportunities and companies find talent.
             </p>
           </div>
@@ -315,78 +321,214 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-4 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+      <section id="how-it-works" className="relative py-28 px-4 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/4 -left-1/4 w-[800px] h-[800px] bg-gradient-to-br from-purple-900/20 to-transparent rounded-full animate-float"></div>
+          <div className="absolute -bottom-1/4 -right-1/4 w-[1000px] h-[1000px] bg-gradient-to-tr from-blue-900/20 to-transparent rounded-full animate-float animation-delay-4000"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(0, 0, 0, 0) 70%) animate-pulse-slow"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="text-center mb-24 relative z-10" data-aos="fade-up">
+            <div className="inline-flex items-center justify-center mb-6 relative group">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></span>
+              <span className="relative z-10 px-6 py-2.5 text-sm font-semibold text-purple-200 bg-gray-800/80 backdrop-blur-sm rounded-full border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                <span className="relative flex h-2 w-2 mr-2 inline-block">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                </span>
+                Simple & Effective
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
               How It Works
             </h2>
-            <p className="text-xl text-gray-400">Get started in 3 simple steps</p>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Start your journey to career success in just <span className="text-purple-300 font-medium">3 simple steps</span>
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative z-10">
             {[
               {
                 step: "01",
-                icon: <GraduationCap className="h-8 w-8" />,
+                icon: <GraduationCap className="h-7 w-7" />,
                 title: "Create Your Profile",
-                description: "Sign up in seconds and build your professional profile with your skills, education, and experience."
+                description: "Sign up in seconds and build your professional profile with your skills, education, and experience.",
+                gradient: "from-purple-600 via-indigo-600 to-blue-600",
+                accent: "from-fuchsia-500 to-purple-600"
               },
               {
                 step: "02",
-                icon: <Search className="h-8 w-8" />,
+                icon: <Search className="h-7 w-7" />,
                 title: "Browse Opportunities",
-                description: "Explore thousands of student jobs and internships from verified companies across Kenya."
+                description: "Explore thousands of student jobs and internships from verified companies across Kenya.",
+                gradient: "from-blue-600 via-cyan-500 to-sky-500",
+                accent: "from-blue-400 to-cyan-500"
               },
               {
                 step: "03",
-                icon: <Briefcase className="h-8 w-8" />,
+                icon: <Briefcase className="h-7 w-7" />,
                 title: "Apply & Get Hired",
-                description: "Apply with one click, track your applications, and land your dream opportunity."
+                description: "Apply with one click, track your applications, and land your dream opportunity.",
+                gradient: "from-indigo-600 via-purple-600 to-fuchsia-600",
+                accent: "from-violet-500 to-purple-600"
               }
             ].map((step, index) => (
-              <div key={index} className="relative">
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 hover:border-purple-500/50 transition">
-                  <div className="text-6xl font-bold text-purple-600/20 mb-4">{step.step}</div>
-                  <div className="h-16 w-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mb-4 text-white">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-3 text-white">{step.title}</h3>
-                  <p className="text-gray-400">{step.description}</p>
-                </div>
+              <div 
+                key={index} 
+                className="group relative"
+                data-aos="fade-up"
+                data-aos-delay={index * 150}
+              >
+                {/* Connection Arrow */}
                 {index < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <ChevronRight className="h-8 w-8 text-purple-600" />
+                  <div className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 z-10">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <ChevronRight className="relative z-10 h-10 w-10 text-white/90 group-hover:text-white transition-colors duration-300" />
+                    </div>
                   </div>
                 )}
+
+                <div className="h-full bg-gradient-to-br from-gray-800/60 to-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:border-transparent group-hover:shadow-2xl group-hover:shadow-purple-500/10 relative overflow-hidden">
+                  {/* Glow effect */}
+                  <div className={`absolute -inset-0.5 bg-gradient-to-br ${step.gradient} rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500`}></div>
+                  
+                  {/* Step Number */}
+                  <div className="relative z-10">
+                    <div className="text-7xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-gray-700 to-gray-900 group-hover:opacity-20 group-hover:scale-110 transform transition-all duration-500">
+                      {step.step}
+                    </div>
+                    
+                    {/* Animated highlight */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-3xl">
+                      <div className={`absolute -inset-1 bg-gradient-to-br ${step.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Icon Container */}
+                  <div className={`relative z-10 inline-flex items-center justify-center w-16 h-16 mb-6 bg-gradient-to-br ${step.gradient} rounded-2xl shadow-xl group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-purple-500/30 transition-all duration-500`}>
+                    <div className="absolute inset-0.5 bg-gradient-to-br from-white/10 to-transparent rounded-2xl blur-sm"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl"></div>
+                    {React.cloneElement(step.icon, {
+                      className: `${step.icon.props.className} text-white/90 group-hover:text-white transition-colors duration-300 relative z-10`
+                    })}
+                    <div className="absolute -inset-1 bg-gradient-to-br from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 space-y-4">
+                    <h3 className="text-2xl font-bold text-white/90 group-hover:text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-blue-300 transition-all duration-500">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-300/80 group-hover:text-gray-200 leading-relaxed transition-colors duration-500">
+                      {step.description}
+                    </p>
+                    
+                    {/* Animated Button */}
+                    <div className="pt-4">
+                      <div className="inline-flex items-center space-x-2 text-sm font-medium text-blue-300 group-hover:text-blue-200 transition-colors duration-300 cursor-pointer">
+                        <span>Learn more</span>
+                        <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+                      </div>
+                    </div>
+                    
+                    {/* Decorative Elements */}
+                    <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-gradient-to-br from-purple-600/10 to-blue-600/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full blur-md opacity-0 group-hover:opacity-70 transition-opacity duration-500 delay-100"></div>
+                  </div>
+                  
+                  {/* Animated Border */}
+                  <div className="absolute inset-0 rounded-3xl p-0.5 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-purple-500/30 group-hover:to-blue-500/30 transition-all duration-500 -z-10">
+                    <div className="w-full h-full bg-gray-800/80 rounded-3xl"></div>
+                  </div>
+                </div>
+                
+                {/* Hover Glow */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} rounded-3xl opacity-0 group-hover:opacity-5 -z-20 transition-opacity duration-700 blur-xl`}></div>
               </div>
             ))}
+          </div>
+        </div>
+        
+          {/* CTA Section */}
+          <div className="mt-20 relative">
+            {/* Animated background elements */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 bg-radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0) 70%) animate-pulse-slow"></div>
+            </div>
+            
+            <div className="text-center" data-aos="fade-up" data-aos-delay="450">
+              <div className="inline-flex items-center justify-center mb-8 group">
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl opacity-70 blur-lg group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <button className="relative px-10 py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-1 flex items-center mx-auto group/button">
+                    <span className="relative z-10 flex items-center">
+                      Get Started Now
+                      <span className="ml-3 inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 group-hover/button:bg-white/30 transition-colors duration-300">
+                        <ArrowRight className="h-4 w-4 text-white group-hover/button:translate-x-0.5 transition-transform duration-300" />
+                      </span>
+                    </span>
+                    {/* Animated border */}
+                    <span className="absolute inset-0 rounded-2xl p-0.5 bg-gradient-to-r from-purple-500/30 to-blue-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Trusted by text */}
+              <div className="mt-8 flex flex-col items-center">
+                <div className="flex -space-x-2 mb-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-10 w-10 rounded-full border-2 border-gray-800 overflow-hidden bg-gray-700" style={{ zIndex: 5 - i }}>
+                      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-400"></div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-400">
+                  Trusted by <span className="text-purple-300 font-medium">10,000+</span> students and <span className="text-blue-300 font-medium">500+</span> companies
+                </p>
+              </div>
           </div>
         </div>
       </section>
 
-      {/* Companies Section */}
-      <section id="companies" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Trusted by Leading Companies
-            </h2>
-            <p className="text-gray-400">Join thousands of students working with top employers</p>
+```
+     {/* Companies Section */}
+<section id="companies" className="py-20 overflow-hidden">
+  <div className="max-w-7xl mx-auto px-4">
+    <div className="text-center mb-12">
+      <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        Trusted by Leading Companies
+      </h2>
+      <p className="text-gray-400">
+        Join thousands of students working with top employers
+      </p>
+    </div>
+
+    <div className="relative">
+      <div className="flex gap-12 animate-marquee">
+        {[...companies, ...companies].map((logo, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-center min-w-[180px]"
+          >
+            <img
+              src={logo}
+              alt="Company logo"
+              className="h-12 grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition"
+            />
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {companies.map((company, index) => (
-              <div 
-                key={index}
-                className="bg-gray-800 border border-gray-700 rounded-xl p-6 flex items-center justify-center hover:border-purple-500/50 transition cursor-pointer"
-              >
-                <span className="text-lg font-semibold text-gray-300">{company}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Testimonials */}
       <section id="testimonials" className="py-20 px-4 bg-gray-800/30">
