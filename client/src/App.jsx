@@ -27,6 +27,7 @@ import CareerTips from "./pages/resources/CareerTips.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import PremiumPayment from "./pages/PremiumPayment.jsx";
 import MyApplications from "./pages/ApplicationsList.jsx";
+import InternshipsPage from "./pages/internships.jsx";
 // Add this import at the top
 
 
@@ -168,7 +169,10 @@ const App = () => {
                     <Route path="/job" element={<JobCard />} />
                     <Route path="/messages" element={<MessagingSystem />} />
                     <Route path="/premium-payment" element={<PremiumPayment />} />
-                    <Route path="/jobs/:id" element={<JobDetails />} />      
+                    <Route path="/jobs/:id" element={<JobDetails />} />
+                    <Route path="/internships" element={<InternshipsPage />} />
+                                     
+                                         
                     {/* Resources */}
                     <Route 
                       path="/resources" 
