@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Footer from '../components/Footer';
+
 import { 
   ArrowRight, 
+  ArrowUp,
   Briefcase, 
   Users, 
   TrendingUp, 
@@ -14,10 +17,14 @@ import {
   Heart,
   Award,
   ChevronRight,
-  Play
+  Play,
+  Quote,
+  ArrowLeft
 } from 'lucide-react';
 
 const LandingPage = () => {
+  
+const [isAnimating, setIsAnimating] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -81,19 +88,17 @@ const LandingPage = () => {
   ];
 
   const companies = [
-  "/logos/google.png",
-  "/logos/microsoft.png",
-  "/logos/amazon.png",
-  "/logos/meta.png",
-  "/logos/netflix.png",
-  "/logos/safaricom.png",
-  "/logos/equity.png",
-  "/logos/kcb.png",
-  "/logos/andela.png",
-  "/logos/m-kopa.png",
-  "/logos/twiga.png",
-  "/logos/flutterwave.png",
-  "/logos/ncba.png",
+  "/src/assets/google.png",
+  "/src/assets/Microsoft.png",
+  "/src/assets/amazon.png",
+  "/src/assets/meta.png",
+  "/src/assets/safaricom.png",
+  "/src/assets/Equity.png",
+  "/src/assets/Andela.png",
+  "/src/assets/Mkopa.png",
+  "/src/assets/twiga.png",
+  "/src/assets/flutterwave.png",
+  "/src/assets/Ncba.png"
 ];
 
 
@@ -279,21 +284,169 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-gray-800/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
+    
+{/* Stats Section */}
+<section className="py-24 px-4 relative overflow-hidden">
+  {/* Animated Background with Mesh Gradient */}
+  <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-purple-900/30 to-gray-900">
+    <div className="absolute inset-0 opacity-30">
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent"></div>
+      <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
+    </div>
+  </div>
+
+  {/* Animated Grid Pattern */}
+  <div className="absolute inset-0 bg-grid-white opacity-5"></div>
+
+  {/* Floating Particles */}
+  <div className="absolute top-20 left-20 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-50"></div>
+  <div className="absolute top-40 right-32 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50 delay-300"></div>
+  <div className="absolute bottom-32 left-1/3 w-2 h-2 bg-pink-400 rounded-full animate-ping opacity-50 delay-700"></div>
+
+  <div className="max-w-7xl mx-auto relative z-10">
+    {/* Section Header */}
+    <div className="text-center mb-16">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-6">
+        <TrendingUp className="h-4 w-4 text-purple-400" />
+        <span className="text-sm font-medium text-purple-300">Our Impact</span>
+      </div>
+      <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        Trusted by Thousands
+      </h2>
+      <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+        Join the fastest-growing student job platform in Kenya
+      </p>
+    </div>
+
+    {/* Stats Grid */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      {[
+        {
+          
+          number: "10,000+",
+          label: "Active Students",
+          color: "purple",
+          gradient: "from-purple-600 to-pink-600",
+          growth: "+23%"
+        },
+        {
+         
+          number: "500+",
+          label: "Partner Companies",
+          color: "blue",
+          gradient: "from-blue-600 to-cyan-600",
+          growth: "+18%"
+        },
+        {
+          
+          number: "5,000+",
+          label: "Jobs Posted",
+          color: "indigo",
+          gradient: "from-indigo-600 to-purple-600",
+          growth: "+35%"
+        },
+        {
+          
+          number: "95%",
+          label: "Success Rate",
+          color: "green",
+          gradient: "from-green-600 to-emerald-600",
+          growth: "+5%"
+        }
+      ].map((stat, index) => (
+        <div key={index} className="group relative">
+          {/* Glow Effect on Hover */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-20 rounded-3xl blur-xl transition-all duration-500`}></div>
+          
+          {/* Card */}
+          <div className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 group-hover:border-${stat.color}-500/50 rounded-3xl p-8 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:-translate-y-2">
+            
+            {/* Growth Badge */}
+            <div className="absolute -top-3 -right-3 flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-green-500/90 to-emerald-500/90 rounded-full shadow-lg">
+              <ArrowUp className="h-3 w-3 text-white" />
+              <span className="text-xs font-bold text-white">{stat.growth}</span>
+            </div>
+
+            {/* Icon */}
+            <div className={`inline-flex mb-6 p-4 bg-gradient-to-br ${stat.gradient} rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+              <div className="text-white">{stat.icon}</div>
+            </div>
+
+            {/* Number with Counter Animation */}
+            <div className="mb-2">
+              <div className={`text-5xl md:text-6xl font-black bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1`}>
+                {stat.number}
               </div>
-            ))}
+              {/* Animated Progress Bar */}
+              <div className="h-1 bg-gray-700/50 rounded-full overflow-hidden mb-3">
+                <div className={`h-full bg-gradient-to-r ${stat.gradient} rounded-full animate-progress`} style={{ width: '100%' }}></div>
+              </div>
+            </div>
+
+            {/* Label */}
+            <div className="text-base md:text-lg text-gray-400 font-medium group-hover:text-gray-300 transition-colors">
+              {stat.label}
+            </div>
+
+            {/* Decorative Elements */}
+            <div className="absolute bottom-0 right-0 w-24 h-24 opacity-10">
+              <div className={`w-full h-full bg-gradient-to-tl ${stat.gradient} rounded-tl-full rounded-br-3xl`}></div>
+            </div>
+
+            {/* Sparkle Effect */}
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <Zap className="h-5 w-5 text-yellow-400" />
+            </div>
           </div>
         </div>
-      </section>
+      ))}
+    </div>
+
+    {/* Bottom CTA */}
+    <div className="mt-16 text-center">
+      <div className="inline-flex flex-col items-center gap-4 p-8 bg-gradient-to-br from-purple-600/10 to-blue-600/10 border border-purple-500/20 rounded-3xl backdrop-blur-sm hover:border-purple-500/40 transition-all duration-300">
+        <CheckCircle className="h-12 w-12 text-purple-400" />
+        <p className="text-lg text-gray-300 max-w-md">
+          Be part of Kenya's most trusted platform for student opportunities
+        </p>
+        <a 
+          href="#signup" 
+          className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-105 transition-all duration-300 flex items-center gap-2"
+        >
+          Join Today
+          <ArrowUp className="h-5 w-5 rotate-45 group-hover:rotate-90 transition-transform duration-300" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {/* CSS for Animations */}
+  <style jsx>{`
+    @keyframes progress {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    
+    .animate-progress {
+      animation: progress 2s ease-out;
+    }
+    
+    .delay-300 {
+      animation-delay: 300ms;
+    }
+    
+    .delay-700 {
+      animation-delay: 700ms;
+    }
+    
+    .bg-grid-white {
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+  `}</style>
+</section>
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4">
@@ -507,28 +660,28 @@ const LandingPage = () => {
 
 ```
      {/* Companies Section */}
-<section id="companies" className="py-20 overflow-hidden">
+<section id="companies" className="py-24 bg-gray-900/50 backdrop-blur-sm overflow-hidden">
   <div className="max-w-7xl mx-auto px-4">
-    <div className="text-center mb-12">
-      <h2 className="text-3xl md:text-4xl font-bold mb-4">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl font-bold md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
         Trusted by Leading Companies
       </h2>
-      <p className="text-gray-400">
+      <p className="text-gray-300  font-bold text-lg">
         Join thousands of students working with top employers
       </p>
     </div>
 
-    <div className="relative">
-      <div className="flex gap-12 animate-marquee">
+    <div className="relative py-8">
+      <div className="flex gap-16 animate-marquee">
         {[...companies, ...companies].map((logo, index) => (
           <div
             key={index}
-            className="flex items-center justify-center min-w-[180px]"
+            className="flex items-center justify-center min-w-[220px] px-6 py-4 bg-gray-800/50 rounded-xl hover:bg-gray-700/70 transition-all duration-300"
           >
             <img
               src={logo}
               alt="Company logo"
-              className="h-12 grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition"
+              className="h-16 w-auto object-contain grayscale brightness-0 invert opacity-70 hover:opacity-100 hover:grayscale-0 hover:brightness-100 hover:invert-0 transition-all duration-300"
             />
           </div>
         ))}
@@ -537,45 +690,181 @@ const LandingPage = () => {
   </div>
 </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Success Stories
-            </h2>
-            <p className="text-xl text-gray-400">Hear from students who landed their dream jobs</p>
+         {/* Testimonials */}
+<section id="testimonials" className="py-24 px-4 relative overflow-hidden">
+  {/* Animated Background */}
+  <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900">
+    <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+    <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+  </div>
+
+  {/* Floating Elements */}
+  <div className="absolute top-20 left-10 opacity-20">
+    <Star className="h-8 w-8 text-yellow-400 animate-spin-slow" />
+  </div>
+  <div className="absolute bottom-20 right-10 opacity-20">
+    <Award className="h-10 w-10 text-purple-400 animate-bounce-slow" />
+  </div>
+
+  <div className="max-w-7xl mx-auto relative z-10">
+    {/* Header */}
+    <div className="text-center mb-20">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full mb-6">
+        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+        
+      </div>
+      <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        Success Stories
+      </h2>
+      <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
+        Join <span className="text-purple-400 font-semibold">10,000+ students</span> who landed their dream jobs
+      </p>
+    </div>
+
+    {/* Main Testimonial Card */}
+    <div className="max-w-5xl mx-auto mb-12">
+      <div className="relative">
+        {/* Glow Effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 to-blue-600/30 rounded-3xl blur-2xl opacity-50"></div>
+        
+        {/* Card */}
+        <div className={`relative bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-8 md:p-12 lg:p-16 transition-all duration-500 ${
+          isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        }`}>
+          
+          {/* Quote Icon */}
+          <div className="absolute top-8 left-8 opacity-10">
+            <Quote className="h-24 w-24 text-purple-400" />
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 md:p-12">
-              <div className="text-6xl mb-6">💬</div>
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
-                "{testimonials[activeTestimonial].text}"
-              </p>
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">{testimonials[activeTestimonial].image}</div>
-                <div>
-                  <div className="font-semibold text-white">{testimonials[activeTestimonial].name}</div>
-                  <div className="text-gray-400">{testimonials[activeTestimonial].role}</div>
-                </div>
+          {/* Rating Stars */}
+          <div className="flex gap-1 mb-6 justify-center md:justify-start relative z-10">
+            {[...Array(testimonials[activeTestimonial].rating)].map((_, i) => (
+              <Star key={i} className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+            ))}
+          </div>
+
+          {/* Quote Text */}
+          <div className="relative z-10 mb-8">
+            <Quote className="h-12 w-12 text-purple-500/30 mb-4" />
+            <p className="text-2xl md:text-3xl lg:text-4xl text-gray-100 leading-relaxed font-light italic">
+              {testimonials[activeTestimonial].text}
+            </p>
+          </div>
+
+          {/* Author Info */}
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
+            {/* Avatar */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+              <div className="relative text-7xl bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-4 border-2 border-gray-600">
+                {testimonials[activeTestimonial].image}
               </div>
             </div>
 
-            <div className="flex justify-center mt-8 space-x-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveTestimonial(index)}
-                  className={`h-2 rounded-full transition-all ${
-                    index === activeTestimonial ? 'w-8 bg-purple-600' : 'w-2 bg-gray-600'
-                  }`}
-                />
-              ))}
+            {/* Details */}
+            <div className="flex-1 text-center md:text-left">
+              <h4 className="text-2xl font-bold text-white mb-2">{testimonials[activeTestimonial].name}</h4>
+              <p className="text-lg text-purple-400 mb-4">{testimonials[activeTestimonial].role}</p>
+              
+              {/* Stats */}
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                  <TrendingUp className="h-4 w-4 text-purple-400" />
+                  <span className="text-sm font-medium text-purple-300">{testimonials[activeTestimonial].stat}</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                  <CheckCircle className="h-4 w-4 text-blue-400" />
+                  <span className="text-sm font-medium text-blue-300">{testimonials[activeTestimonial].achievement}</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full">
+                  <Award className="h-4 w-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-300">{testimonials[activeTestimonial].company}</span>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Decorative Corner */}
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-purple-600/10 to-transparent rounded-tl-full rounded-br-3xl"></div>
         </div>
-      </section>
+      </div>
+    </div>
+
+    {/* Navigation Controls */}
+    <div className="flex items-center justify-center gap-8 mb-8">
+      {/* Previous Button */}
+      <button
+        onClick={() => {
+          setIsAnimating(true);
+          setTimeout(() => {
+            setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+            setIsAnimating(false);
+          }, 300);
+        }}
+        className="group p-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-full transition-all duration-300 hover:scale-110"
+      >
+        <ArrowLeft className="h-6 w-6 text-gray-400 group-hover:text-purple-400 transition-colors" />
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="flex gap-3">
+        {testimonials.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              setIsAnimating(true);
+              setTimeout(() => {
+                setActiveTestimonial(index);
+                setIsAnimating(false);
+              }, 300);
+            }}
+            className={`transition-all duration-300 rounded-full ${
+              index === activeTestimonial 
+                ? 'w-12 h-3 bg-gradient-to-r from-purple-600 to-blue-600' 
+                : 'w-3 h-3 bg-gray-600 hover:bg-gray-500'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Next Button */}
+      <button
+        onClick={() => {
+          setIsAnimating(true);
+          setTimeout(() => {
+            setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+            setIsAnimating(false);
+          }, 300);
+        }}
+        className="group p-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-full transition-all duration-300 hover:scale-110"
+      >
+        <ArrowRight className="h-6 w-6 text-gray-400 group-hover:text-purple-400 transition-colors" />
+      </button>
+    </div>
+
+    {/* Stats Grid */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-16">
+      {[
+        { value: "10K+", label: "Students Hired" },
+        { value: "500+", label: "Partner Companies" },
+        { value: "95%", label: "Success Rate" },
+        { value: "4.9/5", label: "Average Rating" }
+      ].map((stat, index) => (
+        <div 
+          key={index}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 text-center hover:border-purple-500/50 transition-all duration-300 hover:scale-105"
+        >
+          <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+            {stat.value}
+          </div>
+          <div className="text-sm text-gray-400">{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* CTA Section */}
       <section className="py-20 px-4">
@@ -599,47 +888,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800/50 border-t border-gray-700 py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
-                Studex
-              </h3>
-              <p className="text-gray-400 text-sm">
-                Connecting Kenyan students with career opportunities since 2024.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" className="hover:text-white transition">Features</a></li>
-                <li><a href="#" className="hover:text-white transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition">For Companies</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" className="hover:text-white transition">About</a></li>
-                <li><a href="#" className="hover:text-white transition">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" className="hover:text-white transition">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition">Terms</a></li>
-                <li><a href="#" className="hover:text-white transition">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 pt-8 text-center text-gray-400 text-sm">
-            <p>© 2024 Studex. All rights reserved. Made with ❤️ in Kenya</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
