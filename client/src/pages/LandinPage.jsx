@@ -713,7 +713,7 @@ const [isAnimating, setIsAnimating] = useState(false);
         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
         
       </div>
-      <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+      <h2 className=" font-Times New Roman text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
         Success Stories
       </h2>
       <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
@@ -734,7 +734,7 @@ const [isAnimating, setIsAnimating] = useState(false);
           
           {/* Quote Icon */}
           <div className="absolute top-8 left-8 opacity-10">
-            <Quote className="h-24 w-24 text-purple-400" />
+            <Quote className=" font-TimesNewRoman h-24 w-24 text-purple-400" />
           </div>
 
           {/* Rating Stars */}
@@ -746,21 +746,26 @@ const [isAnimating, setIsAnimating] = useState(false);
 
           {/* Quote Text */}
           <div className="relative z-10 mb-8">
-            <Quote className="h-12 w-12 text-purple-500/30 mb-4" />
-            <p className="text-2xl md:text-3xl lg:text-4xl text-gray-100 leading-relaxed font-light italic">
-              {testimonials[activeTestimonial].text}
-            </p>
-          </div>
+  <Quote className="h-12 w-12 text-purple-500/30 mb-4" />
+  <p className="text-2xl md:text-3xl lg:text-4xl text-gray-100 leading-relaxed font-serif font-medium italic">
+    {testimonials[activeTestimonial].text}
+  </p>
+</div>
 
           {/* Author Info */}
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
             {/* Avatar */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative text-7xl bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-4 border-2 border-gray-600">
-                {testimonials[activeTestimonial].image}
-              </div>
-            </div>
+           {/* Avatar */}
+          <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+          <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-600">
+           <img 
+            src={testimonials[activeTestimonial].image} 
+           alt={testimonials[activeTestimonial].name}
+           className="w-full h-full object-cover"
+           />
+           </div>
+          </div>
 
             {/* Details */}
             <div className="flex-1 text-center md:text-left">
