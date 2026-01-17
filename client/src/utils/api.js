@@ -340,7 +340,27 @@ export const smartAPI = {
     }
   }
 };
-
+const handleApply = async (internshipId) => {
+  try {
+    const response = await fetch('/api/internships/apply', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ internshipId })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      // Show success message
+      alert('Application submitted successfully!');
+    }
+  } catch (error) {
+    console.error('Error applying:', error);
+    alert('Failed to submit application');
+  }
+};
 // Export the axios instance as default
 
 export default api;

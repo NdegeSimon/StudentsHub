@@ -26,6 +26,7 @@ import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import CareerTips from "./pages/resources/CareerTips.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import PremiumPayment from "./pages/PremiumPayment.jsx";
+import MyApplications from "./pages/ApplicationsList.jsx";
 // Add this import at the top
 
 
@@ -147,12 +148,12 @@ const App = () => {
                     />
                     
                     {/* Redirect old route to new one for backward compatibility */}
-                    {/* <Route 
+                     <Route 
                       path="/myapplications"
                       element={
                         <Navigate to="/my-applications" replace />}
                     />
-                     */}
+                     
                     <Route
                       path="/jobpostings"
                       element={
