@@ -361,6 +361,395 @@ const handleApply = async (internshipId) => {
     alert('Failed to submit application');
   }
 };
+// GET: /api/saved-jobs
+const getSavedJobs = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Find all saved jobs for this user
+    const savedJobs = await SavedJob.find({ user: userId })
+      .populate({
+        path: 'job',
+        select: 'title company location salary type deadline description requirements perks tags applications rating featured status postedDate'
+      })
+      .sort({ savedAt: -1 });
+    
+    // Calculate match percentage for each job
+    const jobsWithMatch = await Promise.all(
+      savedJobs.map(async (savedJob) => {
+        const job = savedJob.job.toObject();
+        const matchPercentage = await calculateMatchPercentage(userId, job._id);
+        return {
+          ...job,
+          savedId: savedJob._id,
+          savedAt: savedJob.savedAt,
+          matchPercentage,
+          applied: savedJob.applied
+        };
+      })
+    );
+    
+    res.json({
+      success: true,
+      count: jobsWithMatch.length,
+      data: jobsWithMatch
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+// GET: /api/saved-jobs/upcoming
+const getUpcomingDeadlines = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const today = new Date();
+    const sevenDaysFromNow = new Date(today);
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+    
+    // Find saved jobs with deadlines in next 7 days
+    const savedJobs = await SavedJob.find({ user: userId })
+      .populate({
+        path: 'job',
+        match: { 
+          deadline: { 
+            $gte: today, 
+            $lte: sevenDaysFromNow 
+          },
+          status: 'open'
+        },
+        select: 'title company deadline location type'
+      })
+      .sort({ 'job.deadline': 1 });
+    
+    // Filter out null jobs (from populate match)
+    const upcomingJobs = savedJobs
+      .filter(savedJob => savedJob.job !== null)
+      .map(savedJob => {
+        const job = savedJob.job.toObject();
+        const deadline = new Date(job.deadline);
+        const today = new Date();
+        const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+        
+        return {
+          id: savedJob._id,
+          jobId: job._id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          type: job.type,
+          deadline: job.deadline,
+          daysLeft: daysLeft,
+          applied: savedJob.applied
+        };
+      });
+    
+    res.json({
+      success: true,
+      count: upcomingJobs.length,
+      data: upcomingJobs
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+// GET: /api/jobs/recommended
+const getRecommendedJobs = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const userSkills = user.profile.skills || [];
+    const userLocation = user.profile.location || '';
+    const userPreferences = user.preferences || {};
+    
+    // Find jobs that match user's skills and preferences
+    const query = {
+      status: 'open',
+      deadline: { $gt: new Date() }
+    };
+    
+    // If user has skills, prioritize jobs with matching skills
+    if (userSkills.length > 0) {
+      query.$or = [
+        { tags: { $in: userSkills } },
+        { field: { $in: userPreferences.jobTypes || [] } }
+      ];
+    }
+    
+    // If user has location preference
+    if (userLocation) {
+      query.location = new RegExp(userLocation, 'i');
+    }
+    
+    const jobs = await Job.find(query)
+      .select('title company location salary type deadline description tags applications postedDate featured')
+      .sort({ featured: -1, postedDate: -1 })
+      .limit(10);
+    
+    // Calculate match percentage for each job
+    const jobsWithMatch = await Promise.all(
+      jobs.map(async (job) => {
+        const jobObj = job.toObject();
+        const matchPercentage = await calculateMatchPercentage(userId, job._id);
+        return {
+          ...jobObj,
+          matchPercentage
+        };
+      })
+    );
+    
+    // Sort by match percentage
+    jobsWithMatch.sort((a, b) => b.matchPercentage - a.matchPercentage);
+    
+    res.json({
+      success: true,
+      count: jobsWithMatch.length,
+      data: jobsWithMatch
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+// GET: /api/jobs/:jobId/match-percentage
+const getMatchPercentage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { jobId } = req.params;
+    
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    const matchPercentage = await calculateMatchPercentage(userId, jobId);
+    
+    res.json({
+      success: true,
+      data: {
+        jobId: job._id,
+        title: job.title,
+        company: job.company,
+        matchPercentage
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to calculate match percentage
+const calculateMatchPercentage = async (userId, jobId) => {
+  try {
+    const user = await User.findById(userId);
+    const job = await Job.findById(jobId);
+    
+    if (!user || !job) return 0;
+    
+    let score = 0;
+    const maxScore = 100;
+    
+    // 1. Skills match (40 points)
+    const userSkills = user.profile.skills || [];
+    const jobTags = job.tags || [];
+    
+    if (userSkills.length > 0 && jobTags.length > 0) {
+      const matchedSkills = userSkills.filter(skill => 
+        jobTags.some(tag => tag.toLowerCase().includes(skill.toLowerCase()))
+      );
+      const skillMatchPercentage = (matchedSkills.length / userSkills.length) * 100;
+      score += (skillMatchPercentage * 0.4);
+    }
+    
+    // 2. Location match (20 points)
+    const userLocation = user.profile.location || '';
+    const jobLocation = job.location || '';
+    
+    if (userLocation && jobLocation) {
+      if (jobLocation.toLowerCase().includes('remote')) {
+        score += 20;
+      } else if (userLocation.toLowerCase().includes(jobLocation.toLowerCase()) || 
+                 jobLocation.toLowerCase().includes(userLocation.toLowerCase())) {
+        score += 20;
+      }
+    }
+    
+    // 3. Job type match (20 points)
+    const userPreferences = user.preferences || {};
+    const userJobTypes = userPreferences.jobTypes || [];
+    
+    if (userJobTypes.length > 0) {
+      if (userJobTypes.some(type => job.type.toLowerCase().includes(type.toLowerCase()))) {
+        score += 20;
+      }
+    }
+    
+    // 4. Field/Industry match (20 points)
+    const userField = user.profile.education?.[0]?.field || '';
+    const jobField = job.field || '';
+    
+    if (userField && jobField) {
+      if (userField.toLowerCase().includes(jobField.toLowerCase()) ||
+          jobField.toLowerCase().includes(userField.toLowerCase())) {
+        score += 20;
+      }
+    }
+    
+    return Math.min(Math.round(score), 100);
+  } catch (error) {
+    return 0;
+  }
+};
+// POST: /api/jobs/:jobId/save
+const saveJob = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { jobId } = req.params;
+    
+    // Check if job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    // Check if already saved
+    const existingSavedJob = await SavedJob.findOne({
+      user: userId,
+      job: jobId
+    });
+    
+    if (existingSavedJob) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job already saved'
+      });
+    }
+    
+    // Save the job
+    const savedJob = await SavedJob.create({
+      user: userId,
+      job: jobId,
+      savedAt: new Date(),
+      applied: false
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: 'Job saved successfully',
+      data: {
+        savedId: savedJob._id,
+        jobId: job._id,
+        title: job.title,
+        company: job.company,
+        savedAt: savedJob.savedAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+// POST: /api/jobs/:jobId/unsave
+const unsaveJob = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { jobId } = req.params;
+    
+    // Find and delete the saved job
+    const deletedSavedJob = await SavedJob.findOneAndDelete({
+      user: userId,
+      job: jobId
+    });
+    
+    if (!deletedSavedJob) {
+      return res.status(404).json({
+        success: false,
+        message: 'Saved job not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Job removed from saved',
+      data: {
+        jobId,
+        removedAt: new Date()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+// DELETE: /api/saved-jobs/:savedJobId
+const deleteSavedJob = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { savedJobId } = req.params;
+    
+    // Find and delete the saved job
+    const deletedSavedJob = await SavedJob.findOneAndDelete({
+      _id: savedJobId,
+      user: userId
+    });
+    
+    if (!deletedSavedJob) {
+      return res.status(404).json({
+        success: false,
+        message: 'Saved job not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Job removed from saved',
+      data: {
+        savedJobId,
+        removedAt: new Date()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
 // Export the axios instance as default
 
 export default api;

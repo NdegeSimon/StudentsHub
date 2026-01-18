@@ -895,9 +895,12 @@ const MyApplications = () => {
                 <p className="text-purple-200 text-sm mb-4">
                   Access curated resources to ace your upcoming interviews
                 </p>
-                <button className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm">
-                  Start Preparing
-                </button>
+                <Link
+                to="/interview-prep"
+                className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm inline-block"
+                 >
+                Start Preparing
+                </Link>
               </div>
             </div>
           </div>
