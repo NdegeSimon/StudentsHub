@@ -18,9 +18,7 @@ export default function Navbar() {
         "ICT Jobs",
         "HR & Admin",
         "Procurement",
-        "Engineering",
-        "Internship",
-        "Government",
+       ,
       ].map((item) => (
         <button
           key={item}

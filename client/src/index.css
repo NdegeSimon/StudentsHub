@@ -1,6 +1,17 @@
+@import url('https://fonts.cdnfonts.com/css/backsteal');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  .font-Backsteal {
+    font-family: 'Backsteal', sans-serif;
+  }
+  .font-TimesNewRoman {
+    font-family: 'Times New Roman', Times, serif;
+  }
+}
 
 /* Base styles */
 :root {

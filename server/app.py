@@ -128,6 +128,11 @@ def create_app():
         # Import and register notification routes
         from routes.notification_routes import notification_bp
         app.register_blueprint(notification_bp, url_prefix='/api/notifications')
+        
+        # Import and register profile routes
+        from routes.profile_routes import profile_bp
+        app.register_blueprint(profile_bp, url_prefix='')
+        print("✅ Profile routes blueprint registered")
         print("✅ Notification routes blueprint registered")
         
         # Import and register messaging routes

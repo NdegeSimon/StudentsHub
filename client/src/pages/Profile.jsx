@@ -226,6 +226,28 @@ export default function ProfileCard({ isDashboard = false }) {
     gpa: ''
   });
 
+  // Format date for input fields (YYYY-MM-DD)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return 'Present';
+    try {
+      const options = { year: 'numeric', month: 'short' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
+    } catch (e) {
+      return dateString; // Return as is if date parsing fails
+    }
+  };
+
   // Network status monitoring
   useEffect(() => {
     const handleOnline = () => {
@@ -288,31 +310,6 @@ export default function ProfileCard({ isDashboard = false }) {
     } catch (error) {
       console.error('Error syncing changes:', error);
       toast.error('Failed to sync some changes. Will retry later.');
-    }
-  };
-
-  // Helper function to format date for input fields
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    } catch {
-      return '';
-    }
-  };
-
-  // Helper function for date display
-  const formatDateForDisplay = (dateString) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long'
-      });
-    } catch {
-      return dateString;
     }
   };
 
@@ -713,6 +710,33 @@ export default function ProfileCard({ isDashboard = false }) {
       ...prev,
       education: prev.education.filter(edu => edu.id !== id)
     }));
+  };
+
+  // Handle adding/updating experience
+  const handleAddExperience = (newExperience) => {
+    setFormData(prev => ({
+      ...prev,
+      experience: [...prev.experience, newExperience]
+    }));
+  };
+
+  const handleEditExperience = (updatedExperience) => {
+    setFormData(prev => ({
+      ...prev,
+      experience: prev.experience.map(exp => 
+        exp.id === updatedExperience.id ? updatedExperience : exp
+      )
+    }));
+  };
+
+  const handleDeleteExperience = (id) => {
+    if (window.confirm('Are you sure you want to delete this experience?')) {
+      setFormData(prev => ({
+        ...prev,
+        experience: prev.experience.filter(exp => exp.id !== id)
+      }));
+      toast.success('Experience deleted');
+    }
   };
 
   // Form submission
@@ -1540,9 +1564,11 @@ export default function ProfileCard({ isDashboard = false }) {
 
                     {activeTab === 'experience' && (
                       <ExperienceTab 
-                        formData={formData} 
+                        formData={formData}
                         formatDateForDisplay={formatDateForDisplay}
-                        onAddExperience={() => setEditing(true)}
+                        onAddExperience={handleAddExperience}
+                        onEditExperience={handleEditExperience}
+                        onDeleteExperience={handleDeleteExperience}
                       />
                     )}
 
@@ -1695,21 +1721,366 @@ export default function ProfileCard({ isDashboard = false }) {
   );
 }
 
-// Tab Components
-const ExperienceTab = ({ formData, formatDateForDisplay, onAddExperience }) => (
-  <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <h5 className="text-lg font-bold text-white">Professional Experience</h5>
-      <button 
-        onClick={onAddExperience}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center"
-      >
-        <Plus className="h-4 w-4 mr-2" /> Add Experience
-      </button>
-    </div>
+// Experience Modal Component
+const ExperienceModal = ({ 
+  isOpen, 
+  onClose, 
+  experience = null,
+  onSave,
+  formatDateForInput,
+  formatDateForDisplay
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    company: '',
+    location: '',
+    start_date: '',
+    end_date: '',
+    current: false,
+    description: '',
+    achievements: ['']
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (experience) {
+      setFormData({
+        title: experience.title || '',
+        company: experience.company || '',
+        location: experience.location || '',
+        start_date: formatDateForInput(experience.start_date) || '',
+        end_date: experience.current ? '' : (formatDateForInput(experience.end_date) || ''),
+        current: !!experience.current,
+        description: experience.description || '',
+        achievements: experience.achievements?.length ? 
+          experience.achievements : ['']
+      });
+    } else {
+      setFormData({
+        title: '',
+        company: '',
+        location: '',
+        start_date: '',
+        end_date: '',
+        current: false,
+        description: '',
+        achievements: ['']
+      });
+    }
+    setErrors({});
+  }, [experience, isOpen]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
     
-    <div className="space-y-4">
-      {formData.experience.map((exp, index) => (
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  };
+
+  const handleAchievementChange = (index, value) => {
+    const newAchievements = [...formData.achievements];
+    newAchievements[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      achievements: newAchievements
+    }));
+  };
+
+  const addAchievement = () => {
+    setFormData(prev => ({
+      ...prev,
+      achievements: [...prev.achievements, '']
+    }));
+  };
+
+  const removeAchievement = (index) => {
+    const newAchievements = formData.achievements.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      achievements: newAchievements.length ? newAchievements : ['']
+    }));
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    if (!formData.company.trim()) newErrors.company = 'Company is required';
+    if (!formData.start_date) newErrors.start_date = 'Start date is required';
+    if (!formData.current && !formData.end_date) {
+      newErrors.end_date = 'End date is required if not current';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) {
+      onSave({
+        ...formData,
+        id: experience?.id || Date.now().toString(),
+        achievements: formData.achievements.filter(a => a.trim() !== '')
+      });
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-white">
+              {experience ? 'Edit Experience' : 'Add Experience'}
+            </h3>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Job Title *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border ${
+                    errors.title ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="e.g. Senior Developer"
+                />
+                {errors.title && (
+                  <p className="mt-1 text-sm text-red-400">{errors.title}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Company *
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border ${
+                    errors.company ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="Company name"
+                />
+                {errors.company && (
+                  <p className="mt-1 text-sm text-red-400">{errors.company}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g. New York, NY"
+                />
+              </div>
+              
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Start Date *
+                </label>
+                <input
+                  type="date"
+                  name="start_date"
+                  value={formData.start_date}
+                  onChange={handleChange}
+                  className={`px-3 py-2 bg-gray-700 border ${
+                    errors.start_date ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                />
+                {errors.start_date && (
+                  <p className="mt-1 text-sm text-red-400">{errors.start_date}</p>
+                )}
+              </div>
+              
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-300">
+                    End Date {!formData.current && '*'}
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      name="current"
+                      checked={formData.current}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 border-gray-600"
+                    />
+                    <span className="text-sm text-gray-300">I currently work here</span>
+                  </label>
+                </div>
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  disabled={formData.current}
+                  className={`px-3 py-2 bg-gray-700 border ${
+                    !formData.current && errors.end_date ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    formData.current ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                />
+                {!formData.current && errors.end_date && (
+                  <p className="mt-1 text-sm text-red-400">{errors.end_date}</p>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Describe your role and responsibilities"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-300">
+                  Key Achievements
+                </label>
+                <button
+                  type="button"
+                  onClick={addAchievement}
+                  className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Achievement
+                </button>
+              </div>
+              
+              <div className="space-y-2">
+                {formData.achievements.map((achievement, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <div className="flex-1 flex items-center">
+                      <span className="text-blue-400 mr-2">•</span>
+                      <input
+                        type="text"
+                        value={achievement}
+                        onChange={(e) => handleAchievementChange(index, e.target.value)}
+                        className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Add an achievement"
+                      />
+                    </div>
+                    {formData.achievements.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeAchievement(index)}
+                        className="p-1 text-gray-400 hover:text-red-400"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {experience ? 'Update' : 'Save'} Experience
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Experience Tab Component
+const ExperienceTab = ({ 
+  formData, 
+  formatDateForDisplay, 
+  formatDateForInput,
+  onAddExperience, 
+  onEditExperience, 
+  onDeleteExperience 
+}) => {
+  const [showModal, setShowModal] = useState(false);
+  const [editingExperience, setEditingExperience] = useState(null);
+
+  const handleAddNew = () => {
+    setEditingExperience(null);
+    setShowModal(true);
+  };
+
+  const handleEdit = (exp) => {
+    setEditingExperience(exp);
+    setShowModal(true);
+  };
+
+  const handleSave = (experience) => {
+    if (editingExperience) {
+      onEditExperience(experience);
+    } else {
+      onAddExperience(experience);
+    }
+    setShowModal(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h5 className="text-lg font-bold text-white">Professional Experience</h5>
+        <button 
+          onClick={handleAddNew}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Add Experience
+        </button>
+      </div>
+      
+      <div className="space-y-4">
+        {formData.experience.map((exp, index) => (
         <div key={exp.id || index} className="bg-gray-900/30 rounded-xl p-6 border border-gray-800 hover:border-blue-500/30 transition-all group">
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -1722,11 +2093,19 @@ const ExperienceTab = ({ formData, formatDateForDisplay, onAddExperience }) => (
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <button className="p-2 hover:bg-gray-800 rounded-lg">
-                <Edit className="h-4 w-4 text-gray-400" />
+              <button 
+                onClick={() => handleEdit(exp)}
+                className="p-2 hover:bg-gray-800 rounded-lg"
+                title="Edit"
+              >
+                <Edit className="h-4 w-4 text-gray-400 hover:text-white" />
               </button>
-              <button className="p-2 hover:bg-red-500/10 rounded-lg">
-                <Trash2 className="h-4 w-4 text-red-400" />
+              <button 
+                onClick={() => onDeleteExperience(exp.id)}
+                className="p-2 hover:bg-red-500/10 rounded-lg"
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4 text-red-400 hover:text-red-300" />
               </button>
             </div>
           </div>
@@ -1765,19 +2144,322 @@ const ExperienceTab = ({ formData, formatDateForDisplay, onAddExperience }) => (
           <h6 className="text-lg font-semibold text-gray-400 mb-2">No Experience Added</h6>
           <p className="text-gray-500 mb-4">Add your work experience to showcase your career journey</p>
           <button 
-            onClick={onAddExperience}
+            onClick={handleAddNew}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center mx-auto"
           >
             <Plus className="h-5 w-5 mr-2" /> Add Your First Experience
           </button>
         </div>
       )}
+      
+      <ExperienceModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        experience={editingExperience}
+        onSave={handleSave}
+        formatDateForInput={formatDateForInput}
+        formatDateForDisplay={formatDateForDisplay}
+      />
     </div>
   </div>
-);
+  );
+};
 
-const EducationTab = ({ formData, formatDateForDisplay, onAddEducation }) => (
-  <div className="space-y-6">
+// Education Modal Component
+const EducationModal = ({ 
+  isOpen, 
+  onClose, 
+  education = null,
+  onSave,
+  formatDateForInput,
+  formatDateForDisplay
+}) => {
+  const [formData, setFormData] = useState({
+    school: '',
+    degree: '',
+    field_of_study: '',
+    start_date: '',
+    end_date: '',
+    current: false,
+    description: '',
+    gpa: ''
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (education) {
+      setFormData({
+        school: education.school || '',
+        degree: education.degree || '',
+        field_of_study: education.field_of_study || '',
+        start_date: formatDateForInput(education.start_date) || '',
+        end_date: education.current ? '' : (formatDateForInput(education.end_date) || ''),
+        current: !!education.current,
+        description: education.description || '',
+        gpa: education.gpa || ''
+      });
+    } else {
+      setFormData({
+        school: '',
+        degree: '',
+        field_of_study: '',
+        start_date: '',
+        end_date: '',
+        current: false,
+        description: '',
+        gpa: ''
+      });
+    }
+    setErrors({});
+  }, [education, isOpen]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.school.trim()) newErrors.school = 'School name is required';
+    if (!formData.degree) newErrors.degree = 'Degree level is required';
+    if (!formData.field_of_study.trim()) newErrors.field_of_study = 'Field of study is required';
+    if (!formData.start_date) newErrors.start_date = 'Start date is required';
+    if (!formData.current && !formData.end_date) {
+      newErrors.end_date = 'End date is required if not current';
+    }
+    if (formData.gpa && (isNaN(formData.gpa) || formData.gpa < 0 || formData.gpa > 4)) {
+      newErrors.gpa = 'GPA must be between 0 and 4';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) {
+      onSave({
+        ...formData,
+        id: education?.id || Date.now().toString(),
+        gpa: formData.gpa ? parseFloat(formData.gpa) : null
+      });
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-white">
+              {education ? 'Edit Education' : 'Add Education'}
+            </h3>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  School/Institution *
+                </label>
+                <input
+                  type="text"
+                  name="school"
+                  value={formData.school}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border ${
+                    errors.school ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="e.g. University of Technology"
+                />
+                {errors.school && (
+                  <p className="mt-1 text-sm text-red-400">{errors.school}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Degree Level *
+                </label>
+                <select
+                  name="degree"
+                  value={formData.degree}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border ${
+                    errors.degree ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                >
+                  <option value="">Select degree</option>
+                  <option value="High School">High School</option>
+                  <option value="Associate's">Associate's Degree</option>
+                  <option value="Bachelor's">Bachelor's Degree</option>
+                  <option value="Master's">Master's Degree</option>
+                  <option value="PhD">Doctorate (PhD)</option>
+                  <option value="Professional">Professional Degree</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors.degree && (
+                  <p className="mt-1 text-sm text-red-400">{errors.degree}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Field of Study *
+                </label>
+                <input
+                  type="text"
+                  name="field_of_study"
+                  value={formData.field_of_study}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border ${
+                    errors.field_of_study ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="e.g. Computer Science"
+                />
+                {errors.field_of_study && (
+                  <p className="mt-1 text-sm text-red-400">{errors.field_of_study}</p>
+                )}
+              </div>
+              
+              <div className="flex items-end space-x-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    GPA (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    name="gpa"
+                    min="0"
+                    max="4"
+                    step="0.01"
+                    value={formData.gpa}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 bg-gray-700 border ${
+                      errors.gpa ? 'border-red-500' : 'border-gray-600'
+                    } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    placeholder="e.g. 3.5"
+                  />
+                  {errors.gpa && (
+                    <p className="mt-1 text-sm text-red-400">{errors.gpa}</p>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 mb-1">
+                  Scale: 4.0
+                </div>
+              </div>
+              
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Start Date *
+                </label>
+                <input
+                  type="date"
+                  name="start_date"
+                  value={formData.start_date}
+                  onChange={handleChange}
+                  className={`px-3 py-2 bg-gray-700 border ${
+                    errors.start_date ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                />
+                {errors.start_date && (
+                  <p className="mt-1 text-sm text-red-400">{errors.start_date}</p>
+                )}
+              </div>
+              
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-300">
+                    End Date {!formData.current && '*'}
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      name="current"
+                      checked={formData.current}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 border-gray-600"
+                    />
+                    <span className="text-sm text-gray-300">Currently attending</span>
+                  </label>
+                </div>
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  disabled={formData.current}
+                  className={`px-3 py-2 bg-gray-700 border ${
+                    !formData.current && errors.end_date ? 'border-red-500' : 'border-gray-600'
+                  } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    formData.current ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                />
+                {!formData.current && errors.end_date && (
+                  <p className="mt-1 text-sm text-red-400">{errors.end_date}</p>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Description (Optional)
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Additional information about your education"
+              />
+            </div>
+            
+            <div className="pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {education ? 'Update' : 'Save'} Education
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Education Tab Component
+const EducationTab = ({ formData, formatDateForDisplay, onAddEducation, onEditEducation, onDeleteEducation }) => {
+  return (
+    <div className="space-y-6">
     <div className="flex justify-between items-center">
       <h5 className="text-lg font-bold text-white">Education</h5>
       <button 
@@ -1831,5 +2513,6 @@ const EducationTab = ({ formData, formatDateForDisplay, onAddEducation }) => (
         </div>
       )}
     </div>
-  </div>
-);
+    </div>
+  );
+};

@@ -107,6 +107,10 @@ const NextLevelDashboard = () => {
     'Full Stack Developer',
     'React Developer'
   ];
+  
+  const navigateToJobDetails = (jobId) => {
+    navigate(`/jobs/${jobId}`);
+  };
 
   // Timer effect
   useEffect(() => {
@@ -449,10 +453,6 @@ const NextLevelDashboard = () => {
     e?.stopPropagation();
     
     // Navigate to job details page where the user can apply
-    navigate(`/job/${jobId}`);
-  };
-
-  const navigateToJobDetails = (jobId) => {
     navigate(`/job/${jobId}`);
   };
 
@@ -1015,8 +1015,11 @@ const NextLevelDashboard = () => {
                   <p className="text-xs text-slate-300">Get 3x more visibility and exclusive features</p>
                 </div>
               </div>
-              <button className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-white font-medium transition-all shadow-lg hover:shadow-amber-500/30">
-                Upgrade Now
+              <button 
+               onClick={() => navigate('/premium-payment')} 
+               className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-white font-medium transition-all shadow-lg hover:shadow-amber-500/30"
+               >
+               Upgrade Now
               </button>
             </div>
           </div>

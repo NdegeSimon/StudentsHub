@@ -11,7 +11,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { applicationAPI, smartAPI } from '../utils/api';
 import { toast } from 'react-toastify';
 
-const MyApplicationsDashboard = () => {
+const MyApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
@@ -114,22 +114,48 @@ const MyApplicationsDashboard = () => {
     try {
       const response = await smartAPI.applications.getMyApplications(filters);
       
-      if (response.data && response.data.applications) {
-        setApplications(response.data.applications);
-        setFilteredApplications(response.data.applications);
-        
-        // Update stats if provided
-        if (response.data.stats) {
-          setStats(response.data.stats);
-        }
-      } else if (response.data) {
-        // Handle array response
-        setApplications(response.data);
-        setFilteredApplications(response.data);
-        
-        // Calculate stats from data
-        calculateStats(response.data);
+      // Ensure we have a valid response
+      if (!response || !response.data) {
+        console.warn('Invalid response format:', response);
+        setApplications([]);
+        setFilteredApplications([]);
+        setStats({
+          total: 0,
+          pending: 0,
+          reviewing: 0,
+          interviewing: 0,
+          offered: 0,
+          rejected: 0,
+          inProgress: 0,
+          successRate: 0
+        });
+        return;
       }
+
+      let apps = [];
+      
+      // Handle different response formats
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        apps = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        // New format with data and meta
+        apps = response.data.data;
+      } else if (response.data.applications && Array.isArray(response.data.applications)) {
+        // Old format with applications array
+        apps = response.data.applications;
+      }
+      
+      // Ensure we have an array
+      if (!Array.isArray(apps)) {
+        console.warn('Invalid applications data format:', apps);
+        apps = [];
+      }
+      
+      // Update state with the applications
+      setApplications(apps);
+      setFilteredApplications([...apps]); // Create a new array reference
+      calculateStats(apps);
     } catch (error) {
       console.error('Failed to fetch applications:', error);
       toast.error('Failed to load applications');
@@ -139,15 +165,18 @@ const MyApplicationsDashboard = () => {
   };
 
   const calculateStats = (apps) => {
+    // Ensure apps is an array before calling filter
+    const appsArray = Array.isArray(apps) ? apps : [];
+    
     const newStats = {
-      total: apps.length,
-      pending: apps.filter(app => app.status === 'pending' || app.status === 'new').length,
-      reviewing: apps.filter(app => app.status === 'reviewing' || app.status === 'under_review').length,
-      interviewing: apps.filter(app => app.status === 'interviewing' || app.status === 'interview_scheduled').length,
-      offered: apps.filter(app => app.status === 'offered' || app.status === 'hired').length,
-      rejected: apps.filter(app => app.status === 'rejected').length,
-      inProgress: apps.filter(app => ['pending', 'reviewing', 'interviewing', 'new', 'under_review', 'interview_scheduled'].includes(app.status)).length,
-      successRate: apps.length > 0 ? Math.round((apps.filter(app => app.status === 'offered' || app.status === 'hired').length / apps.length) * 100) : 0
+      total: appsArray.length,
+      pending: appsArray.filter(app => app && (app.status === 'pending' || app.status === 'new')).length,
+      reviewing: appsArray.filter(app => app && (app.status === 'reviewing' || app.status === 'under_review')).length,
+      interviewing: appsArray.filter(app => app && (app.status === 'interviewing' || app.status === 'interview_scheduled')).length,
+      offered: appsArray.filter(app => app && (app.status === 'offered' || app.status === 'hired')).length,
+      rejected: appsArray.filter(app => app && app.status === 'rejected').length,
+      inProgress: appsArray.filter(app => app && ['pending', 'reviewing', 'interviewing', 'new', 'under_review', 'interview_scheduled'].includes(app.status)).length,
+      successRate: appsArray.length > 0 ? Math.round((appsArray.filter(app => app && (app.status === 'offered' || app.status === 'hired')).length / appsArray.length) * 100) : 0
     };
     setStats(newStats);
   };
@@ -209,17 +238,31 @@ const MyApplicationsDashboard = () => {
     }
   };
 
-  // Update exportToCSV to use API
+  // Export applications to CSV
   const exportToCSV = async () => {
     try {
-      const response = await applicationAPI.exportApplications(filters);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Use the existing applications data to generate CSV
+      const csvContent = [
+        ['Job Title', 'Company', 'Status', 'Applied Date', 'Last Updated'], // CSV headers
+        ...filteredApplications.map(app => [
+          `"${(app.job_title || app.title || 'N/A').replace(/"/g, '""')}"`,
+          `"${(app.company_name || app.company?.company_name || app.company || 'N/A').replace(/"/g, '""')}"`,
+          `"${app.status || 'N/A'}"`,
+          `"${app.applied_at || app.applied_date || app.created_at || 'N/A'}"`,
+          `"${app.updated_at || app.applied_at || 'N/A'}"`
+        ])
+      ].map(row => row.join(',')).join('\n');
+      
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `applications-${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
+      
       toast.success('Applications exported successfully');
     } catch (error) {
       console.error('Failed to export:', error);
@@ -425,7 +468,7 @@ const MyApplicationsDashboard = () => {
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30">
-                  <Briefcase className="h-7 w-7 text-white" />
+                  
                 </div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-100 via-blue-200 to-indigo-200 bg-clip-text text-transparent">
                   My Applications
@@ -444,16 +487,7 @@ const MyApplicationsDashboard = () => {
                 <Download className="h-5 w-5" />
                 Export
               </button>
-              <button className="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-xl flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Add Application
-              </button>
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-3 bg-gray-800 text-gray-300 rounded-xl hover:bg-gray-700 transition-all duration-200 border border-gray-700"
-              >
-                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
+             
             </div>
           </div>
 
@@ -707,12 +741,6 @@ const MyApplicationsDashboard = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-gray-400">
-                Showing <span className="font-semibold text-gray-200">{filteredApplications.length}</span> of {applications.length} applications
-              </p>
-            </div>
-
             <div className={viewMode === 'grid' 
               ? "grid grid-cols-1 lg:grid-cols-2 gap-6" 
               : "space-y-4"
@@ -867,9 +895,12 @@ const MyApplicationsDashboard = () => {
                 <p className="text-purple-200 text-sm mb-4">
                   Access curated resources to ace your upcoming interviews
                 </p>
-                <button className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm">
-                  Start Preparing
-                </button>
+                <Link
+                to="/interview-prep"
+                className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all text-sm inline-block"
+                 >
+                Start Preparing
+                </Link>
               </div>
             </div>
           </div>
@@ -1051,4 +1082,4 @@ const MyApplicationsDashboard = () => {
   );
 };
 
-export default MyApplicationsDashboard;
+export default MyApplications;

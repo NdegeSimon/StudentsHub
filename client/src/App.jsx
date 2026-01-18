@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
+
 
 // Context Providers
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -16,7 +18,8 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
-import MyApplications from "./pages/MyApplications.jsx";
+import LandingPage from "./pages/LandinPage.jsx";
+
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
 import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
@@ -25,6 +28,14 @@ import ResumeBuilder from "./pages/resources/ResumeBuilder.jsx";
 import CareerTips from "./pages/resources/CareerTips.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import PremiumPayment from "./pages/PremiumPayment.jsx";
+import MyApplications from "./pages/ApplicationsList.jsx";
+import InternshipsPage from "./pages/internships.jsx";
+// Add this import at the top
+
+
+// Add this route inside your Routes component
+
 
 
 // New Components
@@ -95,8 +106,8 @@ const App = () => {
                 <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[100vw]">
                   <Routes>
 
-                    {/* Redirect root */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    {/* Landing Page */}
+                    <Route path="/" element={<LandingPage />} />
 
                     {/* Auth */}
                     <Route path="/login" element={<Login />} />
@@ -142,12 +153,12 @@ const App = () => {
                     />
                     
                     {/* Redirect old route to new one for backward compatibility */}
-                    <Route 
+                     <Route 
                       path="/myapplications"
                       element={
                         <Navigate to="/my-applications" replace />}
                     />
-                    
+                     
                     <Route
                       path="/jobpostings"
                       element={
@@ -161,7 +172,11 @@ const App = () => {
                     <Route path="/jobs" element={<JobsPage />} />
                     
                     <Route path="/messages" element={<MessagingSystem />} />
-                    <Route path="/jobs/:jobId" element={<JobDetails />} /> 
+                    <Route path="/premium-payment" element={<PremiumPayment />} />
+                    <Route path="/jobs/:id" element={<JobDetails />} />
+                    <Route path="/internships" element={<InternshipsPage />} />
+                                     
+                                         
                     {/* Resources */}
                     <Route 
                       path="/resources" 
