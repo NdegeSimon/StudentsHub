@@ -19,6 +19,8 @@ import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
 import LandingPage from "./pages/LandinPage.jsx";
+import SavedJobsPage from './pages/SavedJobsPage';
+
 
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
@@ -175,7 +177,7 @@ const App = () => {
                     <Route path="/premium-payment" element={<PremiumPayment />} />
                     <Route path="/jobs/:id" element={<JobDetails />} />
                     <Route path="/internships" element={<InternshipsPage />} />
-                                     
+                    <Route path="/saved-jobs" element={<SavedJobsPage />} />                
                                          
                     {/* Resources */}
                     <Route 

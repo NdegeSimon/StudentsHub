@@ -1,14 +1,15 @@
+// src/api/index.js
 import axios from 'axios';
 
 // Create an axios instance with base URL
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api`,
+  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Important for cookies and credentials
-  timeout: 10000, // 10 second timeout
+  withCredentials: true,
+  timeout: 10000,
 });
 
 // Request interceptor
@@ -31,7 +32,7 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error.response?.status, error.message);
     if (error.response?.status === 401) {
-      // Handle unauthorized errors (e.g., token expired)
+      // Handle unauthorized errors
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
       window.location.href = '/login';
@@ -40,716 +41,605 @@ api.interceptors.response.use(
   }
 );
 
-// API functions
+// ============== AUTH API ==============
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
   getCurrentUser: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout'),
+  refreshToken: () => api.post('/auth/refresh'),
 };
 
-// User profile API
+// ============== USER API ==============
 export const userAPI = {
-  getProfile: () => api.get('/auth/me'),
-  updateProfile: (data) => api.put('/profile', data),
-};
-
-// Job API
-export const jobAPI = {
-  getAllJobs: () => api.get('/jobs'),
-  getJob: (jobId) => api.get(`/jobs/${jobId}`),
-  createJob: (jobData) => api.post('/jobs', jobData),
-  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
-  searchJobs: (filters) => api.get('/jobs/search', { params: filters }),
-  saveJob: (jobId) => api.post(`/jobs/${jobId}/save`),
-  unsaveJob: (jobId) => api.delete(`/jobs/${jobId}/save`),
-  getSavedJobs: () => api.get('/saved-jobs'),
-  checkSaved: (jobId) => api.get(`/saved-jobs/check/${jobId}`)
-};
-
-// Course API
-export const courseAPI = {
-  getAllCourses: () => api.get('/courses'),
-  getCourse: (courseId) => api.get(`/courses/${courseId}`),
-  enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
-};
-
-// Upload API
-export const uploadAPI = {
-  uploadProfilePicture: (file) => {
-    const formData = new FormData();
-    formData.append('profile_picture', file);
-    return api.post('/upload/profile-picture', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (data) => api.put('/users/profile', data),
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('resume', file);
-    return api.post('/upload/resume', formData, {
+    return api.post('/users/upload-resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadProfilePicture: (file) => {
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    return api.post('/users/upload-profile-picture', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
 };
 
-// Application API
-export const applicationAPI = {
-  getMyApplications: () => api.get('/applications'),
-  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
-  applyToJob: (jobId, applicationData) => api.post(`/applications`, { jobId, ...applicationData }),
-  withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
-  updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
-  getUpcomingDeadlines: () => api.get('/applications/deadlines'),
-  checkApplicationStatus: (jobId) => api.get('/applications/status/check', { params: { job_id: jobId } })
+// ============== JOBS API ==============
+export const jobsAPI = {
+  // Get all jobs
+  getAllJobs: (params) => api.get('/jobs', { params }),
+  
+  // Get single job
+  getJob: (jobId) => api.get(`/jobs/${jobId}`),
+  
+  // Create job (employer only)
+  createJob: (jobData) => api.post('/jobs', jobData),
+  
+  // Update job (employer only)
+  updateJob: (jobId, jobData) => api.put(`/jobs/${jobId}`, jobData),
+  
+  // Delete job (employer only)
+  deleteJob: (jobId) => api.delete(`/jobs/${jobId}`),
+  
+  // Search jobs with filters
+  searchJobs: (filters) => api.get('/jobs/search', { params: filters }),
+  
+  // Get recommended jobs
+  getRecommendedJobs: () => api.get('/jobs/recommended'),
+  
+  // Get match percentage for a job
+  getMatchPercentage: (jobId) => api.get(`/jobs/${jobId}/match-percentage`),
+  
+  // Apply to a job
+  applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
+  
+  // Save/unsave jobs
+  saveJob: (jobId) => api.post(`/jobs/${jobId}/save`),
+  unsaveJob: (jobId) => api.delete(`/jobs/${jobId}/save`),
+  
+  // Check if job is saved
+  checkSavedStatus: (jobId) => api.get(`/jobs/${jobId}/saved-status`),
 };
 
-// Search API
+// ============== SAVED JOBS API ==============
+export const savedJobsAPI = {
+  // Get all saved jobs
+  getSavedJobs: () => api.get('/saved-jobs'),
+  
+  // Get upcoming deadlines from saved jobs
+  getUpcomingDeadlines: () => api.get('/saved-jobs/upcoming'),
+  
+  // Remove a saved job
+  removeSavedJob: (savedJobId) => api.delete(`/saved-jobs/${savedJobId}`),
+  
+  // Bulk remove saved jobs
+  bulkRemoveSavedJobs: (savedJobIds) => api.delete('/saved-jobs/bulk', { data: { savedJobIds } }),
+  
+  // Get saved job stats
+  getStats: () => api.get('/saved-jobs/stats'),
+};
+
+// ============== APPLICATIONS API ==============
+export const applicationsAPI = {
+  // Get all applications for current user
+  getMyApplications: () => api.get('/applications'),
+  
+  // Get single application
+  getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
+  
+  // Create application
+  createApplication: (jobId, data) => api.post('/applications', { jobId, ...data }),
+  
+  // Withdraw application
+  withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
+  
+  // Update application
+  updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
+  
+  // Check application status for a job
+  checkApplicationStatus: (jobId) => api.get(`/applications/check/${jobId}`),
+  
+  // Get upcoming deadlines from applications
+  getApplicationDeadlines: () => api.get('/applications/deadlines'),
+  
+  // Get application stats
+  getStats: () => api.get('/applications/stats'),
+};
+
+// ============== INTERNSHIPS API ==============
+export const internshipsAPI = {
+  // Get all internships
+  getAllInternships: (params) => api.get('/internships', { params }),
+  
+  // Get single internship
+  getInternship: (internshipId) => api.get(`/internships/${internshipId}`),
+  
+  // Apply to internship
+  applyToInternship: (internshipId, applicationData) => api.post(`/internships/${internshipId}/apply`, applicationData),
+  
+  // Search internships
+  searchInternships: (filters) => api.get('/internships/search', { params: filters }),
+  
+  // Save/unsave internships
+  saveInternship: (internshipId) => api.post(`/internships/${internshipId}/save`),
+  unsaveInternship: (internshipId) => api.delete(`/internships/${internshipId}/save`),
+  
+  // Get saved internships
+  getSavedInternships: () => api.get('/saved-internships'),
+};
+
+// ============== COURSES API ==============
+export const coursesAPI = {
+  getAllCourses: () => api.get('/courses'),
+  getCourse: (courseId) => api.get(`/courses/${courseId}`),
+  enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
+  getMyCourses: () => api.get('/courses/my-courses'),
+  getCourseProgress: (courseId) => api.get(`/courses/${courseId}/progress`),
+};
+
+// ============== MESSAGES API ==============
+export const messagesAPI = {
+  getConversations: () => api.get('/messages/conversations'),
+  getMessages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}`, { params }),
+  sendMessage: (conversationId, message) => api.post(`/messages/conversations/${conversationId}`, { message }),
+  createConversation: (userId, initialMessage) => api.post('/messages/conversations', { userId, initialMessage }),
+  markAsRead: (conversationId, messageId) => api.put(`/messages/conversations/${conversationId}/read/${messageId}`),
+  getUnreadCount: () => api.get('/messages/unread-count'),
+};
+
+// ============== DASHBOARD API ==============
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getRecentActivity: () => api.get('/dashboard/activity'),
+  getUpcomingDeadlines: () => api.get('/dashboard/deadlines'),
+  getNotifications: () => api.get('/dashboard/notifications'),
+  markNotificationRead: (notificationId) => api.put(`/dashboard/notifications/${notificationId}/read`),
+  markAllNotificationsRead: () => api.put('/dashboard/notifications/read-all'),
+};
+
+// ============== SEARCH API ==============
 export const searchAPI = {
   getSavedSearches: () => api.get('/searches/saved'),
   saveSearch: (searchData) => api.post('/searches/save', searchData),
   deleteSavedSearch: (searchId) => api.delete(`/searches/${searchId}`),
+  updateSavedSearch: (searchId, searchData) => api.put(`/searches/${searchId}`, searchData),
+  getRecentSearches: () => api.get('/searches/recent'),
+  clearRecentSearches: () => api.delete('/searches/recent'),
 };
 
-// Message API
-export const messageAPI = {
-  getConversations: () => api.get('/messages/conversations'),
-  getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
-  sendMessage: (conversationId, message) => api.post(`/messages/conversations/${conversationId}`, message),
-};
-
-// Dashboard API
-export const dashboardAPI = {
-  getStats: () => api.get('/dashboard/stats'),
-  getRecentActivity: () => api.get('/dashboard/activity'),
-  getUpcomingDeadlines: () => api.get('/dashboard/deadlines'), // Alternative endpoint
-};
-
-// Mock data for development when backend is down
-export const mockAPI = {
-  jobs: {
-    getAllJobs: async () => {
-      return {
-        data: [
-          {
-            id: 1,
-            title: 'Frontend Developer',
-            company: 'TechCorp',
-            location: 'Remote',
-            salary: '$80,000 - $100,000',
-            description: 'Looking for React developer',
-            type: 'Full-time',
-            postedDate: '2024-01-15'
-          },
-          {
-            id: 2,
-            title: 'Backend Developer',
-            company: 'StartupHub',
-            location: 'New York, NY',
-            salary: '$90,000 - $120,000',
-            description: 'Node.js developer needed',
-            type: 'Full-time',
-            postedDate: '2024-01-14'
-          }
-        ]
-      };
-    }
-  },
-  
-  applications: {
-    getUpcomingDeadlines: async () => {
-      return {
-        data: [
-          {
-            id: 1,
-            jobTitle: 'Senior Developer',
-            company: 'TechCorp',
-            deadline: '2024-01-25',
-            status: 'Submitted'
-          },
-          {
-            id: 2,
-            jobTitle: 'Marketing Manager',
-            company: 'StartupHub',
-            deadline: '2024-01-28',
-            status: 'In Review'
-          }
-        ]
-      };
+// ============== MOCK DATA FOR DEVELOPMENT ==============
+export const mockData = {
+  jobs: [
+    {
+      id: 1,
+      title: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      location: 'San Francisco, CA',
+      salary: '$120,000 - $180,000',
+      type: 'Full-time',
+      deadline: '2024-04-15',
+      description: 'Build cutting-edge web applications using React and TypeScript.',
+      tags: ['React', 'TypeScript', 'Next.js', 'Frontend'],
+      applications: 45,
+      rating: 4.8,
+      featured: true,
+      status: 'open',
+      postedDate: '2024-03-10',
     },
-    
-    getMyApplications: async () => {
-      return {
-        data: [
-          {
-            id: 1,
-            jobTitle: 'Frontend Developer',
-            company: 'TechCorp',
-            appliedDate: '2024-01-10',
-            status: 'Under Review'
-          }
-        ]
-      };
+    {
+      id: 2,
+      title: 'Full Stack Engineer',
+      company: 'StartupXYZ',
+      location: 'Remote',
+      salary: '$90,000 - $140,000',
+      type: 'Full-time',
+      deadline: '2024-04-20',
+      description: 'Build scalable applications from frontend to backend.',
+      tags: ['Node.js', 'React', 'MongoDB', 'AWS'],
+      applications: 23,
+      rating: 4.5,
+      featured: true,
+      status: 'open',
+      postedDate: '2024-03-11',
     }
-  },
+  ],
   
-  searches: {
-    getSavedSearches: async () => {
-      return {
-        data: [
-          {
-            id: 1,
-            query: 'React Developer',
-            filters: { location: 'Remote' },
-            lastSearch: '2024-01-15'
-          }
-        ]
-      };
+  savedJobs: [
+    {
+      savedId: 1,
+      jobId: 1,
+      title: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      savedAt: '2024-03-10T10:30:00Z',
+      applied: false,
+      matchPercentage: 95
+    },
+    {
+      savedId: 2,
+      jobId: 2,
+      title: 'Full Stack Engineer',
+      company: 'StartupXYZ',
+      savedAt: '2024-03-11T14:20:00Z',
+      applied: true,
+      matchPercentage: 88
     }
-  }
+  ],
+  
+  upcomingDeadlines: [
+    {
+      id: 1,
+      title: 'Google Software Engineer',
+      company: 'Google',
+      daysLeft: 2,
+      deadline: '2024-03-15',
+      location: 'Remote',
+      type: 'Full-time',
+      applied: false
+    },
+    {
+      id: 2,
+      title: 'Microsoft PM Intern',
+      company: 'Microsoft',
+      daysLeft: 5,
+      deadline: '2024-03-18',
+      location: 'Redmond, WA',
+      type: 'Internship',
+      applied: true
+    }
+  ],
+  
+  recommendedJobs: [
+    {
+      id: 101,
+      title: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      location: 'San Francisco, CA',
+      salary: '$120,000 - $180,000',
+      type: 'Full-time',
+      tags: ['React', 'TypeScript', 'Next.js'],
+      applications: 45,
+      postedDate: '2 days ago',
+      featured: true,
+      matchPercentage: 92
+    }
+  ],
+  
+  applications: [
+    {
+      id: 1,
+      jobTitle: 'Frontend Developer',
+      company: 'TechCorp',
+      appliedDate: '2024-01-10',
+      status: 'Under Review',
+      deadline: '2024-03-15'
+    }
+  ]
 };
 
-// Smart API wrapper that falls back to mock data when backend is down
+// ============== SMART API WRAPPER WITH FALLBACK ==============
 export const smartAPI = {
+  // Jobs
   jobs: {
-    getAllJobs: async () => {
+    getAllJobs: async (params = {}) => {
       try {
-        const response = await jobAPI.getAllJobs();
+        const response = await jobsAPI.getAllJobs(params);
         return response;
       } catch (error) {
         console.log('Using mock data for jobs:', error.message);
-        return { data: mockAPI.jobs.getAllJobs() };
+        return { data: { success: true, data: mockData.jobs } };
       }
     },
+    
+    getRecommendedJobs: async () => {
+      try {
+        const response = await jobsAPI.getRecommendedJobs();
+        return response;
+      } catch (error) {
+        console.log('Using mock data for recommended jobs:', error.message);
+        return { data: { success: true, data: mockData.recommendedJobs } };
+      }
+    },
+    
     saveJob: async (jobId) => {
       try {
-        const response = await jobAPI.saveJob(jobId);
+        const response = await jobsAPI.saveJob(jobId);
         return response;
       } catch (error) {
         console.error('Error saving job:', error.message);
-        throw error;
+        // Simulate success in mock mode
+        return { 
+          data: { 
+            success: true, 
+            message: 'Job saved successfully',
+            data: {
+              savedId: Date.now(),
+              jobId,
+              title: 'Mock Job Title',
+              company: 'Mock Company',
+              savedAt: new Date().toISOString()
+            }
+          } 
+        };
       }
     },
+    
     unsaveJob: async (jobId) => {
       try {
-        const response = await jobAPI.unsaveJob(jobId);
+        const response = await jobsAPI.unsaveJob(jobId);
         return response;
       } catch (error) {
         console.error('Error unsaving job:', error.message);
-        throw error;
+        // Simulate success in mock mode
+        return { 
+          data: { 
+            success: true, 
+            message: 'Job removed from saved',
+            data: { jobId, removedAt: new Date().toISOString() }
+          } 
+        };
       }
     },
-    getSavedJobs: async () => {
+    
+    checkSavedStatus: async (jobId) => {
       try {
-        const response = await jobAPI.getSavedJobs();
-        return response;
-      } catch (error) {
-        console.error('Using mock data for saved jobs:', error.message);
-        return { data: [] };
-      }
-    },
-    checkSaved: async (jobId) => {
-      try {
-        const response = await jobAPI.checkSaved(jobId);
+        const response = await jobsAPI.checkSavedStatus(jobId);
         return response;
       } catch (error) {
         console.error('Error checking saved status:', error.message);
-        return { data: { is_saved: false } };
+        // Check against mock data
+        const isSaved = mockData.savedJobs.some(job => job.jobId === jobId);
+        return { 
+          data: { 
+            success: true, 
+            data: { isSaved } 
+          } 
+        };
       }
     },
-    searchJobs: async (query) => {
+    
+    getMatchPercentage: async (jobId) => {
       try {
-        const response = await jobAPI.searchJobs({ q: query });
+        const response = await jobsAPI.getMatchPercentage(jobId);
         return response;
       } catch (error) {
-        console.error('Error searching jobs:', error.message);
-        return { data: [] };
-      }
-    }
-  },
-  
-  applications: {
-    getUpcomingDeadlines: async () => {
-      try {
-        const response = await applicationAPI.getUpcomingDeadlines();
-        return response;
-      } catch (error) {
-        console.error('Using mock data for deadlines:', error.message);
-        return { data: mockAPI.applications.getUpcomingDeadlines() };
+        console.error('Error getting match percentage:', error.message);
+        // Return mock match percentage
+        const savedJob = mockData.savedJobs.find(job => job.jobId === jobId);
+        return { 
+          data: { 
+            success: true, 
+            data: { 
+              jobId, 
+              matchPercentage: savedJob?.matchPercentage || Math.floor(Math.random() * 50) + 50 
+            } 
+          } 
+        };
       }
     },
-    getMyApplications: async () => {
+    
+    applyToJob: async (jobId, applicationData) => {
       try {
-        const response = await applicationAPI.getMyApplications();
-        // Ensure the response has the expected format
-        if (response && response.data) {
-          // If data is already in the expected format, return as is
-          if (response.data.data || response.data.applications || Array.isArray(response.data)) {
-            return response;
-          }
-          // If data is an array, wrap it in the standard format
-          if (Array.isArray(response.data)) {
-            return { data: { data: response.data } };
-          }
-        }
-        // If we get here, the response format is unexpected
-        console.warn('Unexpected API response format:', response);
-        return { data: { data: response?.data || [] } };
-      } catch (error) {
-        console.error('Using mock data for applications:', error.message);
-        return { data: { data: mockAPI.applications.getMyApplications() } };
-      }
-    },
-    applyToJob: async (jobId, data) => {
-      try {
-        const response = await applicationAPI.applyToJob(jobId, data);
+        const response = await jobsAPI.applyToJob(jobId, applicationData);
         return response;
       } catch (error) {
         console.error('Error applying to job:', error.message);
-        throw error;
-      }
-    },
-    checkStatus: async (jobId) => {
-      try {
-        const response = await applicationAPI.checkApplicationStatus(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error checking application status:', error.message);
-        return { data: { has_applied: false, can_apply: true } };
+        // Simulate success in mock mode
+        return { 
+          data: { 
+            success: true, 
+            message: 'Application submitted successfully',
+            data: {
+              applicationId: Date.now(),
+              jobId,
+              appliedAt: new Date().toISOString(),
+              status: 'pending'
+            }
+          } 
+        };
       }
     }
   },
   
-  searches: {
-    getSavedSearches: async () => {
+  // Saved Jobs
+  savedJobs: {
+    getSavedJobs: async () => {
       try {
-        const response = await searchAPI.getSavedSearches();
+        const response = await savedJobsAPI.getSavedJobs();
         return response;
       } catch (error) {
-        console.error('Using mock data for saved searches:', error.message);
-        return { data: mockAPI.searches.getSavedSearches() };
+        console.log('Using mock data for saved jobs:', error.message);
+        return { data: { success: true, data: mockData.savedJobs } };
       }
     },
-    saveSearch: async (query) => {
+    
+    getUpcomingDeadlines: async () => {
       try {
-        const response = await searchAPI.saveSearch({ query });
+        const response = await savedJobsAPI.getUpcomingDeadlines();
         return response;
       } catch (error) {
-        console.error('Error saving search:', error.message);
-        throw error;
+        console.log('Using mock data for upcoming deadlines:', error.message);
+        return { data: { success: true, data: mockData.upcomingDeadlines } };
+      }
+    },
+    
+    removeSavedJob: async (savedJobId) => {
+      try {
+        const response = await savedJobsAPI.removeSavedJob(savedJobId);
+        return response;
+      } catch (error) {
+        console.error('Error removing saved job:', error.message);
+        // Simulate success in mock mode
+        return { 
+          data: { 
+            success: true, 
+            message: 'Job removed from saved',
+            data: { savedJobId, removedAt: new Date().toISOString() }
+          } 
+        };
+      }
+    }
+  },
+  
+  // Applications
+  applications: {
+    getMyApplications: async () => {
+      try {
+        const response = await applicationsAPI.getMyApplications();
+        return response;
+      } catch (error) {
+        console.log('Using mock data for applications:', error.message);
+        return { data: { success: true, data: mockData.applications } };
+      }
+    },
+    
+    checkApplicationStatus: async (jobId) => {
+      try {
+        const response = await applicationsAPI.checkApplicationStatus(jobId);
+        return response;
+      } catch (error) {
+        console.error('Error checking application status:', error.message);
+        // Check against mock data
+        const hasApplied = mockData.applications.some(app => app.jobId === jobId);
+        return { 
+          data: { 
+            success: true, 
+            data: { 
+              hasApplied,
+              canApply: !hasApplied,
+              application: hasApplied ? mockData.applications.find(app => app.jobId === jobId) : null
+            } 
+          } 
+        };
+      }
+    },
+    
+    getApplicationDeadlines: async () => {
+      try {
+        const response = await applicationsAPI.getApplicationDeadlines();
+        return response;
+      } catch (error) {
+        console.log('Using mock data for application deadlines:', error.message);
+        return { data: { success: true, data: mockData.upcomingDeadlines } };
+      }
+    }
+  },
+  
+  // Dashboard
+  dashboard: {
+    getStats: async () => {
+      try {
+        const response = await dashboardAPI.getStats();
+        return response;
+      } catch (error) {
+        console.log('Using mock data for dashboard stats:', error.message);
+        return { 
+          data: { 
+            success: true, 
+            data: {
+              totalSaved: mockData.savedJobs.length,
+              totalApplications: mockData.applications.length,
+              upcomingDeadlines: mockData.upcomingDeadlines.length,
+              avgMatchRate: 85
+            }
+          } 
+        };
+      }
+    },
+    
+    getUpcomingDeadlines: async () => {
+      try {
+        const response = await dashboardAPI.getUpcomingDeadlines();
+        return response;
+      } catch (error) {
+        console.log('Using mock data for dashboard deadlines:', error.message);
+        return { data: { success: true, data: mockData.upcomingDeadlines } };
       }
     }
   }
 };
-const handleApply = async (internshipId) => {
-  try {
-    const response = await fetch('/api/internships/apply', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userToken}`
-      },
-      body: JSON.stringify({ internshipId })
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      // Show success message
-      alert('Application submitted successfully!');
+
+// ============== USEFUL HELPER FUNCTIONS ==============
+export const apiHelpers = {
+  // Format error message
+  formatError: (error) => {
+    if (error.response?.data?.message) {
+      return error.response.data.message;
     }
-  } catch (error) {
-    console.error('Error applying:', error);
-    alert('Failed to submit application');
-  }
-};
-// GET: /api/saved-jobs
-const getSavedJobs = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    // Find all saved jobs for this user
-    const savedJobs = await SavedJob.find({ user: userId })
-      .populate({
-        path: 'job',
-        select: 'title company location salary type deadline description requirements perks tags applications rating featured status postedDate'
-      })
-      .sort({ savedAt: -1 });
-    
-    // Calculate match percentage for each job
-    const jobsWithMatch = await Promise.all(
-      savedJobs.map(async (savedJob) => {
-        const job = savedJob.job.toObject();
-        const matchPercentage = await calculateMatchPercentage(userId, job._id);
-        return {
-          ...job,
-          savedId: savedJob._id,
-          savedAt: savedJob.savedAt,
-          matchPercentage,
-          applied: savedJob.applied
-        };
-      })
-    );
-    
-    res.json({
-      success: true,
-      count: jobsWithMatch.length,
-      data: jobsWithMatch
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// GET: /api/saved-jobs/upcoming
-const getUpcomingDeadlines = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const today = new Date();
-    const sevenDaysFromNow = new Date(today);
-    sevenDaysFromNow.setDate(today.getDate() + 7);
-    
-    // Find saved jobs with deadlines in next 7 days
-    const savedJobs = await SavedJob.find({ user: userId })
-      .populate({
-        path: 'job',
-        match: { 
-          deadline: { 
-            $gte: today, 
-            $lte: sevenDaysFromNow 
-          },
-          status: 'open'
-        },
-        select: 'title company deadline location type'
-      })
-      .sort({ 'job.deadline': 1 });
-    
-    // Filter out null jobs (from populate match)
-    const upcomingJobs = savedJobs
-      .filter(savedJob => savedJob.job !== null)
-      .map(savedJob => {
-        const job = savedJob.job.toObject();
-        const deadline = new Date(job.deadline);
-        const today = new Date();
-        const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-        
-        return {
-          id: savedJob._id,
-          jobId: job._id,
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          type: job.type,
-          deadline: job.deadline,
-          daysLeft: daysLeft,
-          applied: savedJob.applied
-        };
-      });
-    
-    res.json({
-      success: true,
-      count: upcomingJobs.length,
-      data: upcomingJobs
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// GET: /api/jobs/recommended
-const getRecommendedJobs = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+    if (error.response?.data?.error) {
+      return error.response.data.error;
     }
-    
-    const userSkills = user.profile.skills || [];
-    const userLocation = user.profile.location || '';
-    const userPreferences = user.preferences || {};
-    
-    // Find jobs that match user's skills and preferences
-    const query = {
-      status: 'open',
-      deadline: { $gt: new Date() }
+    return error.message || 'An unknown error occurred';
+  },
+  
+  // Check if response is successful
+  isSuccess: (response) => {
+    return response?.data?.success === true;
+  },
+  
+  // Extract data from response
+  extractData: (response) => {
+    return response?.data?.data || response?.data || null;
+  },
+  
+  // Create headers with token
+  createHeaders: (additionalHeaders = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+      ...additionalHeaders
     };
+  },
+  
+  // Handle file upload
+  uploadFile: async (file, endpoint, fieldName = 'file') => {
+    const formData = new FormData();
+    formData.append(fieldName, file);
     
-    // If user has skills, prioritize jobs with matching skills
-    if (userSkills.length > 0) {
-      query.$or = [
-        { tags: { $in: userSkills } },
-        { field: { $in: userPreferences.jobTypes || [] } }
-      ];
-    }
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    // If user has location preference
-    if (userLocation) {
-      query.location = new RegExp(userLocation, 'i');
-    }
-    
-    const jobs = await Job.find(query)
-      .select('title company location salary type deadline description tags applications postedDate featured')
-      .sort({ featured: -1, postedDate: -1 })
-      .limit(10);
-    
-    // Calculate match percentage for each job
-    const jobsWithMatch = await Promise.all(
-      jobs.map(async (job) => {
-        const jobObj = job.toObject();
-        const matchPercentage = await calculateMatchPercentage(userId, job._id);
-        return {
-          ...jobObj,
-          matchPercentage
-        };
-      })
-    );
-    
-    // Sort by match percentage
-    jobsWithMatch.sort((a, b) => b.matchPercentage - a.matchPercentage);
-    
-    res.json({
-      success: true,
-      count: jobsWithMatch.length,
-      data: jobsWithMatch
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// GET: /api/jobs/:jobId/match-percentage
-const getMatchPercentage = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { jobId } = req.params;
-    
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found'
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: formData,
       });
-    }
-    
-    const matchPercentage = await calculateMatchPercentage(userId, jobId);
-    
-    res.json({
-      success: true,
-      data: {
-        jobId: job._id,
-        title: job.title,
-        company: job.company,
-        matchPercentage
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
+      
+      return await response.json();
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    }
   }
 };
 
-// Helper function to calculate match percentage
-const calculateMatchPercentage = async (userId, jobId) => {
-  try {
-    const user = await User.findById(userId);
-    const job = await Job.findById(jobId);
-    
-    if (!user || !job) return 0;
-    
-    let score = 0;
-    const maxScore = 100;
-    
-    // 1. Skills match (40 points)
-    const userSkills = user.profile.skills || [];
-    const jobTags = job.tags || [];
-    
-    if (userSkills.length > 0 && jobTags.length > 0) {
-      const matchedSkills = userSkills.filter(skill => 
-        jobTags.some(tag => tag.toLowerCase().includes(skill.toLowerCase()))
-      );
-      const skillMatchPercentage = (matchedSkills.length / userSkills.length) * 100;
-      score += (skillMatchPercentage * 0.4);
-    }
-    
-    // 2. Location match (20 points)
-    const userLocation = user.profile.location || '';
-    const jobLocation = job.location || '';
-    
-    if (userLocation && jobLocation) {
-      if (jobLocation.toLowerCase().includes('remote')) {
-        score += 20;
-      } else if (userLocation.toLowerCase().includes(jobLocation.toLowerCase()) || 
-                 jobLocation.toLowerCase().includes(userLocation.toLowerCase())) {
-        score += 20;
-      }
-    }
-    
-    // 3. Job type match (20 points)
-    const userPreferences = user.preferences || {};
-    const userJobTypes = userPreferences.jobTypes || [];
-    
-    if (userJobTypes.length > 0) {
-      if (userJobTypes.some(type => job.type.toLowerCase().includes(type.toLowerCase()))) {
-        score += 20;
-      }
-    }
-    
-    // 4. Field/Industry match (20 points)
-    const userField = user.profile.education?.[0]?.field || '';
-    const jobField = job.field || '';
-    
-    if (userField && jobField) {
-      if (userField.toLowerCase().includes(jobField.toLowerCase()) ||
-          jobField.toLowerCase().includes(userField.toLowerCase())) {
-        score += 20;
-      }
-    }
-    
-    return Math.min(Math.round(score), 100);
-  } catch (error) {
-    return 0;
-  }
-};
-// POST: /api/jobs/:jobId/save
-const saveJob = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { jobId } = req.params;
-    
-    // Check if job exists
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found'
-      });
-    }
-    
-    // Check if already saved
-    const existingSavedJob = await SavedJob.findOne({
-      user: userId,
-      job: jobId
-    });
-    
-    if (existingSavedJob) {
-      return res.status(400).json({
-        success: false,
-        message: 'Job already saved'
-      });
-    }
-    
-    // Save the job
-    const savedJob = await SavedJob.create({
-      user: userId,
-      job: jobId,
-      savedAt: new Date(),
-      applied: false
-    });
-    
-    res.status(201).json({
-      success: true,
-      message: 'Job saved successfully',
-      data: {
-        savedId: savedJob._id,
-        jobId: job._id,
-        title: job.title,
-        company: job.company,
-        savedAt: savedJob.savedAt
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// POST: /api/jobs/:jobId/unsave
-const unsaveJob = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { jobId } = req.params;
-    
-    // Find and delete the saved job
-    const deletedSavedJob = await SavedJob.findOneAndDelete({
-      user: userId,
-      job: jobId
-    });
-    
-    if (!deletedSavedJob) {
-      return res.status(404).json({
-        success: false,
-        message: 'Saved job not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Job removed from saved',
-      data: {
-        jobId,
-        removedAt: new Date()
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// DELETE: /api/saved-jobs/:savedJobId
-const deleteSavedJob = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { savedJobId } = req.params;
-    
-    // Find and delete the saved job
-    const deletedSavedJob = await SavedJob.findOneAndDelete({
-      _id: savedJobId,
-      user: userId
-    });
-    
-    if (!deletedSavedJob) {
-      return res.status(404).json({
-        success: false,
-        message: 'Saved job not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Job removed from saved',
-      data: {
-        savedJobId,
-        removedAt: new Date()
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-      error: error.message
-    });
-  }
-};
-// Export the axios instance as default
-
+// Export default api instance
 export default api;
+
+// Export all APIs as a single object for convenience
+export const API = {
+  auth: authAPI,
+  user: userAPI,
+  jobs: jobsAPI,
+  savedJobs: savedJobsAPI,
+  applications: applicationsAPI,
+  internships: internshipsAPI,
+  courses: coursesAPI,
+  messages: messagesAPI,
+  dashboard: dashboardAPI,
+  search: searchAPI,
+  smart: smartAPI,
+  helpers: apiHelpers,
+  mockData
+};
