@@ -704,6 +704,28 @@ export const apiHelpers = {
     }
   }
 };
+// In your api.js file
+export const shareAPI = {
+  // Share job
+  shareJob: (jobId, shareData) => {
+    return api.post(`/jobs/${jobId}/share`, shareData);
+  },
+
+  // Get share options
+  getShareOptions: (jobId) => {
+    return api.get(`/jobs/${jobId}/share/options`);
+  },
+
+  // Get share history
+  getShareHistory: () => {
+    return api.get('/shares/history');
+  },
+
+  // Delete share
+  deleteShare: (shareId) => {
+    return api.delete(`/share/${shareId}`);
+  }
+};
 
 // Export default api instance
 export default api;

@@ -711,3 +711,23 @@ class Message(db.Model):
             'read_by': self.read_by or [],
             'created_at': self.created_at.isoformat()
         }
+
+        # In models.py
+class Share(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    shared_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    shared_with_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    shared_with_email = db.Column(db.String(255), nullable=True)
+    share_type = db.Column(db.String(50), nullable=False)  # 'email', 'link', 'social'
+    share_token = db.Column(db.String(255), unique=True, nullable=True)
+    message = db.Column(db.Text, nullable=True)
+    shared_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    viewed = db.Column(db.Boolean, default=False)
+    viewed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    job = db.relationship('Job', backref='shares')
+    shared_by = db.relationship('User', foreign_keys=[shared_by_id], backref='shares_sent')
+    shared_with = db.relationship('User', foreign_keys=[shared_with_id], backref='shares_received')
