@@ -7,7 +7,7 @@ from sqlalchemy import desc, func
 
 saved_jobs_bp = Blueprint('saved_jobs', __name__)
 
-@saved_jobs_bp.route('/api/saved-jobs', methods=['GET'])
+@saved_jobs_bp.route('/saved-jobs', methods=['GET'])
 @jwt_required()
 def get_saved_jobs():
     """
@@ -116,7 +116,7 @@ def get_saved_jobs():
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/upcoming', methods=['GET'])
+@saved_jobs_bp.route('/saved-jobs/upcoming', methods=['GET'])
 @jwt_required()
 def get_upcoming_deadlines():
     """
@@ -194,7 +194,7 @@ def get_upcoming_deadlines():
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/stats', methods=['GET'])
+@saved_jobs_bp.route('/saved-jobs/stats', methods=['GET'])
 @jwt_required()
 def get_saved_jobs_stats():
     """
@@ -259,9 +259,9 @@ def get_saved_jobs_stats():
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs', methods=['POST'])
+@saved_jobs_bp.route('/saved-jobs', methods=['POST'])
 @jwt_required()
-def save_job():
+def save_job_to_list():
     """
     Save a job for the current user
     """
@@ -324,7 +324,7 @@ def save_job():
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/<int:saved_job_id>', methods=['DELETE'])
+@saved_jobs_bp.route('/saved-jobs/<int:saved_job_id>', methods=['DELETE'])
 @jwt_required()
 def remove_saved_job(saved_job_id):
     """
@@ -362,7 +362,7 @@ def remove_saved_job(saved_job_id):
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/check/<int:job_id>', methods=['GET'])
+@saved_jobs_bp.route('/saved-jobs/check/<int:job_id>', methods=['GET'])
 @jwt_required()
 def check_saved_job(job_id):
     """
@@ -391,7 +391,7 @@ def check_saved_job(job_id):
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/bulk', methods=['DELETE'])
+@saved_jobs_bp.route('/saved-jobs/bulk', methods=['DELETE'])
 @jwt_required()
 def bulk_remove_saved_jobs():
     """
@@ -429,7 +429,7 @@ def bulk_remove_saved_jobs():
         return jsonify({"error": str(e)}), 500
 
 
-@saved_jobs_bp.route('/api/saved-jobs/<int:saved_job_id>/notes', methods=['PUT'])
+@saved_jobs_bp.route('/saved-jobs/<int:saved_job_id>/notes', methods=['PUT'])
 @jwt_required()
 def update_saved_job_notes(saved_job_id):
     """

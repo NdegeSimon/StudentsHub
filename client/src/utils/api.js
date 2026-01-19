@@ -70,6 +70,46 @@ export const userAPI = {
   },
 };
 
+// ============== UPLOAD API ==============
+export const uploadAPI = {
+  uploadProfilePicture: (file) => {
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    return api.post('/upload/profile-picture', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  uploadResume: (file) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    return api.post('/upload/resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  uploadDocument: (file, type) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    return api.post('/upload/document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  uploadCompanyLogo: (file) => {
+    const formData = new FormData();
+    formData.append('logo', file);
+    return api.post('/upload/company-logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  getUploadUrl: (filename, fileType) => {
+    return api.post('/upload/get-url', { filename, fileType });
+  }
+};
+
 // ============== JOBS API ==============
 export const jobsAPI = {
   // Get all jobs
@@ -106,6 +146,9 @@ export const jobsAPI = {
   // Check if job is saved
   checkSavedStatus: (jobId) => api.get(`/jobs/${jobId}/saved-status`),
 };
+
+// For backward compatibility - SINGULAR version
+export const jobAPI = jobsAPI;
 
 // ============== SAVED JOBS API ==============
 export const savedJobsAPI = {
@@ -151,6 +194,9 @@ export const applicationsAPI = {
   // Get application stats
   getStats: () => api.get('/applications/stats'),
 };
+
+// For backward compatibility - SINGULAR version
+export const applicationAPI = applicationsAPI;
 
 // ============== INTERNSHIPS API ==============
 export const internshipsAPI = {
@@ -561,6 +607,41 @@ export const smartAPI = {
         return { data: { success: true, data: mockData.upcomingDeadlines } };
       }
     }
+  },
+  
+  // Upload
+  upload: {
+    uploadProfilePicture: async (file) => {
+      try {
+        const response = await uploadAPI.uploadProfilePicture(file);
+        return response;
+      } catch (error) {
+        console.error('Error uploading profile picture:', error.message);
+        return { 
+          data: { 
+            success: true, 
+            message: 'Profile picture uploaded (mock)',
+            data: { url: 'mock-profile-picture-url.jpg' }
+          } 
+        };
+      }
+    },
+    
+    uploadResume: async (file) => {
+      try {
+        const response = await uploadAPI.uploadResume(file);
+        return response;
+      } catch (error) {
+        console.error('Error uploading resume:', error.message);
+        return { 
+          data: { 
+            success: true, 
+            message: 'Resume uploaded (mock)',
+            data: { url: 'mock-resume-url.pdf' }
+          } 
+        };
+      }
+    }
   }
 };
 
@@ -631,9 +712,12 @@ export default api;
 export const API = {
   auth: authAPI,
   user: userAPI,
+  upload: uploadAPI,      // ADDED
   jobs: jobsAPI,
+  job: jobAPI,            // ADDED - singular version
   savedJobs: savedJobsAPI,
   applications: applicationsAPI,
+  application: applicationAPI,  // ADDED - singular version
   internships: internshipsAPI,
   courses: coursesAPI,
   messages: messagesAPI,

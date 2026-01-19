@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import or_, and_
-from models.models import Job, db, SavedJob, User
+from models.models import Job, db, SavedJob, User, Student, Company
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
@@ -182,7 +182,7 @@ def create_job():
 
 @job_bp.route('/<int:job_id>/save', methods=['POST'])
 @jwt_required()
-def save_job(job_id):
+def save_specific_job(job_id):  # CHANGED NAME HERE
     """
     Save a job for the current user
     """
@@ -364,86 +364,147 @@ def delete_job(job_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-# routes/jobs.py or similar
-@job_bp.route('/api/jobs/<int:job_id>/apply', methods=['POST'])
+
+# ============== APPLICATION ROUTES ==============
+@job_bp.route('/<int:job_id>/apply', methods=['POST'])
 @jwt_required()
-def apply_to_job(job_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    
-    if not user or user.role != 'student':
-        return jsonify({"error": "Only students can apply to jobs"}), 403
-    
-    student = Student.query.filter_by(user_id=user_id).first()
-    job = Job.query.get(job_id)
-    
-    if not student:
-        return jsonify({"error": "Student profile not found"}), 404
-    
-    if not job:
-        return jsonify({"error": "Job not found"}), 404
-    
-    data = request.get_json()
-    cover_letter = data.get('cover_letter', '')
-    resume_url = data.get('resume_url')
-    
-    application, message = job.apply(student, cover_letter, resume_url)
-    
-    if application:
+def apply_to_job(job_id):  # CHANGED: This should be separate from the save routes
+    """
+    Apply to a job
+    """
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user or user.role != 'student':
+            return jsonify({"error": "Only students can apply to jobs"}), 403
+        
+        student = Student.query.filter_by(user_id=user_id).first()
+        job = Job.query.get(job_id)
+        
+        if not student:
+            return jsonify({"error": "Student profile not found"}), 404
+        
+        if not job:
+            return jsonify({"error": "Job not found"}), 404
+        
+        data = request.get_json()
+        cover_letter = data.get('cover_letter', '')
+        resume_url = data.get('resume_url')
+        
+        # Check if already applied
+        from models.models import Application  # Make sure to import Application
+        existing_application = Application.query.filter_by(
+            student_id=student.id,
+            job_id=job_id
+        ).first()
+        
+        if existing_application:
+            return jsonify({"error": "You have already applied to this job"}), 400
+        
+        # Create application
+        application = Application(
+            job_id=job_id,
+            student_id=student.id,
+            cover_letter=cover_letter,
+            resume_url=resume_url,
+            status='pending',
+            applied_at=datetime.utcnow()
+        )
+        
+        db.session.add(application)
+        db.session.commit()
+        
         return jsonify({
             "success": True,
-            "message": message,
+            "message": "Application submitted successfully",
             "application_id": application.id
         }), 201
-    else:
-        return jsonify({"error": message}), 400
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
-@job_bp.route('/api/jobs/<int:job_id>/save', methods=['POST'])
-@jwt_required()
-def save_job(job_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+# ============== REMOVE DUPLICATE SAVE JOB FUNCTION ==============
+# DELETE THIS ENTIRE SECTION - IT'S A DUPLICATE OF THE ABOVE FUNCTION
+# @job_bp.route('/<int:job_id>/save', methods=['POST'])  # DUPLICATE ROUTE
+# @jwt_required()
+# def save_job(job_id):  # DUPLICATE FUNCTION NAME
+#     user_id = get_jwt_identity()
+#     user = User.query.get(user_id)
     
-    if not user or user.role != 'student':
-        return jsonify({"error": "Only students can save jobs"}), 403
+#     if not user or user.role != 'student':
+#         return jsonify({"error": "Only students can save jobs"}), 403
     
-    student = Student.query.filter_by(user_id=user_id).first()
-    job = Job.query.get(job_id)
+#     student = Student.query.filter_by(user_id=user_id).first()
+#     job = Job.query.get(job_id)
     
-    if not student:
-        return jsonify({"error": "Student profile not found"}), 404
+#     if not student:
+#         return jsonify({"error": "Student profile not found"}), 404
     
-    if not job:
-        return jsonify({"error": "Job not found"}), 404
+#     if not job:
+#         return jsonify({"error": "Job not found"}), 404
     
-    success, message = student.save_job(job)
+#     # This code is a duplicate - use the function above instead
+#     # (save_specific_job function at line 175)
     
-    if success:
-        return jsonify({"success": True, "message": message}), 200
-    else:
-        return jsonify({"error": message}), 400
+#     return jsonify({"error": "Duplicate function - use the other save endpoint"}), 400
 
-@job_bp.route('/api/students/<int:student_id>/save', methods=['POST'])
+# ============== CANDIDATE SAVING ROUTE ==============
+@job_bp.route('/students/<int:student_id>/save', methods=['POST'])
 @jwt_required()
-def save_candidate(student_id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    
-    if not user or user.role != 'company':
-        return jsonify({"error": "Only companies can save candidates"}), 403
-    
-    company = Company.query.filter_by(user_id=user_id).first()
-    student = Student.query.get(student_id)
-    
-    if not company:
-        return jsonify({"error": "Company profile not found"}), 404
-    
-    if not student:
-        return jsonify({"error": "Student not found"}), 404
-    
-    success, message = company.save_candidate(student)
-    
-    if success:
-        return jsonify({"success": True, "message": message}), 200
-    else:
-        return jsonify({"error": message}), 400
+def save_candidate(student_id):  # This is different - saves a candidate, not a job
+    """
+    Save a candidate (for companies)
+    """
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user or user.role != 'company':
+            return jsonify({"error": "Only companies can save candidates"}), 403
+        
+        company = Company.query.filter_by(user_id=user_id).first()
+        student = Student.query.get(student_id)
+        
+        if not company:
+            return jsonify({"error": "Company profile not found"}), 404
+        
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+        
+        # Check if already saved (you might need a SavedCandidate model)
+        # For now, we'll assume there's a method or create one
+        from models.models import SavedCandidate
+        
+        existing = SavedCandidate.query.filter_by(
+            company_id=company.id,
+            student_id=student_id
+        ).first()
+        
+        if existing:
+            return jsonify({
+                "success": True,
+                "message": "Candidate already saved",
+                "saved": True
+            }), 200
+            
+        # Save candidate
+        saved_candidate = SavedCandidate(
+            company_id=company.id,
+            student_id=student_id,
+            saved_at=datetime.utcnow()
+        )
+        
+        db.session.add(saved_candidate)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Candidate saved successfully",
+            "saved": True
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

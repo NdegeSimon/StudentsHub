@@ -19,7 +19,7 @@ import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
 import LandingPage from "./pages/LandinPage.jsx";
-import SavedJobsPage from './pages/SavedJobsPage';
+import SavedJobsPage from './pages/SavedJobs.jsx';
 
 
 import JobPostings from "./pages/JobPosting.jsx";
