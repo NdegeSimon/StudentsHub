@@ -68,6 +68,8 @@ export const userAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  toggleSaveJob: (jobId) => api.post(`/users/toggle-save-job/${jobId}`),
+  getSavedJobs: () => api.get('/users/saved-jobs')
 };
 
 // ============== UPLOAD API ==============

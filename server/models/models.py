@@ -715,9 +715,9 @@ class Message(db.Model):
         # In models.py
 class Share(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
-    shared_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    shared_with_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
+    shared_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    shared_with_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     shared_with_email = db.Column(db.String(255), nullable=True)
     share_type = db.Column(db.String(50), nullable=False)  # 'email', 'link', 'social'
     share_token = db.Column(db.String(255), unique=True, nullable=True)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, Bell, Settings, User, BookOpen, Briefcase, Clock, 
   Star, Sun, Moon, Menu, X, FileText, Mic, Zap, TrendingUp, Award, 
@@ -42,6 +42,8 @@ const NextLevelDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [savedJobs, setSavedJobs] = useState(new Set());
+  const [savedJobsList, setSavedJobsList] = useState([]);
+  const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [recommendedJobs, setRecommendedJobs] = useState([]);
@@ -417,6 +419,43 @@ const NextLevelDashboard = () => {
     fetchUserData();
   }, [user]);
 
+  // Fetch saved jobs function
+  const fetchSavedJobs = useCallback(async () => {
+    if (!user) return;
+    
+    setIsLoadingSavedJobs(true);
+    try {
+      const response = await smartAPI.jobs.getSavedJobs();
+      if (response?.data) {
+        const formattedJobs = response.data.map(job => ({
+          id: job.id,
+          title: job.title || 'No Title',
+          company: job.company_name || job.company || 'Unknown Company',
+          type: job.job_type || job.type || 'Full-time',
+          location: job.location || 'Remote',
+          postedDate: job.posted_at || new Date().toISOString(),
+          salary: job.salary || job.salary_range || 'Not specified',
+          logo: (job.company_name || '?').charAt(0).toUpperCase(),
+          match: job.match_score || Math.floor(Math.random() * 20) + 80,
+        }));
+        setSavedJobsList(formattedJobs);
+        setSavedJobs(new Set(formattedJobs.map(job => job.id)));
+      }
+    } catch (error) {
+      console.error('Error fetching saved jobs:', error);
+      toast.error('Failed to load saved jobs');
+    } finally {
+      setIsLoadingSavedJobs(false);
+    }
+  }, [user]);
+
+  // Effect to fetch saved jobs when user changes or component mounts
+  useEffect(() => {
+    if (user) {
+      fetchSavedJobs();
+    }
+  }, [user, fetchSavedJobs]);
+
   const getGreeting = () => {
     const hour = currentTime.getHours();
     if (hour < 12) return 'Good morning';
@@ -426,26 +465,33 @@ const NextLevelDashboard = () => {
 
   const handleSaveJob = async (jobId, e) => {
     e?.stopPropagation();
+    if (!user) {
+      toast.error('Please log in to save jobs');
+      return;
+    }
+
     try {
       if (savedJobs.has(jobId)) {
-        // Unsave the job
         await smartAPI.jobs.unsaveJob(jobId);
         setSavedJobs(prev => {
           const newSet = new Set(prev);
           newSet.delete(jobId);
           return newSet;
         });
+        setSavedJobsList(prev => prev.filter(job => job.id !== jobId));
         toast.success('Job removed from saved jobs');
       } else {
-        // Save the job
         await smartAPI.jobs.saveJob(jobId);
         setSavedJobs(prev => new Set([...prev, jobId]));
         toast.success('Job saved successfully');
+        // Refresh the saved jobs list if we're on the saved tab
+        if (activeTab === 'saved') {
+          await fetchSavedJobs();
+        }
       }
     } catch (error) {
       console.error('Error saving job:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to save job';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.message || 'Failed to save job');
     }
   };
 
@@ -1145,114 +1191,206 @@ const NextLevelDashboard = () => {
 
               {/* Content */}
               <div className="p-6">
-                <div className="space-y-4">
-                  {recommendedJobs.length > 0 ? (
-                    recommendedJobs.map((job) => (
-                      <div
-                        key={job.id}
-                        onClick={() => navigateToJobDetails(job.id)}
-                        className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex gap-4 flex-1">
-                            <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform">
-                              {job.logo}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                                  {job.title}
-                                </h3>
-                                {job.featured && (
-                                  <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-lg border border-amber-500/30">
-                                    Featured
-                                  </span>
-                                )}
+                {/* Saved Jobs Section */}
+                {activeTab === 'saved' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-bold text-white">Saved Jobs</h2>
+                      <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-sm font-medium rounded-full">
+                        {savedJobs.size} {savedJobs.size === 1 ? 'Job' : 'Jobs'} Saved
+                      </span>
+                    </div>
+                    
+                    {isLoadingSavedJobs ? (
+                      <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+                      </div>
+                    ) : savedJobsList.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Bookmark className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-slate-300">No saved jobs yet</h3>
+                        <p className="text-slate-500 mt-1">Save jobs you're interested in to view them here</p>
+                        <button 
+                          onClick={() => setActiveTab('overview')}
+                          className="mt-4 inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Browse Jobs
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                        {savedJobsList.map((job) => (
+                          <div 
+                            key={job.id}
+                            className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 hover:border-amber-500/30 transition-colors cursor-pointer"
+                            onClick={() => navigate(`/jobs/${job.id}`)}
+                          >
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-white mb-1">{job.title}</h3>
+                                <p className="text-slate-400 text-sm">{job.company}</p>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
-                                <span className="flex items-center gap-1">
-                                  <Building className="h-4 w-4" />
-                                  {job.company}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-4 w-4" />
-                                  {job.location}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <DollarSign className="h-4 w-4" />
-                                  {job.salary}
-                                </span>
-                              </div>
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                {job.tags.map((tag, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 hover:scale-105 transition-transform"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                              <div className="flex items-center gap-4 text-xs text-slate-500">
-                                <span>{job.posted}</span>
-                                <span>•</span>
-                                <span>{job.applicants} applicants</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col items-end gap-3">
-                            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
-                              <Target className="h-4 w-4" />
-                              <span className="text-sm font-medium">{job.match}% Match</span>
-                            </div>
-                            <div className="flex gap-2">
                               <button 
-                                onClick={(e) => handleSaveJob(job.id, e)}
-                                className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110"
-                                aria-label={savedJobs.has(job.id) ? 'Unsave job' : 'Save job'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveJob(job.id, e);
+                                }}
+                                className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                aria-label={savedJobs.has(job.id) ? "Remove from saved" : "Save job"}
                               >
                                 {savedJobs.has(job.id) ? (
                                   <BookmarkCheck className="h-5 w-5 text-amber-400" />
                                 ) : (
-                                  <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                                  <Bookmark className="h-5 w-5 text-slate-400" />
                                 )}
                               </button>
-                              <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
-                                <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
-                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <span className="px-2.5 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-full">
+                                {job.type}
+                              </span>
+                              <span className="px-2.5 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-full">
+                                {job.location}
+                              </span>
+                              {job.salary && (
+                                <span className="px-2.5 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-full">
+                                  {job.salary}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
+                              <span className="text-sm text-slate-400">
+                                {new Date(job.postedDate).toLocaleDateString()}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-20 bg-slate-700 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400" 
+                                    style={{ width: `${job.match}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs text-amber-400 font-medium">{job.match}%</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                        <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
-                          <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
-                            {job.type}
-                          </span>
-                          <button 
-                            onClick={(e) => handleApplyJob(job.id, e)}
-                            className={`px-6 py-2 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105 ${
-                              appliedJobs.has(job.id)
-                                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
-                            }`}
-                          >
-                            {appliedJobs.has(job.id) ? 'View Application' : 'Apply Now'}
-                            <ArrowUpRight className="h-4 w-4" />
-                          </button>
+                {/* Recommended and Recent Jobs */}
+                {(activeTab === 'recommended' || activeTab === 'recent') && (
+                  <div className="space-y-4">
+                    {recommendedJobs.length > 0 ? (
+                      recommendedJobs.map((job) => (
+                        <div
+                          key={job.id}
+                          onClick={() => navigateToJobDetails(job.id)}
+                          className="bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group cursor-pointer"
+                        >
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex gap-4 flex-1">
+                              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform">
+                                {job.logo}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                                    {job.title}
+                                  </h3>
+                                  {job.featured && (
+                                    <span className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-lg border border-amber-500/30">
+                                      Featured
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
+                                  <span className="flex items-center gap-1">
+                                    <Building className="h-4 w-4" />
+                                    {job.company}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    {job.location}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <DollarSign className="h-4 w-4" />
+                                    {job.salary}
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  {job.tags.map((tag, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 hover:scale-105 transition-transform"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-slate-500">
+                                  <span>{job.posted}</span>
+                                  <span>•</span>
+                                  <span>{job.applicants} applicants</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end gap-3">
+                              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
+                                <Target className="h-4 w-4" />
+                                <span className="text-sm font-medium">{job.match}% Match</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={(e) => handleSaveJob(job.id, e)}
+                                  className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110"
+                                  aria-label={savedJobs.has(job.id) ? 'Unsave job' : 'Save job'}
+                                >
+                                  {savedJobs.has(job.id) ? (
+                                    <BookmarkCheck className="h-5 w-5 text-amber-400" />
+                                  ) : (
+                                    <Bookmark className="h-5 w-5 text-slate-400 hover:text-amber-400" />
+                                  )}
+                                </button>
+                                <button className="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-all hover:scale-110">
+                                  <Share2 className="h-5 w-5 text-slate-400 hover:text-blue-400" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center pt-4 border-t border-slate-700/50">
+                            <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-lg border border-purple-500/30">
+                              {job.type}
+                            </span>
+                            <button 
+                              onClick={(e) => handleApplyJob(job.id, e)}
+                              className={`px-6 py-2 rounded-xl text-white font-medium transition-all shadow-lg group-hover:shadow-xl flex items-center gap-2 hover:scale-105 ${
+                                appliedJobs.has(job.id)
+                                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                              }`}
+                            >
+                              {appliedJobs.has(job.id) ? 'View Application' : 'Apply Now'}
+                              <ArrowUpRight className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Briefcase className="h-8 w-8 text-slate-400" />
+                        </div>
+                        <p className="text-slate-400">No recommended jobs available</p>
+                        <p className="text-sm text-slate-500 mt-1">Check back later for new opportunities</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Briefcase className="h-8 w-8 text-slate-400" />
-                      </div>
-                      <p className="text-slate-400">No recommended jobs available</p>
-                      <p className="text-sm text-slate-500 mt-1">Check back later for new opportunities</p>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

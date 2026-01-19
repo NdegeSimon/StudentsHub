@@ -1,6 +1,6 @@
 import { Bookmark, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-import ShareButton from "./ShareButton"; // Import the ShareButton
+import ShareButton from "../components/Sharebutton"; // Import the ShareButton
 
 export default function JobCard({
   id,
