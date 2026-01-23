@@ -35,6 +35,7 @@ class User(db.Model):
     # Relationships
     student_profile = db.relationship('Student', backref='user', uselist=False, cascade='all, delete-orphan')
     company_profile = db.relationship('Company', backref='user', uselist=False, cascade='all, delete-orphan')
+    posted_jobs = db.relationship('Job', backref='employer', lazy='dynamic', cascade='all, delete-orphan')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     conversations = db.relationship('Participant', back_populates='user', cascade='all, delete-orphan')
     sent_messages = db.relationship('Message', backref='sender', lazy=True, foreign_keys='Message.sender_id')
@@ -259,6 +260,7 @@ class Job(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    employer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
     requirements = db.Column(db.Text)

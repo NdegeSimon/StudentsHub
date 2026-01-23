@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -25,11 +27,13 @@ import {
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -112,6 +116,35 @@ Best regards,
       setShowShareOptions(false);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!user) {
+      toast.error('Please login to apply for jobs');
+      navigate('/login');
+      return;
+    }
+
+    if (user.role !== 'student') {
+      toast.error('Only students can apply for jobs');
+      return;
+    }
+
+    setApplying(true);
+    try {
+      const applicationData = {
+        cover_letter: '', // Could add a modal for this later
+        resume_url: user.student_profile?.resume_url || ''
+      };
+
+      await api.post(`/jobs/${id}/apply`, applicationData);
+      toast.success('Application submitted successfully!');
+    } catch (error) {
+      console.error('Apply error:', error);
+      toast.error(error.response?.data?.message || 'Failed to apply for job');
+    } finally {
+      setApplying(false);
     }
   };
 
@@ -303,8 +336,12 @@ Best regards,
             </div>
 
             <div className="flex flex-col gap-3 w-full md:w-auto">
-              <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                Apply Now
+              <button 
+                onClick={handleApply}
+                disabled={applying}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {applying ? 'Applying...' : 'Apply Now'}
                 <ExternalLink className="w-4 h-4" />
               </button>
               <div className="flex gap-2">

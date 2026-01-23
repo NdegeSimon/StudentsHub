@@ -1,0 +1,274 @@
+nohup: ignoring input
+Server initialized for eventlet.
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(52958) wsgi starting up on http://0.0.0.0:5001
+(52958) accepted ('127.0.0.1', 55350)
+127.0.0.1 - - [21/Jan/2026 01:01:22] "GET /api/saved-jobs HTTP/1.1" 200 372 0.255801
+(52958) accepted ('127.0.0.1', 47344)
+(52958) accepted ('127.0.0.1', 47348)
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/health HTTP/1.1" 200 369 0.008952
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.002691
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/health HTTP/1.1" 200 369 0.003093
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/jobs HTTP/1.1" 200 439 0.002269
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/saved-jobs HTTP/1.1" 200 445 0.006506
+(52958) accepted ('127.0.0.1', 47352)
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/saved-jobs HTTP/1.1" 200 445 0.003050
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/jobs HTTP/1.1" 200 356 0.042889
+(52958) accepted ('127.0.0.1', 47358)
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/saved-jobs HTTP/1.1" 200 396 0.014525
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/jobs HTTP/1.1" 200 356 0.006820
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/saved-jobs HTTP/1.1" 200 396 0.016562
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/applications HTTP/1.1" 200 434 0.003310
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.002021
+127.0.0.1 - - [21/Jan/2026 01:26:25] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.002326
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/applications/ HTTP/1.1" 200 402 0.024844
+127.0.0.1 - - [21/Jan/2026 01:26:25] "GET /api/applications/ HTTP/1.1" 200 402 0.013201
+(52958) accepted ('127.0.0.1', 54886)
+(52958) accepted ('127.0.0.1', 54900)
+127.0.0.1 - - [21/Jan/2026 01:33:37] "OPTIONS /api/dashboard/stats HTTP/1.1" 404 380 0.014050
+127.0.0.1 - - [21/Jan/2026 01:33:37] "OPTIONS /api/applications HTTP/1.1" 200 434 0.005233
+127.0.0.1 - - [21/Jan/2026 01:33:37] "OPTIONS /api/jobs HTTP/1.1" 200 439 0.011671
+(52958) accepted ('127.0.0.1', 54908)
+127.0.0.1 - - [21/Jan/2026 01:33:37] "GET /api/jobs HTTP/1.1" 200 356 0.104127
+127.0.0.1 - - [21/Jan/2026 01:33:37] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.025373
+127.0.0.1 - - [21/Jan/2026 01:33:37] "GET /api/applications/ HTTP/1.1" 200 402 0.116886
+127.0.0.1 - - [21/Jan/2026 01:33:37] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.031559
+127.0.0.1 - - [21/Jan/2026 01:33:39] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.024477
+127.0.0.1 - - [21/Jan/2026 01:33:40] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.014564
+127.0.0.1 - - [21/Jan/2026 01:33:50] "OPTIONS /api/jobs/?page=1&limit=12 HTTP/1.1" 200 445 0.001790
+127.0.0.1 - - [21/Jan/2026 01:33:50] "OPTIONS /api/jobs/?page=1&limit=12 HTTP/1.1" 200 445 0.009276
+127.0.0.1 - - [21/Jan/2026 01:33:50] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.004264
+(52958) accepted ('127.0.0.1', 43102)
+127.0.0.1 - - [21/Jan/2026 01:33:50] "GET /api/jobs/?page=1&limit=12 HTTP/1.1" 200 374 0.051060
+127.0.0.1 - - [21/Jan/2026 01:33:50] "GET /api/jobs/?page=1&limit=12 HTTP/1.1" 200 374 0.006596
+127.0.0.1 - - [21/Jan/2026 01:33:53] "OPTIONS /api/applications HTTP/1.1" 200 434 0.010694
+127.0.0.1 - - [21/Jan/2026 01:33:53] "OPTIONS /api/applications HTTP/1.1" 200 434 0.008037
+127.0.0.1 - - [21/Jan/2026 01:33:53] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.001509
+127.0.0.1 - - [21/Jan/2026 01:33:53] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.002760
+127.0.0.1 - - [21/Jan/2026 01:33:53] "GET /api/applications/ HTTP/1.1" 200 402 0.051353
+127.0.0.1 - - [21/Jan/2026 01:33:53] "GET /api/applications/ HTTP/1.1" 200 402 0.018720
+127.0.0.1 - - [21/Jan/2026 01:34:57] "OPTIONS /api/jobs/?page=1&limit=12 HTTP/1.1" 200 445 0.005685
+127.0.0.1 - - [21/Jan/2026 01:34:57] "OPTIONS /api/jobs/?page=1&limit=12 HTTP/1.1" 200 445 0.003990
+127.0.0.1 - - [21/Jan/2026 01:34:57] "GET /api/jobs/?page=1&limit=12 HTTP/1.1" 200 374 0.026194
+127.0.0.1 - - [21/Jan/2026 01:34:57] "GET /api/jobs/?page=1&limit=12 HTTP/1.1" 200 374 0.009668
+127.0.0.1 - - [21/Jan/2026 01:34:59] "GET /api/health HTTP/1.1" 200 369 0.005742
+127.0.0.1 - - [21/Jan/2026 01:34:59] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.002104
+127.0.0.1 - - [21/Jan/2026 01:34:59] "GET /api/health HTTP/1.1" 200 369 0.006374
+127.0.0.1 - - [21/Jan/2026 01:34:59] "OPTIONS /api/saved-jobs HTTP/1.1" 200 445 0.003899
+127.0.0.1 - - [21/Jan/2026 01:34:59] "OPTIONS /api/jobs HTTP/1.1" 200 439 0.009738
+127.0.0.1 - - [21/Jan/2026 01:34:59] "GET /api/saved-jobs HTTP/1.1" 200 396 0.060672
+(52958) accepted ('127.0.0.1', 57540)
+127.0.0.1 - - [21/Jan/2026 01:34:59] "GET /api/jobs HTTP/1.1" 200 356 0.017803
+127.0.0.1 - - [21/Jan/2026 01:34:59] "GET /api/saved-jobs HTTP/1.1" 200 396 0.054858
+(52958) accepted ('127.0.0.1', 57542)
+127.0.0.1 - - [21/Jan/2026 01:35:00] "OPTIONS /api/applications HTTP/1.1" 200 434 0.002579
+127.0.0.1 - - [21/Jan/2026 01:35:00] "GET /api/jobs HTTP/1.1" 200 356 0.008053
+127.0.0.1 - - [21/Jan/2026 01:35:00] "OPTIONS /api/applications/ HTTP/1.1" 200 445 0.005021
+127.0.0.1 - - [21/Jan/2026 01:35:00] "GET /api/applications/ HTTP/1.1" 200 402 0.008218
+127.0.0.1 - - [21/Jan/2026 01:35:00] "GET /api/applications/ HTTP/1.1" 200 402 0.005637
+127.0.0.1 - - [21/Jan/2026 01:35:03] "OPTIONS /api/dashboard/stats HTTP/1.1" 404 380 0.001961
+127.0.0.1 - - [21/Jan/2026 01:35:03] "OPTIONS /api/dashboard/stats HTTP/1.1" 404 380 0.025976
+127.0.0.1 - - [21/Jan/2026 01:35:03] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.012851
+127.0.0.1 - - [21/Jan/2026 01:35:03] "GET /api/jobs HTTP/1.1" 200 356 0.017148
+127.0.0.1 - - [21/Jan/2026 01:35:03] "GET /api/applications/ HTTP/1.1" 200 402 0.017494
+127.0.0.1 - - [21/Jan/2026 01:35:03] "GET /api/jobs HTTP/1.1" 200 356 0.010008
+127.0.0.1 - - [21/Jan/2026 01:35:03] "GET /api/applications/ HTTP/1.1" 200 402 0.009612
+127.0.0.1 - - [21/Jan/2026 01:35:03] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.001802
+127.0.0.1 - - [21/Jan/2026 01:35:03] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.001771
+127.0.0.1 - - [21/Jan/2026 01:35:04] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.001983
+127.0.0.1 - - [21/Jan/2026 01:35:04] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.011146
+127.0.0.1 - - [21/Jan/2026 01:35:04] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.006307
+127.0.0.1 - - [21/Jan/2026 01:35:04] "OPTIONS /api/searches/saved HTTP/1.1" 404 380 0.005001
+(52958) accepted ('127.0.0.1', 33186)
+127.0.0.1 - - [21/Jan/2026 01:44:35] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.016822
+(52958) accepted ('127.0.0.1', 53218)
+127.0.0.1 - - [21/Jan/2026 09:39:01] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.008822
+(52958) accepted ('127.0.0.1', 60104)
+127.0.0.1 - - [21/Jan/2026 11:04:05] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.012862
+(52958) accepted ('127.0.0.1', 56122)
+127.0.0.1 - - [21/Jan/2026 13:09:12] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.023130
+(52958) accepted ('127.0.0.1', 56410)
+127.0.0.1 - - [21/Jan/2026 13:27:20] "OPTIONS /api/profile/me HTTP/1.1" 404 380 0.014422
+(52958) accepted ('127.0.0.1', 54682)
+127.0.0.1 - - [21/Jan/2026 13:39:49] "GET /api/health HTTP/1.1" 200 345 0.020277
+(52958) accepted ('127.0.0.1', 35896)
+127.0.0.1 - - [21/Jan/2026 13:52:45] "GET /api/jobs HTTP/1.1" 200 332 0.180160
+(52958) accepted ('127.0.0.1', 33386)
+ERROR:app:Get jobs error: 'Job' object has no attribute 'salary'
+127.0.0.1 - - [21/Jan/2026 13:58:30] "GET /api/jobs HTTP/1.1" 500 323 0.102779
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/venv/lib/python3.8/site-packages/werkzeug/datastructures/__init__.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(68506) wsgi starting up on http://0.0.0.0:5001
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/venv/lib/python3.8/site-packages/jwt/jwk_set_cache.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(68530) wsgi starting up on http://0.0.0.0:5001
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/venv/lib/python3.8/site-packages/flask_jwt_extended/default_callbacks.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+Exception in thread Thread-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/threading.py", line 932, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.8/threading.py", line 870, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/simon/studentshub/server/venv/lib/python3.8/site-packages/flask_socketio/__init__.py", line 679, in run_server
+    eventlet.wsgi.server(eventlet_socket, app,
+TypeError: server() got an unexpected keyword argument 'allow_unsafe_werkzeug'
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/app.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(69612) wsgi starting up on http://0.0.0.0:5001
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/app.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(70139) wsgi starting up on http://0.0.0.0:5001
+(70139) accepted ('127.0.0.1', 58934)
+ERROR:app:Get jobs error: 'Job' object has no attribute 'salary'
+127.0.0.1 - - [21/Jan/2026 14:03:08] "GET /api/jobs HTTP/1.1" 500 323 0.290211
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/routes/routes.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764
+(71239) wsgi starting up on http://0.0.0.0:5001
+(71239) accepted ('127.0.0.1', 54868)
+127.0.0.1 - - [21/Jan/2026 14:07:33] "GET /api/jobs HTTP/1.1" 200 1118 0.253899
+INFO:werkzeug: * Detected change in '/home/simon/studentshub/server/routes/routes.py', reloading
+📊 Database tables ensured.
+✅ Auth blueprint registered
+✅ Search blueprint registered
+✅ Saved Jobs blueprint registered at /api/saved-jobs
+✅ Job routes blueprint registered
+✅ Company routes blueprint registered
+✅ Student routes blueprint registered
+✅ Application routes blueprint registered
+✅ Profile routes blueprint registered
+✅ Notification routes blueprint registered
+✅ Messaging routes blueprint registered
+✅ Upload routes blueprint registered
+✅ Dashboard routes blueprint registered
+🚀 Students Hub API starting...
+🔗 Available at: http://localhost:5001
+🔌 WebSocket enabled on: ws://localhost:5001
+📁 Upload folder: /home/simon/studentshub/server/uploads
+INFO:werkzeug: * Restarting with stat
+Server initialized for eventlet.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 124-161-764

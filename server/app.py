@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
-import eventlet
+# import eventlet
 
 # Import extensions from extensions.py
 from extensions import db, jwt, migrate, bcrypt, socketio, mail
@@ -54,10 +54,10 @@ def create_app():
     bcrypt.init_app(app)
     mail.init_app(app)
     
-    # Initialize SocketIO with CORS support
+    # Initialize SocketIO with threading instead of eventlet
     socketio.init_app(app, 
                      cors_allowed_origins=os.getenv('FRONTEND_URL', 'http://localhost:3000'),
-                     async_mode='eventlet',
+                     async_mode='threading',
                      logger=True,
                      engineio_logger=True)
 
@@ -362,9 +362,9 @@ def create_app():
 
 
 if __name__ == "__main__":
-    # Use eventlet for production websocket support
-    import eventlet
-    eventlet.monkey_patch()
+    # Use threading for websocket support
+    # import eventlet
+    # eventlet.monkey_patch()
     
     app = create_app()
     
@@ -377,5 +377,4 @@ if __name__ == "__main__":
     socketio.run(app, 
                  host="0.0.0.0", 
                  port=5001, 
-                 debug=True,
-                 allow_unsafe_werkzeug=True)
+                 debug=True)

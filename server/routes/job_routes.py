@@ -148,23 +148,31 @@ def create_job():
             if field not in data or not data[field]:
                 return jsonify({"error": f"{field.replace('_', ' ').title()} is required"}), 400
         
-        # Create job with posted_by set to current user
+        # Create job with employer_id and company_id
+        user = User.query.get(current_user_id)
+        if not user or user.role != 'employer':
+            return jsonify({"error": "Only employers can post jobs"}), 403
+        
+        if not user.company_profile:
+            return jsonify({"error": "Employer must have a company profile"}), 400
+        
         job_data = {
+            'employer_id': current_user_id,
+            'company_id': user.company_profile.id,
             'title': data['title'],
-            'company': data['company'],
             'description': data['description'],
             'location': data['location'],
             'job_type': data['job_type'],
-            'salary': data['salary'],
-            'posted_by': current_user_id,
-            'is_active': True,
-            'posted_date': datetime.utcnow()
+            'salary_min': data.get('salary_min'),
+            'salary_max': data.get('salary_max'),
+            'is_active': True
         }
         
         # Optional fields
         optional_fields = [
-            'experience_level', 'skills_required', 'application_deadline',
-            'job_requirements', 'responsibilities', 'benefits'
+            'requirements', 'responsibilities', 'work_mode', 'department', 
+            'experience_level', 'salary_currency', 'required_skills', 
+            'preferred_skills', 'benefits', 'application_deadline', 'positions_available'
         ]
         for field in optional_fields:
             if field in data:

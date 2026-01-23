@@ -290,7 +290,8 @@ def get_me():
 
 # ==================== PROFILE ROUTES ====================
 
-@bp.route('/profile', methods=['GET'])
+@bp.route("/profile", authMiddleware, getProfile)
+
 @jwt_required()
 def get_profile():
     """Get the current user's profile"""

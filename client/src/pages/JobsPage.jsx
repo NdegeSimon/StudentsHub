@@ -251,21 +251,21 @@ export default function JobsPage() {
     const matchesSearch = 
       searchText === '' || 
       (job.title && job.title.toLowerCase().includes(searchText.toLowerCase())) ||
-      (job.company && job.company.toLowerCase().includes(searchText.toLowerCase())) ||
+      (job.company && (typeof job.company === 'string' ? job.company.toLowerCase().includes(searchText.toLowerCase()) : job.company.name?.toLowerCase().includes(searchText.toLowerCase()))) ||
       (job.description && job.description.toLowerCase().includes(searchText.toLowerCase())) ||
-      (job.tags && job.tags.some(tag => 
-        tag && typeof tag === 'string' && tag.toLowerCase().includes(searchText.toLowerCase())
+      (job.required_skills && job.required_skills.some(skill => 
+        skill && typeof skill === 'string' && skill.toLowerCase().includes(searchText.toLowerCase())
       ));
     
-    const matchesType = filters.type === "All" || job.type === filters.type;
+    const matchesType = filters.type === "All" || job.job_type === filters.type;
     const matchesLocation = filters.location === "All" || job.location === filters.location;
-    const matchesExperience = filters.experience === "All" || job.experienceLevel === filters.experience;
+    const matchesExperience = filters.experience === "All" || job.experience_level === filters.experience;
     
     return matchesSearch && matchesType && matchesLocation && matchesExperience;
   });
 
   // Extract unique values for filters
-  const jobTypes = ["All", ...new Set(jobs.map(job => job.type).filter(Boolean))];
+  const jobTypes = ["All", ...new Set(jobs.map(job => job.job_type).filter(Boolean))];
   const locations = ["All", ...new Set(jobs.map(job => job.location).filter(Boolean))];
   const experienceLevels = ["All", "Entry Level", "Mid Level", "Senior", "Executive"];
 
@@ -561,7 +561,7 @@ export default function JobsPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-white mb-1">{job.title}</h3>
-                        <p className="text-gray-300">{job.company}</p>
+                        <p className="text-gray-300">{typeof job.company === 'string' ? job.company : job.company?.name || 'Unknown Company'}</p>
                       </div>
                       <button
                         onClick={() => handleSaveJob(job.id)}
@@ -579,18 +579,25 @@ export default function JobsPage() {
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center text-gray-400">
                         <MapPin className="h-4 w-4 mr-2" />
-                        <span>{job.location}</span>
+                        <span>{job.location || 'Not specified'}</span>
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Briefcase className="h-4 w-4 mr-2" />
-                        <span>{job.type}</span>
-                        {job.salary && (
-                          <span className="ml-4 text-green-400">{job.salary}</span>
+                        <span>{job.job_type || 'Not specified'}</span>
+                        {(job.salary_min || job.salary_max) && (
+                          <span className="ml-4 text-green-400">
+                            {job.salary_min && job.salary_max 
+                              ? `$${job.salary_min} - $${job.salary_max}`
+                              : job.salary_min 
+                                ? `$${job.salary_min}+`
+                                : `Up to $${job.salary_max}`
+                            }
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Star className="h-4 w-4 mr-2" />
-                        <span>{job.experienceLevel || 'Not specified'}</span>
+                        <span>{job.experience_level || 'Not specified'}</span>
                       </div>
                     </div>
                     
@@ -601,9 +608,9 @@ export default function JobsPage() {
                     
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {job.tags && job.tags.slice(0, 3).map((tag, index) => (
+                      {job.required_skills && job.required_skills.slice(0, 3).map((skill, index) => (
                         <span key={index} className="px-3 py-1 bg-gray-700/50 text-gray-300 text-sm rounded-full">
-                          {tag}
+                          {skill}
                         </span>
                       ))}
                     </div>
