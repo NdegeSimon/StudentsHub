@@ -601,7 +601,7 @@ class SavedSearch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     search_query = db.Column(db.String(255), nullable=False)
-    filters = db.Column(db.JSON)  # Store additional filters as JSON
+    filters = db.Column(db.JSON)
     search_count = db.Column(db.Integer, default=1)
     last_searched = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

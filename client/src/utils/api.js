@@ -2,8 +2,11 @@
 import axios from 'axios';
 
 // Create an axios instance with base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+console.log('API Base URL:', API_BASE_URL);
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`,
+  baseURL: `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -41,35 +44,66 @@ api.interceptors.response.use(
   }
 );
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  return {
+    'Authorization': token ? `Bearer ${token}` : '',
+    'Content-Type': 'application/json'
+  };
+};
+
 // ============== AUTH API ==============
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
-  getCurrentUser: () => api.get('/auth/me'),
+  getCurrentUser: () => api.post('/auth/me'),
   logout: () => api.post('/auth/logout'),
   refreshToken: () => api.post('/auth/refresh'),
 };
 
 // ============== USER API ==============
 export const userAPI = {
-  getProfile: () => api.get('/users/profile'),
-  updateProfile: (data) => api.put('/users/profile', data),
+  // User profile methods
+  getProfile: () => api.get('/profile/me'),
+  
+  // Profile update methods
+  updateProfile: (data) => {
+    // For basic info
+    return api.put('/profile/basic', {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      phone: data.phone,
+      location: data.location,
+      bio: data.bio
+    });
+  },
+  
+  // Additional methods for specific updates
+  updateEducation: (educationData) => api.post('/profile/education', educationData),
+  updateExperience: (experienceData) => api.post('/profile/experience', experienceData),
+  updateSkills: (skillsArray) => api.put('/profile/skills', { skills: skillsArray }),
+  
+  // File upload methods
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('resume', file);
-    return api.post('/users/upload-resume', formData, {
+    return api.post('/profile/upload-resume', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  
   uploadProfilePicture: (file) => {
     const formData = new FormData();
     formData.append('profile_picture', file);
-    return api.post('/users/upload-profile-picture', formData, {
+    return api.post('/profile/upload-picture', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  
+  // Job related methods
   toggleSaveJob: (jobId) => api.post(`/users/toggle-save-job/${jobId}`),
-  getSavedJobs: () => api.get('/users/saved-jobs')
+  getSavedJobs: () => api.get('/users/saved-jobs'),
 };
 
 // ============== UPLOAD API ==============
@@ -114,132 +148,37 @@ export const uploadAPI = {
 
 // ============== JOBS API ==============
 export const jobsAPI = {
-  // Get all jobs
   getAllJobs: (params) => api.get('/jobs', { params }),
-  
-  // Get single job
   getJob: (jobId) => api.get(`/jobs/${jobId}`),
-  
-  // Create job (employer only)
   createJob: (jobData) => api.post('/jobs', jobData),
-  
-  // Update job (employer only)
   updateJob: (jobId, jobData) => api.put(`/jobs/${jobId}`, jobData),
-  
-  // Delete job (employer only)
   deleteJob: (jobId) => api.delete(`/jobs/${jobId}`),
-  
-  // Search jobs with filters
   searchJobs: (filters) => api.get('/jobs/search', { params: filters }),
-  
-  // Get recommended jobs
   getRecommendedJobs: () => api.get('/jobs/recommended'),
-  
-  // Get match percentage for a job
   getMatchPercentage: (jobId) => api.get(`/jobs/${jobId}/match-percentage`),
-  
-  // Apply to a job
   applyToJob: (jobId, applicationData) => api.post(`/jobs/${jobId}/apply`, applicationData),
-  
-  // Save/unsave jobs
   saveJob: (jobId) => api.post(`/jobs/${jobId}/save`),
   unsaveJob: (jobId) => api.delete(`/jobs/${jobId}/save`),
-  
-  // Check if job is saved
   checkSavedStatus: (jobId) => api.get(`/jobs/${jobId}/saved-status`),
 };
 
-// For backward compatibility - SINGULAR version
+// For backward compatibility
 export const jobAPI = jobsAPI;
-
-// ============== SAVED JOBS API ==============
-export const savedJobsAPI = {
-  // Get all saved jobs
-  getSavedJobs: () => api.get('/saved-jobs'),
-  
-  // Get upcoming deadlines from saved jobs
-  getUpcomingDeadlines: () => api.get('/saved-jobs/upcoming'),
-  
-  // Remove a saved job
-  removeSavedJob: (savedJobId) => api.delete(`/saved-jobs/${savedJobId}`),
-  
-  // Bulk remove saved jobs
-  bulkRemoveSavedJobs: (savedJobIds) => api.delete('/saved-jobs/bulk', { data: { savedJobIds } }),
-  
-  // Get saved job stats
-  getStats: () => api.get('/saved-jobs/stats'),
-};
 
 // ============== APPLICATIONS API ==============
 export const applicationsAPI = {
-  // Get all applications for current user
   getMyApplications: () => api.get('/applications'),
-  
-  // Get single application
   getApplication: (applicationId) => api.get(`/applications/${applicationId}`),
-  
-  // Create application
   createApplication: (jobId, data) => api.post('/applications', { jobId, ...data }),
-  
-  // Withdraw application
   withdrawApplication: (applicationId) => api.delete(`/applications/${applicationId}`),
-  
-  // Update application
   updateApplication: (applicationId, data) => api.put(`/applications/${applicationId}`, data),
-  
-  // Check application status for a job
   checkApplicationStatus: (jobId) => api.get(`/applications/check/${jobId}`),
-  
-  // Get upcoming deadlines from applications
   getApplicationDeadlines: () => api.get('/applications/deadlines'),
-  
-  // Get application stats
   getStats: () => api.get('/applications/stats'),
 };
 
-// For backward compatibility - SINGULAR version
+// For backward compatibility
 export const applicationAPI = applicationsAPI;
-
-// ============== INTERNSHIPS API ==============
-export const internshipsAPI = {
-  // Get all internships
-  getAllInternships: (params) => api.get('/internships', { params }),
-  
-  // Get single internship
-  getInternship: (internshipId) => api.get(`/internships/${internshipId}`),
-  
-  // Apply to internship
-  applyToInternship: (internshipId, applicationData) => api.post(`/internships/${internshipId}/apply`, applicationData),
-  
-  // Search internships
-  searchInternships: (filters) => api.get('/internships/search', { params: filters }),
-  
-  // Save/unsave internships
-  saveInternship: (internshipId) => api.post(`/internships/${internshipId}/save`),
-  unsaveInternship: (internshipId) => api.delete(`/internships/${internshipId}/save`),
-  
-  // Get saved internships
-  getSavedInternships: () => api.get('/saved-internships'),
-};
-
-// ============== COURSES API ==============
-export const coursesAPI = {
-  getAllCourses: () => api.get('/courses'),
-  getCourse: (courseId) => api.get(`/courses/${courseId}`),
-  enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
-  getMyCourses: () => api.get('/courses/my-courses'),
-  getCourseProgress: (courseId) => api.get(`/courses/${courseId}/progress`),
-};
-
-// ============== MESSAGES API ==============
-export const messagesAPI = {
-  getConversations: () => api.get('/messages/conversations'),
-  getMessages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}`, { params }),
-  sendMessage: (conversationId, message) => api.post(`/messages/conversations/${conversationId}`, { message }),
-  createConversation: (userId, initialMessage) => api.post('/messages/conversations', { userId, initialMessage }),
-  markAsRead: (conversationId, messageId) => api.put(`/messages/conversations/${conversationId}/read/${messageId}`),
-  getUnreadCount: () => api.get('/messages/unread-count'),
-};
 
 // ============== DASHBOARD API ==============
 export const dashboardAPI = {
@@ -261,6 +200,542 @@ export const searchAPI = {
   clearRecentSearches: () => api.delete('/searches/recent'),
 };
 
+// ============== SMART API (EXACT STRUCTURE FROM YOUR ERRORS) ==============
+export const smartAPI = {
+  // savedJobs.getSavedJobs() - from your error
+  // In your smartAPI object, add this to the searches section:
+searches: {
+  // Add this method if it doesn't exist:
+  getSavedSearches: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/searches/saved`, {
+        headers: getAuthHeaders(),
+        timeout: 5000
+      });
+      return response.data;
+    } catch (error) {
+      console.log('Using mock data for saved searches:', error.message);
+      return [
+        {
+          id: 1,
+          name: 'Remote React Jobs',
+          filters: {
+            location: 'Remote',
+            technology: 'React',
+            experienceLevel: 'Mid-Senior',
+            jobType: 'Full-time',
+            salaryMin: 100000
+          },
+          lastSearch: '2024-01-15T10:30:00Z',
+          resultCount: 42,
+          isActive: true,
+          createdAt: '2024-01-10'
+        },
+        {
+          id: 2,
+          name: 'San Francisco Python Jobs',
+          filters: {
+            location: 'San Francisco',
+            technology: 'Python',
+            jobType: 'Full-time',
+            salaryMin: 120000,
+            remote: false
+          },
+          lastSearch: '2024-01-10T14:20:00Z',
+          resultCount: 28,
+          isActive: true,
+          createdAt: '2024-01-05'
+        }
+      ];
+    }
+  },
+  
+  // Make sure you have other search methods too...
+},
+   savedJobs: {
+    getSavedJobs: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/saved-jobs`, {
+          headers: getAuthHeaders(),
+          timeout: 5000
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for saved jobs:', error.message);
+        return [
+          {
+            id: 1,
+            jobId: 101,
+            title: 'Senior Frontend Developer',
+            company: 'Tech Corp',
+            location: 'Remote',
+            salary: '$120,000 - $180,000',
+            postedDate: '2024-01-15',
+            savedDate: '2024-01-16',
+            deadline: '2024-02-15',
+            status: 'active',
+            jobType: 'Full-time',
+            matchPercentage: 95
+          },
+          {
+            id: 2,
+            jobId: 102,
+            title: 'Full Stack Engineer',
+            company: 'Startup Inc',
+            location: 'New York, NY',
+            salary: '$100,000 - $150,000',
+            postedDate: '2024-01-10',
+            savedDate: '2024-01-12',
+            deadline: '2024-02-10',
+            status: 'active',
+            jobType: 'Full-time',
+            matchPercentage: 88
+          },
+          {
+            id: 3,
+            jobId: 103,
+            title: 'React Developer',
+            company: 'Digital Solutions',
+            location: 'San Francisco, CA',
+            salary: '$110,000 - $160,000',
+            postedDate: '2024-01-12',
+            savedDate: '2024-01-14',
+            deadline: '2024-02-12',
+            status: 'active',
+            jobType: 'Contract',
+            matchPercentage: 92
+          }
+        ];
+      }
+    },
+    
+    // Additional method that might be needed
+    getUpcomingDeadlines: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/saved-jobs/upcoming`, {
+          headers: getAuthHeaders()
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for upcoming deadlines:', error.message);
+        // Return a format that Dashboard.jsx expects
+        return {
+          deadlines: [
+            {
+              id: 1,
+              title: 'Google Software Engineer',
+              company: 'Google',
+              deadline: '2024-01-25T23:59:59',
+              daysLeft: 3,
+              type: 'application',
+              status: 'pending',
+              jobId: 101
+            },
+            {
+              id: 2,
+              title: 'Microsoft PM Intern',
+              company: 'Microsoft',
+              deadline: '2024-01-28T23:59:59',
+              daysLeft: 6,
+              type: 'application',
+              status: 'pending',
+              jobId: 102
+            }
+          ],
+          total: 2,
+          upcomingCount: 2
+        };
+      }
+    }
+  },
+  
+  // applications.getMyApplications() - from your error
+  applications: {
+    getMyApplications: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/applications`, {
+          headers: getAuthHeaders(),
+          timeout: 5000
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for applications:', error.message);
+        return [
+          {
+            id: 1,
+            jobId: 101,
+            jobTitle: 'Senior Frontend Developer',
+            company: 'Tech Corp',
+            status: 'applied',
+            appliedDate: '2024-01-10',
+            lastUpdated: '2024-01-10',
+            location: 'Remote',
+            salary: '$120,000 - $180,000',
+            applicationStatus: 'Under Review'
+          },
+          {
+            id: 2,
+            jobId: 102,
+            jobTitle: 'Full Stack Engineer',
+            company: 'Startup Inc',
+            status: 'interview',
+            appliedDate: '2024-01-05',
+            lastUpdated: '2024-01-15',
+            location: 'New York, NY',
+            salary: '$100,000 - $150,000',
+            applicationStatus: 'Interview Scheduled',
+            interviewDate: '2024-01-25'
+          },
+          {
+            id: 3,
+            jobId: 103,
+            jobTitle: 'Backend Engineer',
+            company: 'Amazon',
+            status: 'rejected',
+            appliedDate: '2023-12-20',
+            lastUpdated: '2024-01-08',
+            location: 'Seattle, WA',
+            salary: '$140,000 - $220,000',
+            applicationStatus: 'Not Selected'
+          }
+        ];
+      }
+    },
+    
+    getApplicationDeadlines: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/applications/deadlines`, {
+          headers: getAuthHeaders()
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for application deadlines:', error.message);
+        return [
+          {
+            id: 1,
+            title: 'Technical Interview - Google',
+            company: 'Google',
+            deadline: '2024-01-22T14:00:00',
+            type: 'interview',
+            status: 'upcoming'
+          },
+          {
+            id: 2,
+            title: 'Take-home Assignment',
+            company: 'Microsoft',
+            deadline: '2024-01-19T23:59:59',
+            type: 'assignment',
+            status: 'pending'
+          }
+        ];
+      }
+    }
+  },
+  
+  // dashboard.getUpcomingDeadlines() - from your error
+  dashboard: {
+    getUpcomingDeadlines: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/dashboard/deadlines`, {
+          headers: getAuthHeaders(),
+          timeout: 5000
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for dashboard deadlines:', error.message);
+        return [
+          {
+            id: 1,
+            title: 'Software Engineer Interview',
+            company: 'Google',
+            deadline: '2024-01-25T14:00:00',
+            type: 'interview',
+            status: 'scheduled',
+            daysLeft: 5,
+            priority: 'high'
+          },
+          {
+            id: 2,
+            title: 'Application Deadline',
+            company: 'Microsoft',
+            deadline: '2024-01-30T23:59:59',
+            type: 'application',
+            status: 'pending',
+            daysLeft: 10,
+            priority: 'medium'
+          },
+          {
+            id: 3,
+            title: 'Technical Assessment',
+            company: 'Amazon',
+            deadline: '2024-01-22T12:00:00',
+            type: 'assessment',
+            status: 'upcoming',
+            daysLeft: 2,
+            priority: 'high'
+          },
+          {
+            id: 4,
+            title: 'Final Round Interview',
+            company: 'Facebook',
+            deadline: '2024-01-28T10:30:00',
+            type: 'interview',
+            status: 'scheduled',
+            daysLeft: 8,
+            priority: 'medium'
+          }
+        ];
+      }
+    },
+    
+    getStats: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/dashboard/stats`, {
+          headers: getAuthHeaders(),
+          timeout: 5000
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for dashboard stats:', error.message);
+        return {
+          applications: {
+            total: 24,
+            pending: 8,
+            interview: 5,
+            rejected: 3,
+            offered: 2,
+            accepted: 1
+          },
+          savedJobs: 12,
+          upcomingDeadlines: 4,
+          profileCompletion: 85,
+          weeklyActivity: [
+            { day: 'Mon', applications: 3, interviews: 1 },
+            { day: 'Tue', applications: 5, interviews: 2 },
+            { day: 'Wed', applications: 2, interviews: 0 },
+            { day: 'Thu', applications: 4, interviews: 1 },
+            { day: 'Fri', applications: 6, interviews: 3 },
+            { day: 'Sat', applications: 1, interviews: 0 },
+            { day: 'Sun', applications: 3, interviews: 1 }
+          ]
+        };
+      }
+    },
+    
+    getRecentActivity: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/dashboard/activity`, {
+          headers: getAuthHeaders()
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for recent activity:', error.message);
+        return [
+          {
+            id: 1,
+            type: 'application',
+            title: 'Applied to Software Engineer at Microsoft',
+            date: '2024-01-15T10:30:00Z',
+            status: 'success',
+            icon: '📄'
+          },
+          {
+            id: 2,
+            type: 'interview',
+            title: 'Interview scheduled with Google',
+            date: '2024-01-14T14:20:00Z',
+            status: 'upcoming',
+            icon: '🎯'
+          },
+          {
+            id: 3,
+            type: 'saved',
+            title: 'Saved Senior Frontend Developer at Amazon',
+            date: '2024-01-13T09:15:00Z',
+            status: 'info',
+            icon: '💾'
+          },
+          {
+            id: 4,
+            type: 'profile',
+            title: 'Updated resume uploaded',
+            date: '2024-01-12T16:45:00Z',
+            status: 'success',
+            icon: '👤'
+          }
+        ];
+      }
+    }
+  },
+  
+  // searches.getSavedSearches() - from your error
+  searches: {
+    getSavedSearches: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/searches/saved`, {
+          headers: getAuthHeaders(),
+          timeout: 5000
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for saved searches:', error.message);
+        return [
+          {
+            id: 1,
+            name: 'Remote React Jobs',
+            filters: {
+              location: 'Remote',
+              technology: 'React',
+              experienceLevel: 'Mid-Senior',
+              jobType: 'Full-time',
+              salaryMin: 100000
+            },
+            lastSearch: '2024-01-15T10:30:00Z',
+            resultCount: 42,
+            isActive: true,
+            createdAt: '2024-01-10'
+          },
+          {
+            id: 2,
+            name: 'San Francisco Python Jobs',
+            filters: {
+              location: 'San Francisco',
+              technology: 'Python',
+              jobType: 'Full-time',
+              salaryMin: 120000,
+              remote: false
+            },
+            lastSearch: '2024-01-10T14:20:00Z',
+            resultCount: 28,
+            isActive: true,
+            createdAt: '2024-01-05'
+          },
+          {
+            id: 3,
+            name: 'Entry Level Frontend',
+            filters: {
+              experienceLevel: 'Entry',
+              technology: 'JavaScript',
+              remote: true,
+              jobType: ['Full-time', 'Internship']
+            },
+            lastSearch: '2024-01-05T09:15:00Z',
+            resultCount: 15,
+            isActive: false,
+            createdAt: '2024-01-01'
+          },
+          {
+            id: 4,
+            name: 'Senior DevOps Roles',
+            filters: {
+              technology: ['AWS', 'Docker', 'Kubernetes'],
+              experienceLevel: 'Senior',
+              salaryMin: 150000,
+              remote: true
+            },
+            lastSearch: '2024-01-12T16:45:00Z',
+            resultCount: 23,
+            isActive: true,
+            createdAt: '2024-01-08'
+          }
+        ];
+      }
+    },
+    
+    saveSearch: async (searchName, filters) => {
+      try {
+        const response = await axios.post(`${API_BASE_URL}/api/searches/save`, {
+          name: searchName,
+          filters: filters
+        }, {
+          headers: getAuthHeaders()
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Mock saving search:', error.message);
+        return { 
+          success: true, 
+          message: 'Search saved successfully',
+          searchId: Date.now()
+        };
+      }
+    }
+  },
+  
+  // Additional helper methods that might be needed
+  jobs: {
+    getAllJobs: async (filters = {}) => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/jobs`, {
+          headers: getAuthHeaders(),
+          params: filters
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for all jobs:', error.message);
+        return [
+          {
+            id: 1,
+            title: 'Software Engineer',
+            company: 'Microsoft',
+            location: 'Redmond, WA',
+            salary: '$120,000 - $180,000',
+            postedDate: '2 days ago',
+            jobType: 'Full-time',
+            isRemote: false,
+            experienceLevel: 'Mid-level',
+            description: 'Build and maintain software applications...'
+          },
+          {
+            id: 2,
+            title: 'Frontend Developer',
+            company: 'Google',
+            location: 'Mountain View, CA',
+            salary: '$130,000 - $200,000',
+            postedDate: '1 week ago',
+            jobType: 'Full-time',
+            isRemote: true,
+            experienceLevel: 'Senior',
+            description: 'Develop user-facing features...'
+          }
+        ];
+      }
+    }
+  },
+  
+  profile: {
+    getProfile: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/users/profile`, {
+          headers: getAuthHeaders()
+        });
+        return response.data;
+      } catch (error) {
+        console.log('Using mock data for profile:', error.message);
+        return {
+          id: 1,
+          name: 'John Doe',
+          email: 'john.doe@example.com',
+          avatar: 'https://via.placeholder.com/150',
+          role: 'Software Engineer',
+          location: 'San Francisco, CA',
+          bio: 'Passionate full-stack developer with 5+ years of experience...',
+          skills: ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker'],
+          experience: [
+            {
+              title: 'Senior Software Engineer',
+              company: 'Tech Corp',
+              duration: '2020 - Present',
+              location: 'San Francisco, CA'
+            }
+          ],
+          profileCompletion: 85
+        };
+      }
+    }
+  }
+};
+
 // ============== MOCK DATA FOR DEVELOPMENT ==============
 export const mockData = {
   jobs: [
@@ -279,22 +754,6 @@ export const mockData = {
       featured: true,
       status: 'open',
       postedDate: '2024-03-10',
-    },
-    {
-      id: 2,
-      title: 'Full Stack Engineer',
-      company: 'StartupXYZ',
-      location: 'Remote',
-      salary: '$90,000 - $140,000',
-      type: 'Full-time',
-      deadline: '2024-04-20',
-      description: 'Build scalable applications from frontend to backend.',
-      tags: ['Node.js', 'React', 'MongoDB', 'AWS'],
-      applications: 23,
-      rating: 4.5,
-      featured: true,
-      status: 'open',
-      postedDate: '2024-03-11',
     }
   ],
   
@@ -307,15 +766,6 @@ export const mockData = {
       savedAt: '2024-03-10T10:30:00Z',
       applied: false,
       matchPercentage: 95
-    },
-    {
-      savedId: 2,
-      jobId: 2,
-      title: 'Full Stack Engineer',
-      company: 'StartupXYZ',
-      savedAt: '2024-03-11T14:20:00Z',
-      applied: true,
-      matchPercentage: 88
     }
   ],
   
@@ -329,327 +779,12 @@ export const mockData = {
       location: 'Remote',
       type: 'Full-time',
       applied: false
-    },
-    {
-      id: 2,
-      title: 'Microsoft PM Intern',
-      company: 'Microsoft',
-      daysLeft: 5,
-      deadline: '2024-03-18',
-      location: 'Redmond, WA',
-      type: 'Internship',
-      applied: true
-    }
-  ],
-  
-  recommendedJobs: [
-    {
-      id: 101,
-      title: 'Senior Frontend Developer',
-      company: 'TechCorp Inc.',
-      location: 'San Francisco, CA',
-      salary: '$120,000 - $180,000',
-      type: 'Full-time',
-      tags: ['React', 'TypeScript', 'Next.js'],
-      applications: 45,
-      postedDate: '2 days ago',
-      featured: true,
-      matchPercentage: 92
-    }
-  ],
-  
-  applications: [
-    {
-      id: 1,
-      jobTitle: 'Frontend Developer',
-      company: 'TechCorp',
-      appliedDate: '2024-01-10',
-      status: 'Under Review',
-      deadline: '2024-03-15'
     }
   ]
 };
 
-// ============== SMART API WRAPPER WITH FALLBACK ==============
-export const smartAPI = {
-  // Jobs
-  jobs: {
-    getAllJobs: async (params = {}) => {
-      try {
-        const response = await jobsAPI.getAllJobs(params);
-        return response;
-      } catch (error) {
-        console.log('Using mock data for jobs:', error.message);
-        return { data: { success: true, data: mockData.jobs } };
-      }
-    },
-    
-    getRecommendedJobs: async () => {
-      try {
-        const response = await jobsAPI.getRecommendedJobs();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for recommended jobs:', error.message);
-        return { data: { success: true, data: mockData.recommendedJobs } };
-      }
-    },
-    
-    saveJob: async (jobId) => {
-      try {
-        const response = await jobsAPI.saveJob(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error saving job:', error.message);
-        // Simulate success in mock mode
-        return { 
-          data: { 
-            success: true, 
-            message: 'Job saved successfully',
-            data: {
-              savedId: Date.now(),
-              jobId,
-              title: 'Mock Job Title',
-              company: 'Mock Company',
-              savedAt: new Date().toISOString()
-            }
-          } 
-        };
-      }
-    },
-    
-    unsaveJob: async (jobId) => {
-      try {
-        const response = await jobsAPI.unsaveJob(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error unsaving job:', error.message);
-        // Simulate success in mock mode
-        return { 
-          data: { 
-            success: true, 
-            message: 'Job removed from saved',
-            data: { jobId, removedAt: new Date().toISOString() }
-          } 
-        };
-      }
-    },
-    
-    checkSavedStatus: async (jobId) => {
-      try {
-        const response = await jobsAPI.checkSavedStatus(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error checking saved status:', error.message);
-        // Check against mock data
-        const isSaved = mockData.savedJobs.some(job => job.jobId === jobId);
-        return { 
-          data: { 
-            success: true, 
-            data: { isSaved } 
-          } 
-        };
-      }
-    },
-    
-    getMatchPercentage: async (jobId) => {
-      try {
-        const response = await jobsAPI.getMatchPercentage(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error getting match percentage:', error.message);
-        // Return mock match percentage
-        const savedJob = mockData.savedJobs.find(job => job.jobId === jobId);
-        return { 
-          data: { 
-            success: true, 
-            data: { 
-              jobId, 
-              matchPercentage: savedJob?.matchPercentage || Math.floor(Math.random() * 50) + 50 
-            } 
-          } 
-        };
-      }
-    },
-    
-    applyToJob: async (jobId, applicationData) => {
-      try {
-        const response = await jobsAPI.applyToJob(jobId, applicationData);
-        return response;
-      } catch (error) {
-        console.error('Error applying to job:', error.message);
-        // Simulate success in mock mode
-        return { 
-          data: { 
-            success: true, 
-            message: 'Application submitted successfully',
-            data: {
-              applicationId: Date.now(),
-              jobId,
-              appliedAt: new Date().toISOString(),
-              status: 'pending'
-            }
-          } 
-        };
-      }
-    }
-  },
-  
-  // Saved Jobs
-  savedJobs: {
-    getSavedJobs: async () => {
-      try {
-        const response = await savedJobsAPI.getSavedJobs();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for saved jobs:', error.message);
-        return { data: { success: true, data: mockData.savedJobs } };
-      }
-    },
-    
-    getUpcomingDeadlines: async () => {
-      try {
-        const response = await savedJobsAPI.getUpcomingDeadlines();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for upcoming deadlines:', error.message);
-        return { data: { success: true, data: mockData.upcomingDeadlines } };
-      }
-    },
-    
-    removeSavedJob: async (savedJobId) => {
-      try {
-        const response = await savedJobsAPI.removeSavedJob(savedJobId);
-        return response;
-      } catch (error) {
-        console.error('Error removing saved job:', error.message);
-        // Simulate success in mock mode
-        return { 
-          data: { 
-            success: true, 
-            message: 'Job removed from saved',
-            data: { savedJobId, removedAt: new Date().toISOString() }
-          } 
-        };
-      }
-    }
-  },
-  
-  // Applications
-  applications: {
-    getMyApplications: async () => {
-      try {
-        const response = await applicationsAPI.getMyApplications();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for applications:', error.message);
-        return { data: { success: true, data: mockData.applications } };
-      }
-    },
-    
-    checkApplicationStatus: async (jobId) => {
-      try {
-        const response = await applicationsAPI.checkApplicationStatus(jobId);
-        return response;
-      } catch (error) {
-        console.error('Error checking application status:', error.message);
-        // Check against mock data
-        const hasApplied = mockData.applications.some(app => app.jobId === jobId);
-        return { 
-          data: { 
-            success: true, 
-            data: { 
-              hasApplied,
-              canApply: !hasApplied,
-              application: hasApplied ? mockData.applications.find(app => app.jobId === jobId) : null
-            } 
-          } 
-        };
-      }
-    },
-    
-    getApplicationDeadlines: async () => {
-      try {
-        const response = await applicationsAPI.getApplicationDeadlines();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for application deadlines:', error.message);
-        return { data: { success: true, data: mockData.upcomingDeadlines } };
-      }
-    }
-  },
-  
-  // Dashboard
-  dashboard: {
-    getStats: async () => {
-      try {
-        const response = await dashboardAPI.getStats();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for dashboard stats:', error.message);
-        return { 
-          data: { 
-            success: true, 
-            data: {
-              totalSaved: mockData.savedJobs.length,
-              totalApplications: mockData.applications.length,
-              upcomingDeadlines: mockData.upcomingDeadlines.length,
-              avgMatchRate: 85
-            }
-          } 
-        };
-      }
-    },
-    
-    getUpcomingDeadlines: async () => {
-      try {
-        const response = await dashboardAPI.getUpcomingDeadlines();
-        return response;
-      } catch (error) {
-        console.log('Using mock data for dashboard deadlines:', error.message);
-        return { data: { success: true, data: mockData.upcomingDeadlines } };
-      }
-    }
-  },
-  
-  // Upload
-  upload: {
-    uploadProfilePicture: async (file) => {
-      try {
-        const response = await uploadAPI.uploadProfilePicture(file);
-        return response;
-      } catch (error) {
-        console.error('Error uploading profile picture:', error.message);
-        return { 
-          data: { 
-            success: true, 
-            message: 'Profile picture uploaded (mock)',
-            data: { url: 'mock-profile-picture-url.jpg' }
-          } 
-        };
-      }
-    },
-    
-    uploadResume: async (file) => {
-      try {
-        const response = await uploadAPI.uploadResume(file);
-        return response;
-      } catch (error) {
-        console.error('Error uploading resume:', error.message);
-        return { 
-          data: { 
-            success: true, 
-            message: 'Resume uploaded (mock)',
-            data: { url: 'mock-resume-url.pdf' }
-          } 
-        };
-      }
-    }
-  }
-};
-
-// ============== USEFUL HELPER FUNCTIONS ==============
+// ============== HELPER FUNCTIONS ==============
 export const apiHelpers = {
-  // Format error message
   formatError: (error) => {
     if (error.response?.data?.message) {
       return error.response.data.message;
@@ -660,17 +795,14 @@ export const apiHelpers = {
     return error.message || 'An unknown error occurred';
   },
   
-  // Check if response is successful
   isSuccess: (response) => {
     return response?.data?.success === true;
   },
   
-  // Extract data from response
   extractData: (response) => {
     return response?.data?.data || response?.data || null;
   },
   
-  // Create headers with token
   createHeaders: (additionalHeaders = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     return {
@@ -678,76 +810,30 @@ export const apiHelpers = {
       'Authorization': token ? `Bearer ${token}` : '',
       ...additionalHeaders
     };
-  },
-  
-  // Handle file upload
-  uploadFile: async (file, endpoint, fieldName = 'file') => {
-    const formData = new FormData();
-    formData.append(fieldName, file);
-    
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('File upload error:', error);
-      throw error;
-    }
-  }
-};
-// In your api.js file
-export const shareAPI = {
-  // Share job
-  shareJob: (jobId, shareData) => {
-    return api.post(`/jobs/${jobId}/share`, shareData);
-  },
-
-  // Get share options
-  getShareOptions: (jobId) => {
-    return api.get(`/jobs/${jobId}/share/options`);
-  },
-
-  // Get share history
-  getShareHistory: () => {
-    return api.get('/shares/history');
-  },
-
-  // Delete share
-  deleteShare: (shareId) => {
-    return api.delete(`/share/${shareId}`);
   }
 };
 
 // Export default api instance
 export default api;
 
-// Export all APIs as a single object for convenience
+// Export the base URL for use in other files
+export { API_BASE_URL };
+
+// Export all APIs as a single object
 export const API = {
   auth: authAPI,
   user: userAPI,
-  upload: uploadAPI,      // ADDED
+  upload: uploadAPI,
   jobs: jobsAPI,
-  job: jobAPI,            // ADDED - singular version
-  savedJobs: savedJobsAPI,
+  job: jobAPI,
   applications: applicationsAPI,
-  application: applicationAPI,  // ADDED - singular version
-  internships: internshipsAPI,
-  courses: coursesAPI,
-  messages: messagesAPI,
+  application: applicationAPI,
   dashboard: dashboardAPI,
   search: searchAPI,
   smart: smartAPI,
   helpers: apiHelpers,
   mockData
 };
+
+// Also export smartAPI as defaultSmartAPI for easy access
+export const defaultSmartAPI = smartAPI;

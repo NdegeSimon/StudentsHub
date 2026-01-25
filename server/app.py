@@ -1,11 +1,10 @@
-# app.py
-from flask import Flask, jsonify
+# app.py - FIXED VERSION
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_socketio import SocketIO
-from datetime import timedelta
+from flask_socketio import SocketIO, emit, join_room
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
-# import eventlet
 
 # Import extensions from extensions.py
 from extensions import db, jwt, migrate, bcrypt, socketio, mail
@@ -14,16 +13,6 @@ def create_app():
     app = Flask(__name__)
     load_dotenv()
 
-    # Configure CORS
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"],
-            "supports_credentials": True
-        }
-    })
-
     # Configuration
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"),
@@ -31,6 +20,7 @@ def create_app():
         JWT_ACCESS_TOKEN_EXPIRES=timedelta(days=7),
         SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL", "sqlite:///studentshub.db"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        ENV=os.getenv("FLASK_ENV", "development"),
         # For file uploads
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
         UPLOAD_FOLDER=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'),
@@ -61,22 +51,24 @@ def create_app():
                      logger=True,
                      engineio_logger=True)
 
-    # CORS - Allow all origins in development
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": ["http://localhost:3000", "http://localhost:5173", os.getenv('FRONTEND_URL', 'http://localhost:3000')],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-            "supports_credentials": True,
-            "expose_headers": ["Content-Disposition"]
-        },
-        r"/uploads/*": {
-            "origins": ["http://localhost:3000", "http://localhost:5173", os.getenv('FRONTEND_URL', 'http://localhost:3000')],
-            "methods": ["GET"],
-            "supports_credentials": True
-        }
-    })
+    # Initialize CORS with allowed origins
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        frontend_url
+    ]
+    
+    CORS(app, 
+         origins=allowed_origins,
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+         supports_credentials=True,
+         expose_headers=["Content-Disposition"])
 
+    # CORS is already configured above with CORS(app, ...)
+   
     # Import models inside app context to avoid circular imports
     with app.app_context():
         from models import (
@@ -85,7 +77,9 @@ def create_app():
             Conversation, Participant, Message
         )
         # This will create all database tables if they don't exist
-        db.create_all()
+        if app.config["ENV"] == "development":
+            db.create_all()
+
         print("📊 Database tables ensured.")
 
     # Register blueprints
@@ -110,6 +104,10 @@ def create_app():
         app.register_blueprint(job_bp, url_prefix='/api/jobs')
         print("✅ Job routes blueprint registered")
         
+        from routes.saved_searches_routes import saved_searches_bp
+        app.register_blueprint(saved_searches_bp, url_prefix='/api/saved-searches')
+        print("✅ Saved Searches blueprint registered")
+        
         # Import and register company routes
         from routes.company_routes import company_bp
         app.register_blueprint(company_bp, url_prefix='/api/companies')
@@ -128,12 +126,12 @@ def create_app():
         # Import and register notification routes
         from routes.notification_routes import notification_bp
         app.register_blueprint(notification_bp, url_prefix='/api/notifications')
+        print("✅ Notification routes blueprint registered")
         
         # Import and register profile routes
         from routes.profile_routes import profile_bp
-        app.register_blueprint(profile_bp, url_prefix='')
+        app.register_blueprint(profile_bp)
         print("✅ Profile routes blueprint registered")
-        print("✅ Notification routes blueprint registered")
         
         # Import and register messaging routes
         from routes.message_routes import message_bp as messages_bp
@@ -150,30 +148,42 @@ def create_app():
         app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
         print("✅ Dashboard routes blueprint registered")
         
-        # Test route
-        @app.route('/api/test', methods=['GET'])
-        def test():
-            return jsonify({"status": "success", "message": "Backend is working!"})
-        
-        # Health check route
-        @app.route('/api/health', methods=['GET'])
-        def health_check():
-            return jsonify({
-                "status": "healthy",
-                "database": "connected" if db.session.bind else "disconnected",
-                "messaging": "enabled"
-            })
-            
     except Exception as e:
         print(f"❌ Error registering blueprints: {e}")
         import traceback
         traceback.print_exc()
         raise
 
-    # WebSocket event handlers
-    from flask_jwt_extended import jwt_required, get_jwt_identity
-    from models import User, Conversation, Participant, Message
+    # Test route
+    @app.route('/api/test', methods=['GET'])
+    def test():
+        return jsonify({"status": "success", "message": "Backend is working!"})
     
+    # Health check route
+    @app.route('/api/health', methods=['GET'])
+    def health_check():
+        return jsonify({
+            "status": "healthy",
+            "database": "connected" if db.session.bind else "disconnected",
+            "messaging": "enabled"
+        })
+    
+    # CORS test endpoint
+    @app.route('/api/cors-test', methods=['GET', 'OPTIONS'])
+    def cors_test():
+        if request.method == 'OPTIONS':
+            # Handle preflight request
+            response = jsonify({'status': 'preflight'})
+            return response, 200
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'CORS test successful',
+            'origin': request.headers.get('Origin'),
+            'method': request.method
+        })
+
+    # WebSocket event handlers
     @socketio.on('connect')
     def handle_connect():
         print(f'Client connected: {request.sid}')
@@ -182,14 +192,16 @@ def create_app():
     def handle_disconnect():
         print(f'Client disconnected: {request.sid}')
         # Update user status to offline
-        user = User.query.filter_by(socket_id=request.sid).first()
-        if user:
-            user.is_online = False
-            user.socket_id = None
-            db.session.commit()
-            
-            # Notify others
-            emit('user_offline', {'user_id': user.id}, broadcast=True)
+        with app.app_context():
+            from models import User
+            user = User.query.filter_by(socket_id=request.sid).first()
+            if user:
+                user.is_online = False
+                user.socket_id = None
+                db.session.commit()
+                
+                # Notify others
+                emit('user_offline', {'user_id': user.id}, broadcast=True)
     
     @socketio.on('authenticate')
     def handle_authentication(data):
@@ -201,28 +213,30 @@ def create_app():
             
             from flask_jwt_extended import decode_token
             decoded = decode_token(token)
-            user_id = decoded.get('user_id')
-            
+            user_id = decoded.get("sub")
+
             if not user_id:
                 emit('auth_error', {'message': 'Invalid token'})
                 return
             
-            user = User.query.get(user_id)
-            if not user:
-                emit('auth_error', {'message': 'User not found'})
-                return
-            
-            # Store user's socket connection
-            user.is_online = True
-            user.socket_id = request.sid
-            db.session.commit()
-            
-            # Join user to their personal room
-            join_room(str(user_id))
-            emit('authenticated', {'user_id': user_id})
-            
-            # Notify others that user is online
-            emit('user_online', {'user_id': user_id}, broadcast=True, include_self=False)
+            with app.app_context():
+                from models import User
+                user = User.query.get(user_id)
+                if not user:
+                    emit('auth_error', {'message': 'User not found'})
+                    return
+                
+                # Store user's socket connection
+                user.is_online = True
+                user.socket_id = request.sid
+                db.session.commit()
+                
+                # Join user to their personal room
+                join_room(str(user_id))
+                emit('authenticated', {'user_id': user_id})
+                
+                # Notify others that user is online
+                emit('user_online', {'user_id': user_id}, broadcast=True, include_self=False)
             
         except Exception as e:
             print(f"Authentication error: {e}")
@@ -253,62 +267,65 @@ def create_app():
                 emit('error', {'message': 'Missing required fields'})
                 return
             
-            # Create message in database
-            message = Message(
-                conversation_id=conversation_id,
-                sender_id=sender_id,
-                content=content,
-                message_type=message_type,
-                file_url=file_url,
-                file_name=file_name,
-                file_size=file_size,
-                status='sent'
-            )
-            
-            db.session.add(message)
-            
-            # Update conversation last message
-            conversation = Conversation.query.get(conversation_id)
-            if conversation:
-                conversation.last_message = content[:100]
-                conversation.last_message_at = datetime.utcnow()
-            
-            # Update unread counts for other participants
-            participants = Participant.query.filter_by(conversation_id=conversation_id).all()
-            for participant in participants:
-                if participant.user_id != sender_id:
-                    participant.unread_count += 1
-            
-            db.session.commit()
-            
-            # Prepare message data to send
-            sender = User.query.get(sender_id)
-            message_data = {
-                'id': message.id,
-                'conversation_id': message.conversation_id,
-                'sender_id': message.sender_id,
-                'sender': sender.to_dict() if sender else None,
-                'content': message.content,
-                'message_type': message.message_type,
-                'file_url': message.file_url,
-                'file_name': message.file_name,
-                'file_size': message.file_size,
-                'status': message.status,
-                'created_at': message.created_at.isoformat()
-            }
-            
-            # Send to all participants in the conversation room
-            room_name = f'conversation_{conversation_id}'
-            emit('new_message', message_data, room=room_name)
-            
-            # Also send to individual user rooms for real-time updates
-            for participant in participants:
-                if participant.user_id != sender_id:
-                    emit('new_message_notification', {
-                        'conversation_id': conversation_id,
-                        'message': content[:50],
-                        'sender_name': sender.name if sender else 'Unknown'
-                    }, room=str(participant.user_id))
+            with app.app_context():
+                from models import User, Conversation, Participant, Message
+                
+                # Create message in database
+                message = Message(
+                    conversation_id=conversation_id,
+                    sender_id=sender_id,
+                    content=content,
+                    message_type=message_type,
+                    file_url=file_url,
+                    file_name=file_name,
+                    file_size=file_size,
+                    status='sent'
+                )
+                
+                db.session.add(message)
+                
+                # Update conversation last message
+                conversation = Conversation.query.get(conversation_id)
+                if conversation:
+                    conversation.last_message = content[:100]
+                    conversation.last_message_at = datetime.utcnow()
+                
+                # Update unread counts for other participants
+                participants = Participant.query.filter_by(conversation_id=conversation_id).all()
+                for participant in participants:
+                    if participant.user_id != sender_id:
+                        participant.unread_count += 1
+                
+                db.session.commit()
+                
+                # Prepare message data to send
+                sender = User.query.get(sender_id)
+                message_data = {
+                    'id': message.id,
+                    'conversation_id': message.conversation_id,
+                    'sender_id': message.sender_id,
+                    'sender': sender.to_dict() if sender else None,
+                    'content': message.content,
+                    'message_type': message.message_type,
+                    'file_url': message.file_url,
+                    'file_name': message.file_name,
+                    'file_size': message.file_size,
+                    'status': message.status,
+                    'created_at': message.created_at.isoformat()
+                }
+                
+                # Send to all participants in the conversation room
+                room_name = f'conversation_{conversation_id}'
+                emit('new_message', message_data, room=room_name)
+                
+                # Also send to individual user rooms for real-time updates
+                for participant in participants:
+                    if participant.user_id != sender_id:
+                        emit('new_message_notification', {
+                            'conversation_id': conversation_id,
+                            'message': content[:50],
+                            'sender_name': sender.first_name if sender else 'Unknown'
+                        }, room=str(participant.user_id))
             
         except Exception as e:
             print(f"Error sending message: {e}")
@@ -334,21 +351,23 @@ def create_app():
         user_id = data.get('user_id')
         
         if message_id and user_id:
-            message = Message.query.get(message_id)
-            if message:
-                read_by = message.read_by or []
-                if user_id not in read_by:
-                    read_by.append(user_id)
-                    message.read_by = read_by
-                    message.status = 'read'
-                    db.session.commit()
-                    
-                    # Notify sender that message was read
-                    emit('message_read', {
-                        'message_id': message_id,
-                        'user_id': user_id
-                    }, room=str(message.sender_id))
-    
+            with app.app_context():
+                from models import Message
+                message = Message.query.get(message_id)
+                if message:
+                    read_by = message.read_by or []
+                    if user_id not in read_by:
+                        read_by.append(user_id)
+                        message.read_by = read_by
+                        message.status = 'read'
+                        db.session.commit()
+                        
+                        # Notify sender that message was read
+                        emit('message_read', {
+                            'message_id': message_id,
+                            'user_id': user_id
+                        }, room=str(message.sender_id))
+
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
@@ -362,19 +381,21 @@ def create_app():
 
 
 if __name__ == "__main__":
-    # Use threading for websocket support
-    # import eventlet
-    # eventlet.monkey_patch()
-    
+    # Create the Flask application
     app = create_app()
     
+    # Print startup information
     print("🚀 Students Hub API starting...")
-    print("🔗 Available at: http://localhost:5001")
-    print("🔌 WebSocket enabled on: ws://localhost:5001")
-    print("📁 Upload folder:", app.config['UPLOAD_FOLDER'])
+    print(f"🔗 Available at: http://localhost:5001")
+    print(f"🔌 WebSocket enabled on: ws://localhost:5001")
+    print(f"📁 Upload folder: {app.config['UPLOAD_FOLDER']}")
+    print(f"🌐 Environment: {app.config['ENV']}")
     
-    # Run with SocketIO support
-    socketio.run(app, 
-                 host="0.0.0.0", 
-                 port=5001, 
-                 debug=True)
+    # Run the application with SocketIO support
+    socketio.run(
+        app=app,
+        host="0.0.0.0",
+        port=5001,
+        debug=app.config['ENV'] == 'development',
+        use_reloader=app.config['ENV'] == 'development'
+    )

@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import or_
-from models.models import Application, Job, Student, db
+from models.models import Application, Job, Student, db, Company
 from extensions import db
 from utils.email_service import send_email_notification
 
@@ -76,6 +76,68 @@ def get_application(application_id):
     except Exception as e:
         current_app.logger.error(f"Error fetching application {application_id}: {str(e)}")
         return jsonify({"error": "Failed to fetch application"}), 500
+
+@application_bp.route('/upcoming-deadlines', methods=['GET'])
+@jwt_required()
+def get_upcoming_deadlines():
+    """
+    Get applications with upcoming deadlines (within next 7 days)
+    """
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
+        
+        # Calculate date range (today to 7 days from now)
+        today = date.today()
+        week_from_now = today + timedelta(days=7)
+        
+        # Query applications with deadlines in the next 7 days
+        applications = db.session.query(
+            Application,
+            Job,
+            Company.company_name,
+            Company.logo_url
+        ).join(
+            Job, Application.job_id == Job.id
+        ).join(
+            Company, Job.company_id == Company.id
+        ).filter(
+            Application.student_id == user_id,
+            Job.application_deadline.between(today, week_from_now)
+        ).order_by(
+            Job.application_deadline.asc()
+        ).all()
+        
+        result = []
+        for app, job, company_name, company_logo in applications:
+            deadline = job.application_deadline
+            days_left = (deadline.date() - today).days if deadline else None
+            
+            result.append({
+                'id': app.id,
+                'job_id': job.id,
+                'job_title': job.title,
+                'company_name': company_name,
+                'company_logo': company_logo,
+                'status': app.status,
+                'applied_date': app.applied_date.isoformat() if app.applied_date else None,
+                'deadline': deadline.isoformat() if deadline else None,
+                'days_left': days_left,
+                'location': job.location,
+                'job_type': job.job_type,
+                'salary': f"{job.min_salary}-{job.max_salary} {job.salary_currency}" \
+                         if job.min_salary and job.max_salary else "Not specified"
+            })
+            
+        return jsonify({
+            'status': 'success',
+            'count': len(result),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching upcoming deadlines: {str(e)}")
+        return jsonify({"error": "Failed to fetch upcoming deadlines"}), 500
 
 @application_bp.route('/', methods=['POST'])
 @jwt_required()

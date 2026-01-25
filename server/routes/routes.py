@@ -1,4 +1,4 @@
-# routes/routes.py - FIXED VERSION
+# routes/routes.py - CORRECTED VERSION
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import (
@@ -8,6 +8,8 @@ from flask_jwt_extended import (
     get_jwt_identity,
     get_jwt
 )
+# REMOVE THIS LINE: from middleware.auth_middleware import auth_middleware
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import re
@@ -290,8 +292,10 @@ def get_me():
 
 # ==================== PROFILE ROUTES ====================
 
-@bp.route("/profile", authMiddleware, getProfile)
+# FIXED: Changed from incorrect @bp.route("/profile", authMiddleware, getProfile)
+# to proper decorator syntax:
 
+@bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
     """Get the current user's profile"""

@@ -17,8 +17,9 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
-
-
+    with op.batch_alter_table('jobs', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('employer_id', sa.Integer(), nullable=True))
+        batch_op.create_foreign_key('fk_jobs_employer_id', 'users', ['employer_id'], ['id'])
+        
 def downgrade():
     ${downgrades if downgrades else "pass"}

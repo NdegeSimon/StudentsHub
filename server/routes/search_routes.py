@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.models import db, SavedSearch
 from datetime import datetime
@@ -46,6 +46,35 @@ def save_search():
     
     db.session.commit()
     return jsonify(search.to_dict()), 201
+
+@search_bp.route('/api/searches/saved', methods=['GET'])
+@jwt_required()
+def get_saved_searches_list():
+    """Get a list of all saved searches for the current user with basic info"""
+    try:
+        user_id = get_jwt_identity()
+        searches = SavedSearch.query.filter_by(user_id=user_id)\
+            .order_by(SavedSearch.last_searched.desc())\
+            .all()
+            
+        result = [{
+            'id': search.id,
+            'search_query': search.search_query,
+            'search_count': search.search_count,
+            'last_searched': search.last_searched.isoformat() if search.last_searched else None,
+            'created_at': search.created_at.isoformat() if search.created_at else None,
+            'filters': search.filters or {}
+        } for search in searches]
+        
+        return jsonify({
+            'status': 'success',
+            'count': len(result),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching saved searches: {str(e)}")
+        return jsonify({"error": "Failed to fetch saved searches"}), 500
 
 @search_bp.route('/api/searches/<int:search_id>', methods=['DELETE'])
 @jwt_required()

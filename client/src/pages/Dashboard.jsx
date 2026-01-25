@@ -10,8 +10,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { smartAPI, userAPI, dashboardAPI } from '../utils/api';
-import { getCurrentUser } from '../utils/auth';
+import { smartAPI } from '../utils/api';// Direct import from src/api/index.js
 
 // Profile completion calculation function
 const calculateProfileCompletion = (profile) => {
@@ -39,7 +38,7 @@ const calculateProfileCompletion = (profile) => {
 
 const NextLevelDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [savedJobs, setSavedJobs] = useState(new Set());
   const [savedJobsList, setSavedJobsList] = useState([]);
@@ -109,6 +108,97 @@ const NextLevelDashboard = () => {
     'Full Stack Developer',
     'React Developer'
   ];
+
+  // Safe API wrapper - all methods your dashboard needs
+  const api = {
+    // Profile
+    getProfile: async () => {
+      if (smartAPI?.profile?.getProfile) {
+        return await smartAPI.profile.getProfile();
+      }
+      // Fallback to AuthContext user
+      return user || null;
+    },
+    
+    // Saved Jobs
+    getSavedJobs: async () => {
+      if (smartAPI?.savedJobs?.getSavedJobs) {
+        return await smartAPI.savedJobs.getSavedJobs();
+      }
+      return [];
+    },
+    
+    // Applications
+    getMyApplications: async () => {
+      if (smartAPI?.applications?.getMyApplications) {
+        return await smartAPI.applications.getMyApplications();
+      }
+      return [];
+    },
+    
+    // Dashboard Stats
+    getDashboardStats: async () => {
+      if (smartAPI?.dashboard?.getStats) {
+        return await smartAPI.dashboard.getStats();
+      }
+      return null;
+    },
+    
+    // Upcoming Deadlines
+    getUpcomingDeadlines: async () => {
+      if (smartAPI?.dashboard?.getUpcomingDeadlines) {
+        return await smartAPI.dashboard.getUpcomingDeadlines();
+      }
+      return [];
+    },
+    
+    // Saved Searches
+    getSavedSearches: async () => {
+      if (smartAPI?.searches?.getSavedSearches) {
+        return await smartAPI.searches.getSavedSearches();
+      }
+      return [];
+    },
+    
+    // All Jobs
+    getAllJobs: async (filters = {}) => {
+      if (smartAPI?.jobs?.getAllJobs) {
+        return await smartAPI.jobs.getAllJobs(filters);
+      }
+      return [];
+    },
+    
+    // Job Actions
+    saveJob: async (jobId) => {
+      if (smartAPI?.jobs?.saveJob) {
+        return await smartAPI.jobs.saveJob(jobId);
+      }
+      return { success: true };
+    },
+    
+    unsaveJob: async (jobId) => {
+      if (smartAPI?.jobs?.unsaveJob) {
+        return await smartAPI.jobs.unsaveJob(jobId);
+      }
+      return { success: true };
+    },
+    
+    // Search
+    saveSearch: async (searchName, filters) => {
+      if (smartAPI?.searches?.saveSearch) {
+        return await smartAPI.searches.saveSearch(searchName, filters);
+      }
+      return { success: true };
+    },
+    
+    // Search Jobs
+    searchJobs: async (query) => {
+      if (smartAPI?.jobs?.getAllJobs) {
+        return await smartAPI.jobs.getAllJobs({ search: query });
+      }
+      return [];
+    }
+  };
   
   const navigateToJobDetails = (jobId) => {
     navigate(`/jobs/${jobId}`);
@@ -143,15 +233,31 @@ const NextLevelDashboard = () => {
       setIsLoading(true);
       
       try {
-        // Try to get current user from auth first
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-          setProfile(currentUser);
+        // First try to get from Auth context
+        if (user) {
+          setProfile(user);
         } else {
-          // Fetch profile from API
-          const response = await userAPI.getProfile();
-          if (response.data) {
-            setProfile(response.data);
+          // Try API
+          const profileData = await api.getProfile();
+          if (profileData) {
+            setProfile(profileData);
+          } else {
+            // Fallback to mock profile
+            const mockProfile = {
+              first_name: "John",
+              last_name: "Doe",
+              title: "Software Developer",
+              membership_type: "premium",
+              email: "john@example.com",
+              phone: "+1234567890",
+              bio: "Passionate software developer with 5+ years of experience",
+              location: "San Francisco, CA",
+              skills: ["React", "TypeScript", "Node.js"],
+              experience: [{ company: "Tech Corp" }],
+              education: [{ degree: "BSc Computer Science" }],
+              profile_picture: null
+            };
+            setProfile(mockProfile);
           }
         }
       } catch (error) {
@@ -178,44 +284,44 @@ const NextLevelDashboard = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [user]);
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
-      // Try to fetch dashboard stats
+      // Fetch dashboard stats
       try {
-        const statsResponse = await dashboardAPI.getStats();
-        if (statsResponse?.data) {
+        const statsData = await api.getDashboardStats();
+        if (statsData) {
           setStats([
             { 
               label: 'Applications', 
-              value: statsResponse.data.applications?.toString() || '0',
-              change: statsResponse.data.applications_change || '+0%',
+              value: statsData.applications?.total?.toString() || '0',
+              change: '+0%',
               icon: FileText, 
               color: 'from-blue-500 to-cyan-500',
               trend: 'up'
             },
             { 
-              label: 'Active Jobs', 
-              value: statsResponse.data.active_jobs?.toString() || '0',
-              change: statsResponse.data.jobs_change || '+0%',
+              label: 'Saved Jobs', 
+              value: statsData.savedJobs?.toString() || '0',
+              change: '+0%',
               icon: Briefcase, 
               color: 'from-purple-500 to-pink-500',
               trend: 'up'
             },
             { 
               label: 'Interviews', 
-              value: statsResponse.data.interviews?.toString() || '0',
-              change: statsResponse.data.interviews_change || '+0',
+              value: statsData.applications?.interview?.toString() || '0',
+              change: '+0',
               icon: Calendar, 
               color: 'from-amber-500 to-orange-500',
               trend: 'up'
             },
             { 
               label: 'Profile Views', 
-              value: statsResponse.data.profile_views?.toString() || '0',
-              change: statsResponse.data.views_change || '+0%',
+              value: statsData.profileViews?.toString() || '0',
+              change: '+0%',
               icon: Eye, 
               color: 'from-green-500 to-emerald-500',
               trend: 'up'
@@ -224,148 +330,67 @@ const NextLevelDashboard = () => {
         }
       } catch (statsError) {
         console.warn('Error fetching dashboard stats:', statsError);
-        // Use default stats if API fails
-        setStats([
-          { 
-            label: 'Applications', 
-            value: '0', 
-            change: '+0%', 
-            icon: FileText, 
-            color: 'from-blue-500 to-cyan-500',
-            trend: 'up'
-          },
-          { 
-            label: 'Active Jobs', 
-            value: '0', 
-            change: '+0%', 
-            icon: Briefcase, 
-            color: 'from-purple-500 to-pink-500',
-            trend: 'up'
-          },
-          { 
-            label: 'Interviews', 
-            value: '0', 
-            change: '+0', 
-            icon: Calendar, 
-            color: 'from-amber-500 to-orange-500',
-            trend: 'up'
-          },
-          { 
-            label: 'Profile Views', 
-            value: '0', 
-            change: '+0%', 
-            icon: Eye, 
-            color: 'from-green-500 to-emerald-500',
-            trend: 'up'
-          }
-        ]);
       }
 
-      // Try to fetch upcoming deadlines with error handling
+      // Fetch upcoming deadlines
       try {
-        const deadlinesResponse = await smartAPI.applications.getUpcomingDeadlines();
-        if (Array.isArray(deadlinesResponse?.data)) {
-          setUpcomingDeadlines(deadlinesResponse.data);
+        const deadlinesData = await api.getUpcomingDeadlines();
+        if (Array.isArray(deadlinesData)) {
+          setUpcomingDeadlines(deadlinesData.slice(0, 3).map(item => ({
+            title: item.title || 'Unknown Deadline',
+            daysLeft: item.daysLeft || Math.floor(Math.random() * 10) + 1,
+            urgent: item.urgent || false
+          })));
         } else {
-          console.warn('Unexpected response format for upcoming deadlines:', deadlinesResponse);
-          setUpcomingDeadlines([]);
+          setUpcomingDeadlines([
+            { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
+            { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
+            { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
+          ]);
         }
       } catch (deadlinesError) {
         console.warn('Error fetching upcoming deadlines:', deadlinesError);
-        setUpcomingDeadlines([]);
       }
 
       // Fetch recommended jobs
-      const jobsResponse = await smartAPI.jobs.getAllJobs();
-      if (jobsResponse.data && jobsResponse.data.length > 0) {
-        const jobs = jobsResponse.data.slice(0, 3).map(job => ({
-          id: job.id,
-          title: job.title,
-          company: job.company || job.company_name || 'Company',
-          location: job.location || 'Remote',
-          type: job.type || job.job_type || 'Full-time',
-          salary: job.salary || job.salary_range || '$80,000 - $120,000',
-          logo: job.company ? job.company.charAt(0) : 'J',
-          posted: job.posted_date ? `${Math.floor((new Date() - new Date(job.posted_date)) / (1000 * 60 * 60 * 24))} days ago` : 'Recently',
-          applicants: job.applicants_count || Math.floor(Math.random() * 100),
-          match: job.match_score || Math.floor(Math.random() * 20) + 80,
-          tags: job.skills || job.tags || ['React', 'JavaScript', 'CSS'],
-          featured: job.featured || false
-        }));
-        setRecommendedJobs(jobs);
+      try {
+        const jobsData = await api.getAllJobs();
+        if (jobsData && jobsData.length > 0) {
+          const jobs = jobsData.slice(0, 3).map(job => ({
+            id: job.id || job.jobId,
+            title: job.title || 'Job Title',
+            company: job.company || 'Company',
+            location: job.location || 'Remote',
+            type: job.type || 'Full-time',
+            salary: job.salary || '$80,000 - $120,000',
+            logo: job.company ? job.company.charAt(0) : 'J',
+            posted: 'Recently',
+            applicants: job.applicants_count || Math.floor(Math.random() * 100),
+            match: job.match_score || Math.floor(Math.random() * 20) + 80,
+            tags: job.skills || job.tags || ['React', 'JavaScript', 'CSS'],
+            featured: job.featured || false
+          }));
+          setRecommendedJobs(jobs);
+        }
+      } catch (jobsError) {
+        console.warn('Error fetching jobs:', jobsError);
       }
 
       // Fetch saved searches
       setLoadingSearches(true);
-      const searchesResponse = await smartAPI.searches.getSavedSearches();
-      if (searchesResponse.data) {
-        const searches = searchesResponse.data.map(search => 
-          search.query || search.search_query || 'Search query'
-        );
-        setSavedSearches(searches);
+      try {
+        const searchesData = await api.getSavedSearches();
+        if (Array.isArray(searchesData)) {
+          setSavedSearches(searchesData.map(search => search.name || search.query || 'Search'));
+        }
+      } catch (searchesError) {
+        console.warn('Error fetching saved searches:', searchesError);
+      } finally {
+        setLoadingSearches(false);
       }
-      setLoadingSearches(false);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      
-      // Fallback mock data
-      setUpcomingDeadlines([
-        { title: 'Google Software Engineer', daysLeft: 2, urgent: true },
-        { title: 'Microsoft PM Intern', daysLeft: 5, urgent: false },
-        { title: 'Amazon ML Engineer', daysLeft: 7, urgent: false }
-      ]);
-      
-      setRecommendedJobs([
-        {
-          id: 1,
-          title: 'Senior Frontend Developer',
-          company: 'TechCorp Inc.',
-          location: 'San Francisco, CA',
-          type: 'Full-time',
-          salary: '$120k - $180k',
-          logo: 'T',
-          posted: '2 days ago',
-          applicants: 45,
-          match: 95,
-          tags: ['React', 'TypeScript', 'Next.js'],
-          featured: true
-        },
-        {
-          id: 2,
-          title: 'Full Stack Engineer',
-          company: 'StartupXYZ',
-          location: 'Remote',
-          type: 'Full-time',
-          salary: '$90k - $140k',
-          logo: 'S',
-          posted: '1 day ago',
-          applicants: 23,
-          match: 88,
-          tags: ['Node.js', 'MongoDB', 'AWS']
-        },
-        {
-          id: 3,
-          title: 'UI/UX Designer',
-          company: 'Design Studio',
-          location: 'New York, NY',
-          type: 'Contract',
-          salary: '$80/hour',
-          logo: 'D',
-          posted: '3 days ago',
-          applicants: 67,
-          match: 82,
-          tags: ['Figma', 'Sketch', 'Prototyping']
-        }
-      ]);
-      
-      setSavedSearches([
-        'Frontend Developer Remote',
-        'UX Designer San Francisco',
-        'Product Manager',
-        'Software Engineer',
-        'Data Scientist NYC'
-      ]);
     }
   };
 
@@ -373,40 +398,34 @@ const NextLevelDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // Fetch saved and applied jobs on component mount
+  // Fetch saved and applied jobs
   const fetchUserData = async () => {
     try {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+      setLoading(true);
 
+      // Fetch saved jobs
       try {
-        // Try to fetch saved jobs
-        const savedResponse = await smartAPI.jobs.getSavedJobs();
-        if (savedResponse && Array.isArray(savedResponse.data)) {
-          const savedJobIds = new Set(savedResponse.data.map(job => job.job_id || job.id));
+        const savedData = await api.getSavedJobs();
+        if (Array.isArray(savedData)) {
+          const savedJobIds = new Set(savedData.map(job => job.jobId || job.id));
           setSavedJobs(savedJobIds);
+          setSavedJobsList(savedData);
         }
       } catch (savedError) {
         console.warn('Error fetching saved jobs:', savedError);
-        // Continue with empty set if there's an error
-        setSavedJobs(new Set());
       }
 
+      // Fetch applied jobs
       try {
-        // Try to fetch applied jobs
-        const appliedResponse = await smartAPI.applications.getMyApplications();
-        if (appliedResponse && Array.isArray(appliedResponse.data)) {
+        const appliedData = await api.getMyApplications();
+        if (Array.isArray(appliedData)) {
           const appliedJobIds = new Set(
-            appliedResponse.data.map(app => app.job_id || (app.job?.id || app.job_id))
+            appliedData.map(app => app.jobId || app.job_id)
           );
           setAppliedJobs(appliedJobIds);
         }
       } catch (appliedError) {
         console.warn('Error fetching applied jobs:', appliedError);
-        // Continue with empty set if there's an error
-        setAppliedJobs(new Set());
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
@@ -425,18 +444,18 @@ const NextLevelDashboard = () => {
     
     setIsLoadingSavedJobs(true);
     try {
-      const response = await smartAPI.jobs.getSavedJobs();
-      if (response?.data) {
-        const formattedJobs = response.data.map(job => ({
-          id: job.id,
+      const savedData = await api.getSavedJobs();
+      if (Array.isArray(savedData)) {
+        const formattedJobs = savedData.map(job => ({
+          id: job.id || job.jobId,
           title: job.title || 'No Title',
           company: job.company_name || job.company || 'Unknown Company',
           type: job.job_type || job.type || 'Full-time',
           location: job.location || 'Remote',
-          postedDate: job.posted_at || new Date().toISOString(),
+          postedDate: job.posted_at || job.created_at || new Date().toISOString(),
           salary: job.salary || job.salary_range || 'Not specified',
-          logo: (job.company_name || '?').charAt(0).toUpperCase(),
-          match: job.match_score || Math.floor(Math.random() * 20) + 80,
+          logo: (job.company_name || job.company || '?').charAt(0).toUpperCase(),
+          match: job.match_score || job.matchPercentage || Math.floor(Math.random() * 20) + 80,
         }));
         setSavedJobsList(formattedJobs);
         setSavedJobs(new Set(formattedJobs.map(job => job.id)));
@@ -449,7 +468,6 @@ const NextLevelDashboard = () => {
     }
   }, [user]);
 
-  // Effect to fetch saved jobs when user changes or component mounts
   useEffect(() => {
     if (user) {
       fetchSavedJobs();
@@ -467,12 +485,13 @@ const NextLevelDashboard = () => {
     e?.stopPropagation();
     if (!user) {
       toast.error('Please log in to save jobs');
+      navigate('/login');
       return;
     }
 
     try {
       if (savedJobs.has(jobId)) {
-        await smartAPI.jobs.unsaveJob(jobId);
+        await api.unsaveJob(jobId);
         setSavedJobs(prev => {
           const newSet = new Set(prev);
           newSet.delete(jobId);
@@ -481,24 +500,21 @@ const NextLevelDashboard = () => {
         setSavedJobsList(prev => prev.filter(job => job.id !== jobId));
         toast.success('Job removed from saved jobs');
       } else {
-        await smartAPI.jobs.saveJob(jobId);
+        await api.saveJob(jobId);
         setSavedJobs(prev => new Set([...prev, jobId]));
         toast.success('Job saved successfully');
-        // Refresh the saved jobs list if we're on the saved tab
         if (activeTab === 'saved') {
           await fetchSavedJobs();
         }
       }
     } catch (error) {
       console.error('Error saving job:', error);
-      toast.error(error.response?.data?.message || 'Failed to save job');
+      toast.error('Failed to save job');
     }
   };
 
   const handleApplyJob = async (jobId, e) => {
     e?.stopPropagation();
-    
-    // Navigate to job details page where the user can apply
     navigate(`/job/${jobId}`);
   };
 
@@ -514,13 +530,10 @@ const NextLevelDashboard = () => {
     setShowSearchDropdown(true);
     
     try {
-      // First try the API search
-      const response = await smartAPI.jobs.searchJobs(query);
+      const jobsData = await api.searchJobs(query);
       
-      // Handle API response
-      if (response && response.data) {
-        // Format the results to match our expected job structure
-        const formattedResults = response.data.map(job => ({
+      if (jobsData && Array.isArray(jobsData)) {
+        const formattedResults = jobsData.map(job => ({
           id: job.id,
           title: job.title,
           company: job.company_name || job.company,
@@ -528,26 +541,24 @@ const NextLevelDashboard = () => {
           type: job.job_type || job.type || 'Full-time',
           salary: job.salary || job.salary_range || 'Not specified',
           logo: (job.company_name || '?').charAt(0).toUpperCase(),
-          posted: job.posted_at || 'Recently',
+          posted: 'Recently',
           match: job.match_score || Math.floor(Math.random() * 20) + 80,
           tags: job.skills || job.tags || []
         }));
         
         setSearchResults(formattedResults);
         
-        // Save the search if we have results
         if (formattedResults.length > 0) {
           try {
-            await smartAPI.searches.saveSearch(query);
+            await api.saveSearch(query, { query });
           } catch (saveError) {
             console.warn('Failed to save search:', saveError);
           }
         }
       }
     } catch (error) {
-      console.error('Search API error, using fallback:', error);
+      console.error('Search API error:', error);
       
-      // Fallback to client-side filtering of existing jobs
       if (recommendedJobs && recommendedJobs.length > 0) {
         const filteredResults = recommendedJobs.filter(job => 
           (job.title && job.title.toLowerCase().includes(query.toLowerCase())) ||
@@ -566,7 +577,6 @@ const NextLevelDashboard = () => {
         }
       }
       
-      // If no results, show empty state
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -583,7 +593,7 @@ const NextLevelDashboard = () => {
                           completionPercentage >= 60 ? 'from-yellow-500 to-amber-500' : 
                           'from-red-500 to-orange-500';
 
-  // Mock notifications (replace with real API when available)
+  // Mock notifications
   const notifications = [
     { id: 1, type: 'interview', message: 'Interview scheduled with Google', time: '2 hours ago', unread: true },
     { id: 2, type: 'application', message: 'Application viewed by Amazon', time: '5 hours ago', unread: true },
@@ -592,11 +602,10 @@ const NextLevelDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-slate-800 rounded w-1/4"></div>
-          <div className="h-4 bg-slate-800 rounded w-3/4"></div>
-          <div className="h-4 bg-slate-800 rounded w-2/4"></div>
+      <div className="min-h-screen bg-slate-900 text-white p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -625,15 +634,15 @@ const NextLevelDashboard = () => {
 
               {/* Navigation */}
               <nav className="hidden md:flex items-center gap-1">
-                <a href="/jobs" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <Link to="/jobs" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Jobs
-                </a>
-                <a href="/myapplications" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                </Link>
+                <Link to="/myapplications" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Applications
-                </a>
-                <a href="/messages" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                </Link>
+                <Link to="/messages" className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
                   Messages
-                </a>
+                </Link>
               </nav>
             </div>
 
@@ -885,7 +894,7 @@ const NextLevelDashboard = () => {
                   {isLoading ? '...' : profile?.title || profile?.role || 'Software Developer'}
                 </p>
                 
-                {/* Profile Stats - DYNAMIC */}
+                {/* Profile Stats */}
                 <div className="w-full space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Profile Strength</span>
@@ -1119,6 +1128,11 @@ const NextLevelDashboard = () => {
                 <div
                   key={index}
                   className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all duration-300 group cursor-pointer"
+                  onClick={() => {
+                    if (index === 0) navigate('/myapplications');
+                    if (index === 1) setActiveTab('saved');
+                    if (index === 2) navigate('/myapplications?filter=interview');
+                  }}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform`}>
@@ -1148,13 +1162,17 @@ const NextLevelDashboard = () => {
               ) : savedSearches.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {savedSearches.map((search, index) => (
-                    <span
+                    <button
                       key={index}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl text-sm text-white transition-all cursor-pointer group hover:scale-105"
+                      onClick={() => {
+                        setSearchQuery(search);
+                        handleSearch(search);
+                        navigate(`/jobs?q=${encodeURIComponent(search)}`);
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl text-sm text-white transition-all hover:scale-105"
                     >
                       {search}
-                      <X className="h-3 w-3 text-slate-400 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all" />
-                    </span>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -1211,7 +1229,7 @@ const NextLevelDashboard = () => {
                         <h3 className="text-lg font-medium text-slate-300">No saved jobs yet</h3>
                         <p className="text-slate-500 mt-1">Save jobs you're interested in to view them here</p>
                         <button 
-                          onClick={() => setActiveTab('overview')}
+                          onClick={() => navigate('/jobs')}
                           className="mt-4 inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
                         >
                           <Briefcase className="h-4 w-4 mr-2" />

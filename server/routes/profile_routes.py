@@ -24,43 +24,43 @@ def get_current_student():
     
     return student
 
-@profile_bp.route('/me', methods=['GET'])
-@jwt_required()
-def get_my_profile():
-    """Get the current user's profile"""
-    try:
-        current_user = get_jwt_identity()
-        user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
+# @profile_bp.route('/me', methods=['GET'])
+# @jwt_required()
+# def get_my_profile():
+#     """Get the current user's profile"""
+#     try:
+#         current_user = get_jwt_identity()
+#         user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
         
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({"status": "error", "message": "User not found"}), 404
+#         user = User.query.get(user_id)
+#         if not user:
+#             return jsonify({"status": "error", "message": "User not found"}), 404
         
-        profile_data = user.to_dict()
+#         profile_data = user.to_dict()
         
-        # Add student-specific data if user is a student
-        if user.role == 'student' and user.student_profile:
-            student_data = user.student_profile.__dict__.copy()
-            # Remove SQLAlchemy instance state
-            student_data.pop('_sa_instance_state', None)
-            profile_data.update(student_data)
-        # Add company-specific data if user is an employer
-        elif user.role == 'employer' and user.company_profile:
-            company_data = user.company_profile.__dict__.copy()
-            company_data.pop('_sa_instance_state', None)
-            profile_data.update(company_data)
+#         # Add student-specific data if user is a student
+#         if user.role == 'student' and user.student_profile:
+#             student_data = user.student_profile.__dict__.copy()
+#             # Remove SQLAlchemy instance state
+#             student_data.pop('_sa_instance_state', None)
+#             profile_data.update(student_data)
+#         # Add company-specific data if user is an employer
+#         elif user.role == 'employer' and user.company_profile:
+#             company_data = user.company_profile.__dict__.copy()
+#             company_data.pop('_sa_instance_state', None)
+#             profile_data.update(company_data)
         
-        return jsonify({
-            "status": "success",
-            "data": profile_data
-        }), 200
+#         return jsonify({
+#             "status": "success",
+#             "data": profile_data
+#         }), 200
         
-    except Exception as e:
-        logger.error(f"Error fetching profile: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+#     except Exception as e:
+#         logger.error(f"Error fetching profile: {str(e)}")
+#         return jsonify({"status": "error", "message": str(e)}), 500
 
 @profile_bp.route('/basic', methods=['PUT'])
-@jwt_required()
+
 @jwt_required()
 def update_basic_info():
     """Update basic user information"""
@@ -437,4 +437,55 @@ def update_skills():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error updating skills: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@profile_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_my_profile():
+    """Get the current user's profile with frontend-friendly structure"""
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Create a response that matches what frontend expects
+        profile_data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role,
+            "created_at": user.created_at.isoformat() if user.created_at else None
+        }
+        
+        # Add student profile data if exists
+        if user.role == 'student' and user.student_profile:
+            student = user.student_profile
+            profile_data.update({
+                "phone": student.phone,
+                "location": student.location,
+                "bio": student.bio,
+                "skills": student.skills or [],
+                "work_experience": student.work_experience or [],
+                "education": student.education or [],
+                "portfolio_url": student.portfolio_url,
+                "github_url": student.github_url,
+                "linkedin_url": student.linkedin_url,
+                "resume_url": student.resume_url,
+                "profile_picture": student.profile_picture,
+                "years_of_experience": student.years_of_experience,
+                "availability": student.availability,
+                "preferred_job_types": student.preferred_job_types or []
+            })
+        
+        return jsonify({
+            "status": "success",
+            "data": profile_data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching profile: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500

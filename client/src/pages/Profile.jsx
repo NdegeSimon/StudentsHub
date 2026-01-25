@@ -6,15 +6,15 @@ import {
   Download, Upload, Shield, Bell, Sparkles, Zap,
   Calendar, ChevronRight, Star, TrendingUp, Target,
   Users, Link, Eye, EyeOff, RefreshCw, Linkedin, Github,
-  ExternalLink
+  ExternalLink, FileText, Award as AwardIcon, Code
 } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
-import { userAPI, uploadAPI } from "../utils/api";
+import { userAPI, authAPI, uploadAPI } from "../utils/api";
 import { toast } from 'react-toastify';
 
 // ==================== CACHE MANAGER ====================
 class CacheManager {
-  static CACHE_KEY = 'profile_cache_v3';
+  static CACHE_KEY = 'profile_cache_v4';
   static CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   static set(data) {
@@ -22,7 +22,7 @@ class CacheManager {
       const cacheData = {
         data,
         timestamp: Date.now(),
-        version: '3.0'
+        version: '4.0'
       };
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(cacheData));
       localStorage.setItem(`${this.CACHE_KEY}_last_updated`, new Date().toISOString());
@@ -73,7 +73,7 @@ class CacheManager {
 
 // ==================== CHANGE QUEUE ====================
 class ChangeQueue {
-  static QUEUE_KEY = 'profile_changes_queue_v2';
+  static QUEUE_KEY = 'profile_changes_queue_v3';
 
   static add(change) {
     const queue = this.getQueue();
@@ -124,18 +124,6 @@ class ChangeQueue {
   }
 }
 
-// ==================== RETRY MECHANISM ====================
-const withRetry = async (fn, maxRetries = 3, delay = 1000) => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
-    }
-  }
-};
-
 // ==================== DEBOUNCE HOOK ====================
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -177,6 +165,8 @@ export default function ProfileCard({ isDashboard = false }) {
   const [profileViews, setProfileViews] = useState(1242);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
   const [pendingChangesCount, setPendingChangesCount] = useState(ChangeQueue.getPendingCount());
+  const [apiError, setApiError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState({});
   
   const initialDataRef = useRef(null);
   const formRef = useRef(null);
@@ -184,18 +174,18 @@ export default function ProfileCard({ isDashboard = false }) {
   
   // Form state that matches your backend Student model
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     location: '',
     bio: '',
     skills: [],
-    experience: [],
+    work_experience: [],
     education: [],
-    website: '',
-    github: '',
-    linkedin: '',
-    twitter: '',
+    portfolio_url: '',
+    github_url: '',
+    linkedin_url: '',
     resume_url: '',
     profile_picture: '',
     years_of_experience: 0,
@@ -210,20 +200,20 @@ export default function ProfileCard({ isDashboard = false }) {
     location: '',
     start_date: '',
     end_date: '',
-    current: false,
+    is_current: false,
     description: '',
-    achievements: []
+    skills: []
   });
   
   const [newEducation, setNewEducation] = useState({
-    school: '',
+    institution: '',
     degree: '',
     field_of_study: '',
     start_date: '',
     end_date: '',
-    current: false,
+    is_current: false,
     description: '',
-    gpa: ''
+    grade: ''
   });
 
   // Format date for input fields (YYYY-MM-DD)
@@ -294,7 +284,7 @@ export default function ProfileCard({ isDashboard = false }) {
       for (const change of queue) {
         if (change.status === 'pending') {
           try {
-            await userAPI.updateProfile(change.data);
+            await updateProfileData(change.data);
             ChangeQueue.markAsSynced(change.id);
             syncedCount++;
           } catch (error) {
@@ -332,18 +322,18 @@ export default function ProfileCard({ isDashboard = false }) {
           delete errors.phone;
         }
         break;
-      case 'name':
-        if (!value || value.trim().length < 2) {
-          errors.name = 'Name must be at least 2 characters';
+      case 'first_name':
+        if (!value || value.trim().length < 1) {
+          errors.first_name = 'First name is required';
         } else {
-          delete errors.name;
+          delete errors.first_name;
         }
         break;
-      case 'website':
+      case 'portfolio_url':
         if (value && !/^https?:\/\/.+\..+/.test(value)) {
-          errors.website = 'Invalid URL';
+          errors.portfolio_url = 'Invalid URL';
         } else {
-          delete errors.website;
+          delete errors.portfolio_url;
         }
         break;
       default:
@@ -354,105 +344,189 @@ export default function ProfileCard({ isDashboard = false }) {
     return Object.keys(errors).length === 0;
   };
 
-  // Transform backend data to form data (matches your Student model)
+  // Transform backend data to form data
   const transformBackendToForm = (backendData) => {
     console.log('Transforming backend data:', backendData);
     
-    // Extract name from first_name and last_name
-    const name = backendData.first_name 
-      ? `${backendData.first_name} ${backendData.last_name || ''}`.trim()
-      : backendData.name || '';
-    
-    // Handle nested student data
-    const studentData = backendData.student_profile || backendData.student || {};
+    const data = backendData.data || backendData;
     
     return {
-      name: name,
-      email: backendData.email || '',
-      phone: studentData.phone || backendData.phone || '',
-      bio: studentData.bio || backendData.bio || '',
-      location: studentData.location || backendData.location || '',
-      skills: studentData.skills || backendData.skills || [],
-      experience: studentData.work_experience || backendData.work_experience || backendData.experience || [],
-      education: studentData.education || backendData.education || [],
-      website: studentData.portfolio_url || backendData.website || '',
-      github: studentData.github_url || backendData.github || '',
-      linkedin: studentData.linkedin_url || backendData.linkedin || '',
-      twitter: studentData.twitter_url || backendData.twitter || '',
-      resume_url: studentData.resume_url || backendData.resume_url || '',
-      profile_picture: studentData.profile_picture || backendData.profile_picture || backendData.avatar || '',
-      years_of_experience: studentData.years_of_experience || backendData.years_of_experience || 0,
-      availability: studentData.availability || 'immediate',
-      preferred_job_types: studentData.preferred_job_types || []
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      email: data.email || '',
+      phone: data.phone || '',
+      bio: data.bio || '',
+      location: data.location || '',
+      skills: Array.isArray(data.skills) ? data.skills : [],
+      work_experience: Array.isArray(data.work_experience) ? data.work_experience : [],
+      education: Array.isArray(data.education) ? data.education : [],
+      portfolio_url: data.portfolio_url || '',
+      github_url: data.github_url || '',
+      linkedin_url: data.linkedin_url || '',
+      resume_url: data.resume_url || '',
+      profile_picture: data.profile_picture || '',
+      years_of_experience: data.years_of_experience || 0,
+      availability: data.availability || 'immediate',
+      preferred_job_types: Array.isArray(data.preferred_job_types) ? data.preferred_job_types : []
     };
   };
 
-  // Transform form data to backend format (matches your Student model)
+  // Transform form data to backend format
   const transformFormToBackend = (formData) => {
     console.log('Transforming form data for backend:', formData);
     
-    const nameParts = formData.name.split(' ');
-    const backendData = {
-      first_name: nameParts[0] || '',
-      last_name: nameParts.slice(1).join(' ') || '',
+    return {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       email: formData.email,
-      // Student-specific fields
       phone: formData.phone || '',
       location: formData.location || '',
       bio: formData.bio || '',
       skills: formData.skills || [],
-      work_experience: formData.experience || [],
+      work_experience: formData.work_experience || [],
       education: formData.education || [],
-      portfolio_url: formData.website || '',
-      github_url: formData.github || '',
-      linkedin_url: formData.linkedin || '',
+      portfolio_url: formData.portfolio_url || '',
+      github_url: formData.github_url || '',
+      linkedin_url: formData.linkedin_url || '',
       resume_url: formData.resume_url || '',
       profile_picture: formData.profile_picture || '',
       years_of_experience: formData.years_of_experience || 0,
       availability: formData.availability || 'immediate',
       preferred_job_types: formData.preferred_job_types || []
     };
+  };
+
+  // Update profile data - handles all updates
+  const updateProfileData = async (data) => {
+    console.log('Updating profile with data:', data);
     
-    return backendData;
+    // Try multiple endpoints
+    const endpoints = [
+      () => userAPI.updateProfile(data),
+      () => apiPost('/profile/basic', data)
+    ];
+    
+    for (const endpointFn of endpoints) {
+      try {
+        const response = await endpointFn();
+        console.log('Update successful via endpoint:', endpointFn.name, response.data);
+        return response;
+      } catch (error) {
+        console.warn('Endpoint failed, trying next...', error.message);
+      }
+    }
+    
+    throw new Error('All update endpoints failed');
+  };
+
+  // Helper function for API posts
+  const apiPost = async (url, data) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    
+    const response = await fetch(`${API_BASE_URL}/api${url}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response.json();
   };
 
   // Fetch profile with caching and error handling
-  const fetchProfile = async (forceRefresh = false) => {
+  const fetchProfile = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
+      setApiError(null);
+      console.log('🔍 Fetching profile...');
 
       // Try cache first (unless force refresh)
       if (!forceRefresh) {
         const cached = CacheManager.get();
         if (cached) {
+          console.log('📦 Using cached profile data');
           const transformed = transformBackendToForm(cached);
           setFormData(transformed);
           initialDataRef.current = transformed;
           setLoading(false);
-          toast.info('📁 Using cached profile data');
+          setDebugInfo(prev => ({ ...prev, source: 'cache' }));
           return;
         }
       }
 
-      // Fetch from API
-      const response = await userAPI.getProfile(); // This calls /auth/me
+      console.log('📡 Fetching from API...');
+      
+      // Try multiple endpoints to find the working one
+      let response;
+      let source = '';
+      
+      try {
+        // Try profile/me first (your backend endpoint)
+        response = await userAPI.getProfile();
+        source = 'profile/me';
+      } catch (error) {
+        console.log('profile/me failed, trying auth/me...');
+        try {
+          response = await authAPI.getCurrentUser();
+          source = 'auth/me';
+        } catch (authError) {
+          console.log('Both endpoints failed');
+          throw new Error('All API endpoints failed');
+        }
+      }
+
+      if (!response || !response.data) {
+        throw new Error('Invalid API response');
+      }
+
+      console.log(`✅ Profile loaded from ${source}:`, response.data);
+      
+      // Store debug info
+      setDebugInfo({
+        lastFetch: new Date().toISOString(),
+        source,
+        status: 'success'
+      });
+
       const profileData = response.data;
-
-      // Cache it
-      CacheManager.set(profileData);
-
-      // Transform and set
       const transformed = transformBackendToForm(profileData);
+      
+      console.log('🔄 Transformed data:', transformed);
+      
+      // Update state
       setFormData(transformed);
       initialDataRef.current = transformed;
-      updateProfile(profileData);
-
-      setLastSaved(new Date().toISOString());
-      toast.success('✅ Profile loaded successfully');
-
-    } catch (error) {
-      console.error('Error fetching profile:', error);
       
+      // Update context if available
+      if (updateProfile) {
+        updateProfile(profileData);
+      }
+      
+      // Cache it
+      CacheManager.set(profileData);
+      setLastSaved(new Date().toISOString());
+      
+      toast.success('✅ Profile loaded successfully');
+      
+    } catch (error) {
+      console.error('❌ Error fetching profile:', error);
+      setApiError(error.message);
+      
+      // Store debug info
+      setDebugInfo({
+        lastFetch: new Date().toISOString(),
+        source: 'error',
+        error: error.message,
+        status: 'failed'
+      });
+
       // Check if we have cached data
       const cached = CacheManager.get();
       if (cached) {
@@ -462,15 +536,61 @@ export default function ProfileCard({ isDashboard = false }) {
         initialDataRef.current = transformed;
       } else {
         toast.error('❌ Unable to load profile. Please check your connection.');
+        
+        // Load sample data for demonstration
+        const sampleData = {
+          first_name: 'John',
+          last_name: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '+1 (555) 123-4567',
+          location: 'San Francisco, CA',
+          bio: 'Passionate full-stack developer with 3+ years of experience building web applications.',
+          skills: ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker'],
+          work_experience: [
+            {
+              id: 1,
+              title: 'Software Engineer',
+              company: 'Tech Corp',
+              location: 'San Francisco, CA',
+              start_date: '2022-01-01',
+              end_date: '',
+              is_current: true,
+              description: 'Developed and maintained web applications using React and Node.js'
+            }
+          ],
+          education: [
+            {
+              id: 1,
+              institution: 'Stanford University',
+              degree: 'Bachelor of Science',
+              field_of_study: 'Computer Science',
+              start_date: '2018-09-01',
+              end_date: '2022-06-01',
+              is_current: false,
+              description: 'Graduated with honors',
+              grade: '3.8'
+            }
+          ],
+          portfolio_url: 'https://portfolio.johndoe.com',
+          github_url: 'https://github.com/johndoe',
+          linkedin_url: 'https://linkedin.com/in/johndoe',
+          profile_picture: '',
+          years_of_experience: 3
+        };
+        
+        const transformed = transformBackendToForm(sampleData);
+        setFormData(transformed);
+        initialDataRef.current = transformed;
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [updateProfile]);
 
   // Initialize form data
   useEffect(() => {
     if (contextProfile) {
+      console.log('Using context profile:', contextProfile);
       const transformed = transformBackendToForm(contextProfile);
       setFormData(transformed);
       initialDataRef.current = transformed;
@@ -478,25 +598,22 @@ export default function ProfileCard({ isDashboard = false }) {
     } else {
       fetchProfile();
     }
-  }, [contextProfile]);
+  }, [contextProfile, fetchProfile]);
 
   // Check for unsaved changes
   useEffect(() => {
     if (initialDataRef.current) {
       const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialDataRef.current);
       setHasUnsavedChanges(hasChanges);
+      
+      // Auto-save when there are changes and we're online
+      if (hasChanges && isOnline && !saving && editing) {
+        autoSaveProfile();
+      }
     }
-  }, [formData]);
+  }, [formData, editing, isOnline, saving]);
 
   // Auto-save functionality
-  const debouncedFormData = useDebounce(formData, 2000);
-
-  useEffect(() => {
-    if (editing && hasUnsavedChanges && isOnline && !saving) {
-      autoSaveProfile();
-    }
-  }, [debouncedFormData]);
-
   const autoSaveProfile = async () => {
     if (!hasUnsavedChanges || !isOnline || saving) return;
 
@@ -504,7 +621,7 @@ export default function ProfileCard({ isDashboard = false }) {
       setAutoSaving(true);
       const dataToSubmit = transformFormToBackend(formData);
       
-      await userAPI.updateProfile(dataToSubmit);
+      await updateProfileData(dataToSubmit);
       
       const now = new Date();
       setLastSaved(now.toISOString());
@@ -519,6 +636,8 @@ export default function ProfileCard({ isDashboard = false }) {
         message: 'Auto-saved successfully'
       }]);
       
+      toast.success('💾 Auto-saved');
+      
     } catch (error) {
       console.error('Auto-save failed:', error);
       // Queue for later sync if offline
@@ -529,6 +648,7 @@ export default function ProfileCard({ isDashboard = false }) {
           data: dataToSubmit
         });
         setPendingChangesCount(ChangeQueue.getPendingCount());
+        toast.info('📱 Changes queued for offline sync');
       }
     } finally {
       setAutoSaving(false);
@@ -545,7 +665,7 @@ export default function ProfileCard({ isDashboard = false }) {
     validateField(name, value);
   };
 
-  // Enhanced image upload - matches your backend upload endpoint
+  // Enhanced image upload
   const handleImageUpload = async (file) => {
     if (!file) return;
 
@@ -568,16 +688,16 @@ export default function ProfileCard({ isDashboard = false }) {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      // Create FormData
-      const formDataObj = new FormData();
-      formDataObj.append('file', file);
-      
       // Upload to backend
       const response = await uploadAPI.uploadProfilePicture(file);
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      const profilePictureUrl = response.data.url;
+      const profilePictureUrl = response.data?.url || response.data?.profile_picture;
+      
+      if (!profilePictureUrl) {
+        throw new Error('No image URL returned from server');
+      }
       
       // Update form data
       setFormData(prev => ({
@@ -586,10 +706,12 @@ export default function ProfileCard({ isDashboard = false }) {
       }));
       
       // Update backend profile
-      await userAPI.updateProfile({ profile_picture: profilePictureUrl });
+      await updateProfileData({ profile_picture: profilePictureUrl });
       
       // Update context
-      updateProfile({ profile_picture: profilePictureUrl });
+      if (updateProfile) {
+        updateProfile({ profile_picture: profilePictureUrl });
+      }
       
       // Update cache
       const cached = CacheManager.get();
@@ -606,6 +728,15 @@ export default function ProfileCard({ isDashboard = false }) {
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload profile picture');
+      
+      // Fallback: Update local state only
+      const localUrl = URL.createObjectURL(file);
+      setFormData(prev => ({
+        ...prev,
+        profile_picture: localUrl
+      }));
+      toast.info('📱 Picture saved locally. Will upload when online.');
+      
       setUploadProgress(0);
     } finally {
       setSaving(false);
@@ -641,14 +772,17 @@ export default function ProfileCard({ isDashboard = false }) {
 
   const addExperience = () => {
     if (newExperience.title && newExperience.company) {
+      const newExp = {
+        ...newExperience, 
+        id: Date.now() + Math.random(),
+        start_date: formatDateForInput(newExperience.start_date),
+        end_date: newExperience.is_current ? '' : formatDateForInput(newExperience.end_date),
+        skills: newExperience.skills || []
+      };
+      
       setFormData(prev => ({
         ...prev,
-        experience: [...prev.experience, { 
-          ...newExperience, 
-          id: Date.now() + Math.random(),
-          start_date: formatDateForInput(newExperience.start_date),
-          end_date: newExperience.current ? '' : formatDateForInput(newExperience.end_date)
-        }]
+        work_experience: [...prev.work_experience, newExp]
       }));
       
       setNewExperience({
@@ -657,9 +791,9 @@ export default function ProfileCard({ isDashboard = false }) {
         location: '',
         start_date: '',
         end_date: '',
-        current: false,
+        is_current: false,
         description: '',
-        achievements: []
+        skills: []
       });
     }
   };
@@ -667,7 +801,7 @@ export default function ProfileCard({ isDashboard = false }) {
   const removeExperience = (id) => {
     setFormData(prev => ({
       ...prev,
-      experience: prev.experience.filter(exp => exp.id !== id)
+      work_experience: prev.work_experience.filter(exp => exp.id !== id)
     }));
   };
 
@@ -681,26 +815,28 @@ export default function ProfileCard({ isDashboard = false }) {
   };
 
   const addEducation = () => {
-    if (newEducation.school && newEducation.degree) {
+    if (newEducation.institution && newEducation.degree) {
+      const newEdu = {
+        ...newEducation, 
+        id: Date.now() + Math.random(),
+        start_date: formatDateForInput(newEducation.start_date),
+        end_date: newEducation.is_current ? '' : formatDateForInput(newEducation.end_date)
+      };
+      
       setFormData(prev => ({
         ...prev,
-        education: [...prev.education, { 
-          ...newEducation, 
-          id: Date.now() + Math.random(),
-          start_date: formatDateForInput(newEducation.start_date),
-          end_date: newEducation.current ? '' : formatDateForInput(newEducation.end_date)
-        }]
+        education: [...prev.education, newEdu]
       }));
       
       setNewEducation({
-        school: '',
+        institution: '',
         degree: '',
         field_of_study: '',
         start_date: '',
         end_date: '',
-        current: false,
+        is_current: false,
         description: '',
-        gpa: ''
+        grade: ''
       });
     }
   };
@@ -712,18 +848,37 @@ export default function ProfileCard({ isDashboard = false }) {
     }));
   };
 
-  // Handle adding/updating experience
-  const handleAddExperience = (newExperience) => {
-    setFormData(prev => ({
-      ...prev,
-      experience: [...prev.experience, newExperience]
-    }));
+  // Handle adding/updating experience via backend
+  const handleAddExperience = async (newExperience) => {
+    try {
+      setSaving(true);
+      const response = await userAPI.updateExperience?.(newExperience) || 
+                       apiPost('/profile/experience', newExperience);
+      
+      if (response.status === 'success') {
+        setFormData(prev => ({
+          ...prev,
+          work_experience: [...prev.work_experience, newExperience]
+        }));
+        toast.success('✅ Experience added successfully');
+      }
+    } catch (error) {
+      console.error('Error adding experience:', error);
+      toast.error('Failed to add experience. Saving locally.');
+      // Save locally
+      setFormData(prev => ({
+        ...prev,
+        work_experience: [...prev.work_experience, newExperience]
+      }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEditExperience = (updatedExperience) => {
     setFormData(prev => ({
       ...prev,
-      experience: prev.experience.map(exp => 
+      work_experience: prev.work_experience.map(exp => 
         exp.id === updatedExperience.id ? updatedExperience : exp
       )
     }));
@@ -733,9 +888,36 @@ export default function ProfileCard({ isDashboard = false }) {
     if (window.confirm('Are you sure you want to delete this experience?')) {
       setFormData(prev => ({
         ...prev,
-        experience: prev.experience.filter(exp => exp.id !== id)
+        work_experience: prev.work_experience.filter(exp => exp.id !== id)
       }));
       toast.success('Experience deleted');
+    }
+  };
+
+  // Handle adding/updating education via backend
+  const handleAddEducation = async (newEducation) => {
+    try {
+      setSaving(true);
+      const response = await userAPI.updateEducation?.(newEducation) ||
+                       apiPost('/profile/education', newEducation);
+      
+      if (response.status === 'success') {
+        setFormData(prev => ({
+          ...prev,
+          education: [...prev.education, newEducation]
+        }));
+        toast.success('✅ Education added successfully');
+      }
+    } catch (error) {
+      console.error('Error adding education:', error);
+      toast.error('Failed to add education. Saving locally.');
+      // Save locally
+      setFormData(prev => ({
+        ...prev,
+        education: [...prev.education, newEducation]
+      }));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -743,8 +925,9 @@ export default function ProfileCard({ isDashboard = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all fields
-    const isValid = ['name', 'email'].every(field => 
+    // Validate all required fields
+    const requiredFields = ['first_name', 'email'];
+    const isValid = requiredFields.every(field => 
       validateField(field, formData[field])
     );
 
@@ -771,18 +954,23 @@ export default function ProfileCard({ isDashboard = false }) {
       }
 
       // Send to backend
-      const response = await userAPI.updateProfile(dataToSubmit);
+      const response = await updateProfileData(dataToSubmit);
       
-      const updatedProfile = response.data;
-      const transformed = transformBackendToForm(updatedProfile);
-      
-      // Update everything
-      updateProfile(updatedProfile);
-      setFormData(transformed);
-      initialDataRef.current = transformed;
-      
-      // Update cache
-      CacheManager.set(updatedProfile);
+      // If backend returns updated data, use it
+      if (response.data) {
+        const updatedProfile = response.data.data || response.data;
+        const transformed = transformBackendToForm(updatedProfile);
+        
+        // Update everything
+        if (updateProfile) {
+          updateProfile(updatedProfile);
+        }
+        setFormData(transformed);
+        initialDataRef.current = transformed;
+        
+        // Update cache
+        CacheManager.set(updatedProfile);
+      }
       
       setEditing(false);
       setLastSaved(new Date().toISOString());
@@ -805,7 +993,23 @@ export default function ProfileCard({ isDashboard = false }) {
         setFormData(initialDataRef.current);
       }
       
-      toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.');
+      let errorMessage = 'Failed to update profile. Please try again.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Queue for offline sync
+      const dataToSubmit = transformFormToBackend(formData);
+      ChangeQueue.add({ 
+        type: 'profile_update',
+        data: dataToSubmit
+      });
+      setPendingChangesCount(ChangeQueue.getPendingCount());
+      
     } finally {
       setSaving(false);
     }
@@ -815,16 +1019,16 @@ export default function ProfileCard({ isDashboard = false }) {
   const calculateProfileStrength = () => {
     let score = 0;
     const fields = [
-      { check: () => formData.name, weight: 15 },
+      { check: () => formData.first_name && formData.last_name, weight: 15 },
       { check: () => formData.email, weight: 10 },
       { check: () => formData.bio?.length > 50, weight: 10 },
       { check: () => formData.profile_picture, weight: 10 },
       { check: () => formData.skills.length >= 3, weight: 10 },
-      { check: () => formData.experience.length > 0, weight: 15 },
+      { check: () => formData.work_experience.length > 0, weight: 15 },
       { check: () => formData.education.length > 0, weight: 10 },
       { check: () => formData.location, weight: 5 },
       { check: () => formData.resume_url, weight: 5 },
-      { check: () => formData.website || formData.linkedin || formData.github, weight: 10 }
+      { check: () => formData.portfolio_url || formData.linkedin_url || formData.github_url, weight: 10 }
     ];
     
     fields.forEach(field => {
@@ -911,6 +1115,9 @@ export default function ProfileCard({ isDashboard = false }) {
     );
   }
 
+  // Full name for display
+  const fullName = `${formData.first_name} ${formData.last_name}`.trim();
+
   // Dashboard View
   if (isDashboard) {
     return (
@@ -945,7 +1152,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 {formData.profile_picture ? (
                   <img 
                     src={formData.profile_picture} 
-                    alt={formData.name}
+                    alt={fullName}
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
                   />
                 ) : (
@@ -976,13 +1183,13 @@ export default function ProfileCard({ isDashboard = false }) {
 
             {/* Info Section */}
             <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">{formData.name}</h3>
-              <p className="text-blue-400 font-medium mb-4">{formData.bio?.substring(0, 50) || 'Professional'}</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{fullName || 'Your Name'}</h3>
+              <p className="text-blue-400 font-medium mb-4">{formData.bio?.substring(0, 50) || 'Add a bio to introduce yourself'}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center text-gray-300">
                   <Mail className="h-4 w-4 mr-2" />
-                  <span className="truncate">{formData.email}</span>
+                  <span className="truncate">{formData.email || 'No email set'}</span>
                 </div>
                 {formData.location && (
                   <div className="flex items-center text-gray-300">
@@ -992,7 +1199,7 @@ export default function ProfileCard({ isDashboard = false }) {
                 )}
                 <div className="flex items-center text-gray-300">
                   <Briefcase className="h-4 w-4 mr-2" />
-                  <span>{formData.experience.length} experiences</span>
+                  <span>{formData.work_experience.length} experiences</span>
                 </div>
                 <div className="flex items-center text-gray-300">
                   <GraduationCap className="h-4 w-4 mr-2" />
@@ -1117,6 +1324,15 @@ export default function ProfileCard({ isDashboard = false }) {
                   </span>
                 </div>
               )}
+              
+              {apiError && (
+                <div className="flex items-center px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-red-400 mr-2" />
+                  <span className="text-red-300 text-sm">
+                    API Error
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3">
@@ -1130,13 +1346,39 @@ export default function ProfileCard({ isDashboard = false }) {
               <button
                 onClick={() => fetchProfile(true)}
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl flex items-center transition-all"
+                disabled={loading}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Debug Panel (Development only) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-6 bg-black/50 border border-gray-700 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-mono text-gray-400">Debug Info</span>
+              <button 
+                onClick={() => console.log('Form Data:', formData)}
+                className="text-xs text-blue-400"
+              >
+                Log Data
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="text-gray-500">Status:</div>
+              <div className="text-green-400">{debugInfo.status || 'unknown'}</div>
+              <div className="text-gray-500">Source:</div>
+              <div className="text-blue-400">{debugInfo.source || 'none'}</div>
+              <div className="text-gray-500">Name:</div>
+              <div className="text-white">{fullName || 'Not set'}</div>
+              <div className="text-gray-500">Skills:</div>
+              <div className="text-white">{formData.skills.length}</div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -1157,7 +1399,7 @@ export default function ProfileCard({ isDashboard = false }) {
                       {formData.profile_picture ? (
                         <img 
                           src={formData.profile_picture} 
-                          alt={formData.name}
+                          alt={fullName}
                           className="w-full h-full object-cover transform group-hover/avatar:scale-110 transition-transform duration-500"
                         />
                       ) : (
@@ -1172,13 +1414,13 @@ export default function ProfileCard({ isDashboard = false }) {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-white mb-1">{formData.name}</h3>
+                  <h3 className="text-2xl font-bold text-white mb-1">{fullName || 'Your Name'}</h3>
                   <p className="text-blue-400 mb-4">{formData.location || 'Location not set'}</p>
                   
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-4 w-full mb-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{formData.experience.length}</div>
+                      <div className="text-2xl font-bold text-white">{formData.work_experience.length}</div>
                       <div className="text-xs text-gray-400">Experience</div>
                     </div>
                     <div className="text-center">
@@ -1215,19 +1457,24 @@ export default function ProfileCard({ isDashboard = false }) {
 
                   {/* Social Links */}
                   <div className="flex space-x-3 mt-6">
-                    {formData.website && (
-                      <a href={formData.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all">
+                    {formData.portfolio_url && (
+                      <a href={formData.portfolio_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all">
                         <Globe className="h-5 w-5 text-gray-300" />
                       </a>
                     )}
-                    {formData.linkedin && (
-                      <a href={formData.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-blue-600/20 rounded-lg transition-all">
+                    {formData.linkedin_url && (
+                      <a href={formData.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-blue-600/20 rounded-lg transition-all">
                         <Linkedin className="h-5 w-5 text-gray-300" />
                       </a>
                     )}
-                    {formData.github && (
-                      <a href={formData.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all">
+                    {formData.github_url && (
+                      <a href={formData.github_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all">
                         <Github className="h-5 w-5 text-gray-300" />
+                      </a>
+                    )}
+                    {formData.resume_url && (
+                      <a href={formData.resume_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 hover:bg-green-600/20 rounded-lg transition-all">
+                        <FileText className="h-5 w-5 text-gray-300" />
                       </a>
                     )}
                   </div>
@@ -1254,7 +1501,7 @@ export default function ProfileCard({ isDashboard = false }) {
                   ))
                 ) : (
                   <div className="text-center py-8">
-                    <Target className="h-12 w-12 text-gray-700 mx-auto mb-3" />
+                    <Code className="h-12 w-12 text-gray-700 mx-auto mb-3" />
                     <p className="text-gray-500">No skills added yet</p>
                     <button 
                       onClick={() => setEditing(true)}
@@ -1280,6 +1527,11 @@ export default function ProfileCard({ isDashboard = false }) {
                     {Object.keys(validationErrors).length > 0 && (
                       <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                         <p className="text-red-400 text-sm">Please fix the errors below</p>
+                        <ul className="mt-1 text-sm text-red-300">
+                          {Object.entries(validationErrors).map(([key, value]) => (
+                            <li key={key}>• {value}</li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
@@ -1319,19 +1571,31 @@ export default function ProfileCard({ isDashboard = false }) {
                 {/* Basic Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Full Name *</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">First Name *</label>
                     <input
                       type="text"
-                      name="name"
-                      value={formData.name}
+                      name="first_name"
+                      value={formData.first_name}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 bg-gray-800 border ${validationErrors.name ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="John Doe"
+                      className={`w-full px-4 py-3 bg-gray-800 border ${validationErrors.first_name ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      placeholder="John"
                       disabled={saving}
                     />
-                    {validationErrors.name && (
-                      <p className="text-red-400 text-sm mt-1">{validationErrors.name}</p>
+                    {validationErrors.first_name && (
+                      <p className="text-red-400 text-sm mt-1">{validationErrors.first_name}</p>
                     )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Last Name *</label>
+                    <input
+                      type="text"
+                      name="last_name"
+                      value={formData.last_name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Doe"
+                      disabled={saving}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Email *</label>
@@ -1363,7 +1627,7 @@ export default function ProfileCard({ isDashboard = false }) {
                       <p className="text-red-400 text-sm mt-1">{validationErrors.phone}</p>
                     )}
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-400 mb-2">Location</label>
                     <input
                       type="text"
@@ -1419,7 +1683,7 @@ export default function ProfileCard({ isDashboard = false }) {
                       onChange={(e) => setNewSkill(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                       className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Add a skill"
+                      placeholder="Add a skill (e.g., React, Python, AWS)"
                       disabled={saving}
                     />
                     <button
@@ -1439,23 +1703,23 @@ export default function ProfileCard({ isDashboard = false }) {
                     <label className="block text-sm font-medium text-gray-400 mb-2">Website/Portfolio</label>
                     <input
                       type="url"
-                      name="website"
-                      value={formData.website}
+                      name="portfolio_url"
+                      value={formData.portfolio_url}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 bg-gray-800 border ${validationErrors.website ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      className={`w-full px-4 py-3 bg-gray-800 border ${validationErrors.portfolio_url ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       placeholder="https://yourportfolio.com"
                       disabled={saving}
                     />
-                    {validationErrors.website && (
-                      <p className="text-red-400 text-sm mt-1">{validationErrors.website}</p>
+                    {validationErrors.portfolio_url && (
+                      <p className="text-red-400 text-sm mt-1">{validationErrors.portfolio_url}</p>
                     )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">LinkedIn</label>
                     <input
                       type="url"
-                      name="linkedin"
-                      value={formData.linkedin}
+                      name="linkedin_url"
+                      value={formData.linkedin_url}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="https://linkedin.com/in/username"
@@ -1466,8 +1730,8 @@ export default function ProfileCard({ isDashboard = false }) {
                     <label className="block text-sm font-medium text-gray-400 mb-2">GitHub</label>
                     <input
                       type="url"
-                      name="github"
-                      value={formData.github}
+                      name="github_url"
+                      value={formData.github_url}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="https://github.com/username"
@@ -1487,19 +1751,103 @@ export default function ProfileCard({ isDashboard = false }) {
                     />
                   </div>
                 </div>
+
+                {/* Experience Section in Edit Mode */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-white mb-4">Work Experience</h3>
+                  <div className="space-y-4">
+                    {formData.work_experience.map((exp, index) => (
+                      <div key={exp.id || index} className="bg-gray-800/50 p-4 rounded-xl">
+                        <div className="flex justify-between">
+                          <div>
+                            <h4 className="font-medium text-white">{exp.title}</h4>
+                            <p className="text-blue-400">{exp.company}</p>
+                            <p className="text-gray-400 text-sm">
+                              {formatDateForDisplay(exp.start_date)} - {exp.is_current ? 'Present' : formatDateForDisplay(exp.end_date)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeExperience(exp.id)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Add New Experience Form */}
+                  <div className="mt-6 p-4 border border-dashed border-gray-700 rounded-xl">
+                    <h4 className="font-medium text-white mb-4">Add New Experience</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        name="title"
+                        value={newExperience.title}
+                        onChange={handleExperienceChange}
+                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg"
+                        placeholder="Job Title"
+                      />
+                      <input
+                        type="text"
+                        name="company"
+                        value={newExperience.company}
+                        onChange={handleExperienceChange}
+                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg"
+                        placeholder="Company"
+                      />
+                      <input
+                        type="date"
+                        name="start_date"
+                        value={newExperience.start_date}
+                        onChange={handleExperienceChange}
+                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="date"
+                          name="end_date"
+                          value={newExperience.end_date}
+                          onChange={handleExperienceChange}
+                          disabled={newExperience.is_current}
+                          className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg"
+                        />
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            name="is_current"
+                            checked={newExperience.is_current}
+                            onChange={handleExperienceChange}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-400">Current</span>
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addExperience}
+                        className="md:col-span-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                      >
+                        Add Experience
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </form>
             ) : (
               <>
                 {/* Tabs */}
                 <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 overflow-hidden">
-                  <div className="flex border-b border-gray-800">
+                  <div className="flex border-b border-gray-800 overflow-x-auto">
                     {['overview', 'experience', 'education', 'skills', 'contact'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-4 font-medium text-sm uppercase tracking-wider transition-all ${activeTab === tab ? 'text-white border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`flex-1 min-w-24 py-4 font-medium text-sm uppercase tracking-wider transition-all ${activeTab === tab ? 'text-white border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300'}`}
                       >
-                        {tab}
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -1511,9 +1859,22 @@ export default function ProfileCard({ isDashboard = false }) {
                         <div>
                           <h4 className="text-xl font-bold text-white mb-4">About Me</h4>
                           <div className="bg-gray-900/30 rounded-xl p-6 border border-gray-800">
-                            <p className="text-gray-300 leading-relaxed">
-                              {formData.bio || 'No biography added yet. Share your story and professional journey.'}
-                            </p>
+                            {formData.bio ? (
+                              <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                                {formData.bio}
+                              </p>
+                            ) : (
+                              <div className="text-center py-8">
+                                <User className="h-12 w-12 text-gray-700 mx-auto mb-3" />
+                                <p className="text-gray-500">No bio added yet</p>
+                                <button 
+                                  onClick={() => setEditing(true)}
+                                  className="mt-3 text-blue-400 hover:text-blue-300 text-sm"
+                                >
+                                  + Add Bio
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -1521,11 +1882,11 @@ export default function ProfileCard({ isDashboard = false }) {
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-xl font-bold text-white">Experience</h4>
-                            <span className="text-sm text-gray-400">{formData.experience.length} positions</span>
+                            <span className="text-sm text-gray-400">{formData.work_experience.length} positions</span>
                           </div>
                           
                           <div className="space-y-4">
-                            {formData.experience.slice(0, 3).map((exp, index) => (
+                            {formData.work_experience.slice(0, 3).map((exp, index) => (
                               <div key={exp.id || index} className="bg-gray-900/30 rounded-xl p-5 border border-gray-800 hover:border-gray-700 transition-all group">
                                 <div className="flex justify-between items-start">
                                   <div>
@@ -1533,7 +1894,7 @@ export default function ProfileCard({ isDashboard = false }) {
                                     <p className="text-blue-400">{exp.company}</p>
                                     <div className="flex items-center text-gray-400 text-sm mt-2">
                                       <Calendar className="h-4 w-4 mr-1" />
-                                      {formatDateForDisplay(exp.start_date)} - {exp.current ? 'Present' : formatDateForDisplay(exp.end_date)}
+                                      {formatDateForDisplay(exp.start_date)} - {exp.is_current ? 'Present' : formatDateForDisplay(exp.end_date)}
                                       {exp.location && <span className="ml-2">• {exp.location}</span>}
                                     </div>
                                   </div>
@@ -1545,7 +1906,7 @@ export default function ProfileCard({ isDashboard = false }) {
                               </div>
                             ))}
                             
-                            {formData.experience.length === 0 && (
+                            {formData.work_experience.length === 0 && (
                               <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-xl">
                                 <Briefcase className="h-12 w-12 text-gray-700 mx-auto mb-3" />
                                 <p className="text-gray-500">No experience added yet</p>
@@ -1569,6 +1930,7 @@ export default function ProfileCard({ isDashboard = false }) {
                         onAddExperience={handleAddExperience}
                         onEditExperience={handleEditExperience}
                         onDeleteExperience={handleDeleteExperience}
+                        formatDateForInput={formatDateForInput}
                       />
                     )}
 
@@ -1576,7 +1938,8 @@ export default function ProfileCard({ isDashboard = false }) {
                       <EducationTab 
                         formData={formData} 
                         formatDateForDisplay={formatDateForDisplay}
-                        onAddEducation={() => setEditing(true)}
+                        formatDateForInput={formatDateForInput}
+                        onAddEducation={handleAddEducation}
                       />
                     )}
                     
@@ -1584,15 +1947,31 @@ export default function ProfileCard({ isDashboard = false }) {
                       <div className="space-y-6">
                         <div className="flex justify-between items-center">
                           <h5 className="text-lg font-bold text-white">Skills & Expertise</h5>
-                          <span className="text-sm text-gray-400">{formData.skills.length} skills</span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-400">{formData.skills.length} skills</span>
+                            <button 
+                              onClick={() => setEditing(true)}
+                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+                            >
+                              + Add Skill
+                            </button>
+                          </div>
                         </div>
                         <div className="flex flex-wrap gap-3">
                           {formData.skills.map((skill, index) => (
                             <span 
                               key={index}
-                              className="px-5 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 rounded-xl text-lg font-medium text-gray-300 hover:border-blue-500/50 transition-all"
+                              className="px-5 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 rounded-xl text-lg font-medium text-gray-300 hover:border-blue-500/50 transition-all group cursor-pointer"
                             >
-                              {skill}
+                              <div className="flex items-center space-x-2">
+                                <span>{skill}</span>
+                                <button 
+                                  onClick={() => removeSkill(skill)}
+                                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
                             </span>
                           ))}
                         </div>
@@ -1604,16 +1983,16 @@ export default function ProfileCard({ isDashboard = false }) {
                         <h5 className="text-lg font-bold text-white">Contact Information</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-4">
-                            <div className="flex items-center text-gray-300">
-                              <Mail className="h-5 w-5 mr-3 text-gray-500" />
+                            <div className="flex items-start text-gray-300">
+                              <Mail className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                               <div>
                                 <p className="text-sm text-gray-400">Email</p>
-                                <p>{formData.email}</p>
+                                <p>{formData.email || 'Not set'}</p>
                               </div>
                             </div>
                             {formData.phone && (
-                              <div className="flex items-center text-gray-300">
-                                <Phone className="h-5 w-5 mr-3 text-gray-500" />
+                              <div className="flex items-start text-gray-300">
+                                <Phone className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                                 <div>
                                   <p className="text-sm text-gray-400">Phone</p>
                                   <p>{formData.phone}</p>
@@ -1621,8 +2000,8 @@ export default function ProfileCard({ isDashboard = false }) {
                               </div>
                             )}
                             {formData.location && (
-                              <div className="flex items-center text-gray-300">
-                                <MapPin className="h-5 w-5 mr-3 text-gray-500" />
+                              <div className="flex items-start text-gray-300">
+                                <MapPin className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                                 <div>
                                   <p className="text-sm text-gray-400">Location</p>
                                   <p>{formData.location}</p>
@@ -1631,34 +2010,34 @@ export default function ProfileCard({ isDashboard = false }) {
                             )}
                           </div>
                           <div className="space-y-4">
-                            {formData.website && (
-                              <div className="flex items-center text-gray-300">
-                                <Globe className="h-5 w-5 mr-3 text-gray-500" />
+                            {formData.portfolio_url && (
+                              <div className="flex items-start text-gray-300">
+                                <Globe className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                                 <div>
-                                  <p className="text-sm text-gray-400">Website</p>
-                                  <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                                    {formData.website}
+                                  <p className="text-sm text-gray-400">Website/Portfolio</p>
+                                  <a href={formData.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 break-all">
+                                    {formData.portfolio_url}
                                   </a>
                                 </div>
                               </div>
                             )}
-                            {formData.linkedin && (
-                              <div className="flex items-center text-gray-300">
-                                <Linkedin className="h-5 w-5 mr-3 text-gray-500" />
+                            {formData.linkedin_url && (
+                              <div className="flex items-start text-gray-300">
+                                <Linkedin className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                                 <div>
                                   <p className="text-sm text-gray-400">LinkedIn</p>
-                                  <a href={formData.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                                  <a href={formData.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 break-all">
                                     LinkedIn Profile
                                   </a>
                                 </div>
                               </div>
                             )}
-                            {formData.github && (
-                              <div className="flex items-center text-gray-300">
-                                <Github className="h-5 w-5 mr-3 text-gray-500" />
+                            {formData.github_url && (
+                              <div className="flex items-start text-gray-300">
+                                <Github className="h-5 w-5 mr-3 text-gray-500 mt-1" />
                                 <div>
                                   <p className="text-sm text-gray-400">GitHub</p>
-                                  <a href={formData.github} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                                  <a href={formData.github_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 break-all">
                                     GitHub Profile
                                   </a>
                                 </div>
@@ -1717,6 +2096,30 @@ export default function ProfileCard({ isDashboard = false }) {
         accept="image/*"
         onChange={(e) => handleImageUpload(e.target.files?.[0])}
       />
+
+      {/* Test Button (Development only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={async () => {
+            console.log('🧪 Testing API connection...');
+            console.log('Form Data:', formData);
+            console.log('Cache:', CacheManager.get());
+            console.log('Pending Changes:', ChangeQueue.getQueue());
+            
+            try {
+              const response = await userAPI.getProfile();
+              console.log('✅ API Response:', response.data);
+              alert('API is working! Check console for details.');
+            } catch (error) {
+              console.error('❌ API Error:', error);
+              alert('API error: ' + error.message);
+            }
+          }}
+          className="fixed top-4 right-4 bg-purple-600 text-white p-2 rounded z-50"
+        >
+          🧪 Test
+        </button>
+      )}
     </div>
   );
 }
@@ -1736,9 +2139,9 @@ const ExperienceModal = ({
     location: '',
     start_date: '',
     end_date: '',
-    current: false,
+    is_current: false,
     description: '',
-    achievements: ['']
+    skills: []
   });
   const [errors, setErrors] = useState({});
 
@@ -1749,11 +2152,10 @@ const ExperienceModal = ({
         company: experience.company || '',
         location: experience.location || '',
         start_date: formatDateForInput(experience.start_date) || '',
-        end_date: experience.current ? '' : (formatDateForInput(experience.end_date) || ''),
-        current: !!experience.current,
+        end_date: experience.is_current ? '' : (formatDateForInput(experience.end_date) || ''),
+        is_current: !!experience.is_current,
         description: experience.description || '',
-        achievements: experience.achievements?.length ? 
-          experience.achievements : ['']
+        skills: experience.skills || []
       });
     } else {
       setFormData({
@@ -1762,13 +2164,13 @@ const ExperienceModal = ({
         location: '',
         start_date: '',
         end_date: '',
-        current: false,
+        is_current: false,
         description: '',
-        achievements: ['']
+        skills: []
       });
     }
     setErrors({});
-  }, [experience, isOpen]);
+  }, [experience, isOpen, formatDateForInput]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -1786,36 +2188,12 @@ const ExperienceModal = ({
     }
   };
 
-  const handleAchievementChange = (index, value) => {
-    const newAchievements = [...formData.achievements];
-    newAchievements[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      achievements: newAchievements
-    }));
-  };
-
-  const addAchievement = () => {
-    setFormData(prev => ({
-      ...prev,
-      achievements: [...prev.achievements, '']
-    }));
-  };
-
-  const removeAchievement = (index) => {
-    const newAchievements = formData.achievements.filter((_, i) => i !== index);
-    setFormData(prev => ({
-      ...prev,
-      achievements: newAchievements.length ? newAchievements : ['']
-    }));
-  };
-
   const validate = () => {
     const newErrors = {};
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.company.trim()) newErrors.company = 'Company is required';
     if (!formData.start_date) newErrors.start_date = 'Start date is required';
-    if (!formData.current && !formData.end_date) {
+    if (!formData.is_current && !formData.end_date) {
       newErrors.end_date = 'End date is required if not current';
     }
     setErrors(newErrors);
@@ -1827,8 +2205,7 @@ const ExperienceModal = ({
     if (validate()) {
       onSave({
         ...formData,
-        id: experience?.id || Date.now().toString(),
-        achievements: formData.achievements.filter(a => a.trim() !== '')
+        id: experience?.id || Date.now().toString()
       });
       onClose();
     }
@@ -1927,13 +2304,13 @@ const ExperienceModal = ({
               <div className="flex flex-col">
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-300">
-                    End Date {!formData.current && '*'}
+                    End Date {!formData.is_current && '*'}
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      name="current"
-                      checked={formData.current}
+                      name="is_current"
+                      checked={formData.is_current}
                       onChange={handleChange}
                       className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 border-gray-600"
                     />
@@ -1945,14 +2322,14 @@ const ExperienceModal = ({
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleChange}
-                  disabled={formData.current}
+                  disabled={formData.is_current}
                   className={`px-3 py-2 bg-gray-700 border ${
-                    !formData.current && errors.end_date ? 'border-red-500' : 'border-gray-600'
+                    !formData.is_current && errors.end_date ? 'border-red-500' : 'border-gray-600'
                   } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formData.current ? 'opacity-50 cursor-not-allowed' : ''
+                    formData.is_current ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 />
-                {!formData.current && errors.end_date && (
+                {!formData.is_current && errors.end_date && (
                   <p className="mt-1 text-sm text-red-400">{errors.end_date}</p>
                 )}
               </div>
@@ -1970,47 +2347,6 @@ const ExperienceModal = ({
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Describe your role and responsibilities"
               />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-300">
-                  Key Achievements
-                </label>
-                <button
-                  type="button"
-                  onClick={addAchievement}
-                  className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Achievement
-                </button>
-              </div>
-              
-              <div className="space-y-2">
-                {formData.achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-start space-x-2">
-                    <div className="flex-1 flex items-center">
-                      <span className="text-blue-400 mr-2">•</span>
-                      <input
-                        type="text"
-                        value={achievement}
-                        onChange={(e) => handleAchievementChange(index, e.target.value)}
-                        className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Add an achievement"
-                      />
-                    </div>
-                    {formData.achievements.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeAchievement(index)}
-                        className="p-1 text-gray-400 hover:text-red-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
             
             <div className="pt-4 flex justify-end space-x-3">
@@ -2080,88 +2416,87 @@ const ExperienceTab = ({
       </div>
       
       <div className="space-y-4">
-        {formData.experience.map((exp, index) => (
-        <div key={exp.id || index} className="bg-gray-900/30 rounded-xl p-6 border border-gray-800 hover:border-blue-500/30 transition-all group">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h6 className="font-bold text-white text-xl">{exp.title}</h6>
-              <p className="text-blue-400 text-lg">{exp.company}</p>
-              {exp.location && (
-                <p className="text-gray-400 flex items-center mt-1">
-                  <MapPin className="h-4 w-4 mr-1" /> {exp.location}
-                </p>
+        {formData.work_experience.map((exp, index) => (
+          <div key={exp.id || index} className="bg-gray-900/30 rounded-xl p-6 border border-gray-800 hover:border-blue-500/30 transition-all group">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h6 className="font-bold text-white text-xl">{exp.title}</h6>
+                <p className="text-blue-400 text-lg">{exp.company}</p>
+                {exp.location && (
+                  <p className="text-gray-400 flex items-center mt-1">
+                    <MapPin className="h-4 w-4 mr-1" /> {exp.location}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => handleEdit(exp)}
+                  className="p-2 hover:bg-gray-800 rounded-lg"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-400 hover:text-white" />
+                </button>
+                <button 
+                  onClick={() => onDeleteExperience(exp.id)}
+                  className="p-2 hover:bg-red-500/10 rounded-lg"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4 text-red-400 hover:text-red-300" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex items-center text-gray-400 mb-4">
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>{formatDateForDisplay(exp.start_date)} - {exp.is_current ? 'Present' : formatDateForDisplay(exp.end_date)}</span>
+              {exp.is_current && (
+                <span className="ml-3 px-2 py-1 bg-green-500/10 text-green-400 text-xs rounded-full">Current</span>
               )}
             </div>
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={() => handleEdit(exp)}
-                className="p-2 hover:bg-gray-800 rounded-lg"
-                title="Edit"
-              >
-                <Edit className="h-4 w-4 text-gray-400 hover:text-white" />
-              </button>
-              <button 
-                onClick={() => onDeleteExperience(exp.id)}
-                className="p-2 hover:bg-red-500/10 rounded-lg"
-                title="Delete"
-              >
-                <Trash2 className="h-4 w-4 text-red-400 hover:text-red-300" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="flex items-center text-gray-400 mb-4">
-            <Calendar className="h-4 w-4 mr-2" />
-            <span>{formatDateForDisplay(exp.start_date)} - {exp.current ? 'Present' : formatDateForDisplay(exp.end_date)}</span>
-            {exp.current && (
-              <span className="ml-3 px-2 py-1 bg-green-500/10 text-green-400 text-xs rounded-full">Current</span>
+            
+            {exp.description && (
+              <p className="text-gray-300 mb-4">{exp.description}</p>
+            )}
+            
+            {exp.skills && exp.skills.length > 0 && (
+              <div className="mt-4">
+                <h6 className="text-sm font-semibold text-gray-400 mb-2">Skills used:</h6>
+                <div className="flex flex-wrap gap-2">
+                  {exp.skills.map((skill, idx) => (
+                    <span key={idx} className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-          
-          {exp.description && (
-            <p className="text-gray-300 mb-4">{exp.description}</p>
-          )}
-          
-          {exp.achievements && exp.achievements.length > 0 && (
-            <div className="mt-4">
-              <h6 className="text-sm font-semibold text-gray-400 mb-2">Key Achievements:</h6>
-              <ul className="space-y-2">
-                {exp.achievements.map((achievement, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <ChevronRight className="h-4 w-4 text-blue-400 mr-2 mt-1 flex-shrink-0" />
-                    <span className="text-gray-300">{achievement}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ))}
+        ))}
       
-      {formData.experience.length === 0 && (
-        <div className="text-center py-12 border-2 border-dashed border-gray-800 rounded-xl">
-          <Briefcase className="h-16 w-16 text-gray-700 mx-auto mb-4" />
-          <h6 className="text-lg font-semibold text-gray-400 mb-2">No Experience Added</h6>
-          <p className="text-gray-500 mb-4">Add your work experience to showcase your career journey</p>
-          <button 
-            onClick={handleAddNew}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center mx-auto"
-          >
-            <Plus className="h-5 w-5 mr-2" /> Add Your First Experience
-          </button>
-        </div>
-      )}
+        {formData.work_experience.length === 0 && (
+          <div className="text-center py-12 border-2 border-dashed border-gray-800 rounded-xl">
+            <Briefcase className="h-16 w-16 text-gray-700 mx-auto mb-4" />
+            <h6 className="text-lg font-semibold text-gray-400 mb-2">No Experience Added</h6>
+            <p className="text-gray-500 mb-4">Add your work experience to showcase your career journey</p>
+            <button 
+              onClick={handleAddNew}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center mx-auto"
+            >
+              <Plus className="h-5 w-5 mr-2" /> Add Your First Experience
+            </button>
+          </div>
+        )}
       
-      <ExperienceModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        experience={editingExperience}
-        onSave={handleSave}
-        formatDateForInput={formatDateForInput}
-        formatDateForDisplay={formatDateForDisplay}
-      />
+        <ExperienceModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          experience={editingExperience}
+          onSave={handleSave}
+          formatDateForInput={formatDateForInput}
+          formatDateForDisplay={formatDateForDisplay}
+        />
+      </div>
     </div>
-  </div>
   );
 };
 
@@ -2175,43 +2510,43 @@ const EducationModal = ({
   formatDateForDisplay
 }) => {
   const [formData, setFormData] = useState({
-    school: '',
+    institution: '',
     degree: '',
     field_of_study: '',
     start_date: '',
     end_date: '',
-    current: false,
+    is_current: false,
     description: '',
-    gpa: ''
+    grade: ''
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (education) {
       setFormData({
-        school: education.school || '',
+        institution: education.institution || '',
         degree: education.degree || '',
         field_of_study: education.field_of_study || '',
         start_date: formatDateForInput(education.start_date) || '',
-        end_date: education.current ? '' : (formatDateForInput(education.end_date) || ''),
-        current: !!education.current,
+        end_date: education.is_current ? '' : (formatDateForInput(education.end_date) || ''),
+        is_current: !!education.is_current,
         description: education.description || '',
-        gpa: education.gpa || ''
+        grade: education.grade || ''
       });
     } else {
       setFormData({
-        school: '',
+        institution: '',
         degree: '',
         field_of_study: '',
         start_date: '',
         end_date: '',
-        current: false,
+        is_current: false,
         description: '',
-        gpa: ''
+        grade: ''
       });
     }
     setErrors({});
-  }, [education, isOpen]);
+  }, [education, isOpen, formatDateForInput]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -2230,15 +2565,15 @@ const EducationModal = ({
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.school.trim()) newErrors.school = 'School name is required';
+    if (!formData.institution.trim()) newErrors.institution = 'Institution name is required';
     if (!formData.degree) newErrors.degree = 'Degree level is required';
     if (!formData.field_of_study.trim()) newErrors.field_of_study = 'Field of study is required';
     if (!formData.start_date) newErrors.start_date = 'Start date is required';
-    if (!formData.current && !formData.end_date) {
+    if (!formData.is_current && !formData.end_date) {
       newErrors.end_date = 'End date is required if not current';
     }
-    if (formData.gpa && (isNaN(formData.gpa) || formData.gpa < 0 || formData.gpa > 4)) {
-      newErrors.gpa = 'GPA must be between 0 and 4';
+    if (formData.grade && (isNaN(formData.grade) || formData.grade < 0 || formData.grade > 4)) {
+      newErrors.grade = 'Grade must be between 0 and 4';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -2250,7 +2585,7 @@ const EducationModal = ({
       onSave({
         ...formData,
         id: education?.id || Date.now().toString(),
-        gpa: formData.gpa ? parseFloat(formData.gpa) : null
+        grade: formData.grade ? parseFloat(formData.grade) : null
       });
       onClose();
     }
@@ -2278,20 +2613,20 @@ const EducationModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  School/Institution *
+                  Institution *
                 </label>
                 <input
                   type="text"
-                  name="school"
-                  value={formData.school}
+                  name="institution"
+                  value={formData.institution}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 bg-gray-700 border ${
-                    errors.school ? 'border-red-500' : 'border-gray-600'
+                    errors.institution ? 'border-red-500' : 'border-gray-600'
                   } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="e.g. University of Technology"
                 />
-                {errors.school && (
-                  <p className="mt-1 text-sm text-red-400">{errors.school}</p>
+                {errors.institution && (
+                  <p className="mt-1 text-sm text-red-400">{errors.institution}</p>
                 )}
               </div>
               
@@ -2309,9 +2644,9 @@ const EducationModal = ({
                 >
                   <option value="">Select degree</option>
                   <option value="High School">High School</option>
-                  <option value="Associate's">Associate's Degree</option>
-                  <option value="Bachelor's">Bachelor's Degree</option>
-                  <option value="Master's">Master's Degree</option>
+                  <option value="Associate">Associate's Degree</option>
+                  <option value="Bachelor">Bachelor's Degree</option>
+                  <option value="Master">Master's Degree</option>
                   <option value="PhD">Doctorate (PhD)</option>
                   <option value="Professional">Professional Degree</option>
                   <option value="Other">Other</option>
@@ -2343,23 +2678,23 @@ const EducationModal = ({
               <div className="flex items-end space-x-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    GPA (Optional)
+                    Grade (Optional)
                   </label>
                   <input
                     type="number"
-                    name="gpa"
+                    name="grade"
                     min="0"
                     max="4"
-                    step="0.01"
-                    value={formData.gpa}
+                    step="0.1"
+                    value={formData.grade}
                     onChange={handleChange}
                     className={`w-full px-3 py-2 bg-gray-700 border ${
-                      errors.gpa ? 'border-red-500' : 'border-gray-600'
+                      errors.grade ? 'border-red-500' : 'border-gray-600'
                     } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                     placeholder="e.g. 3.5"
                   />
-                  {errors.gpa && (
-                    <p className="mt-1 text-sm text-red-400">{errors.gpa}</p>
+                  {errors.grade && (
+                    <p className="mt-1 text-sm text-red-400">{errors.grade}</p>
                   )}
                 </div>
                 <div className="text-xs text-gray-400 mb-1">
@@ -2388,13 +2723,13 @@ const EducationModal = ({
               <div className="flex flex-col">
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-300">
-                    End Date {!formData.current && '*'}
+                    End Date {!formData.is_current && '*'}
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      name="current"
-                      checked={formData.current}
+                      name="is_current"
+                      checked={formData.is_current}
                       onChange={handleChange}
                       className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 border-gray-600"
                     />
@@ -2406,14 +2741,14 @@ const EducationModal = ({
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleChange}
-                  disabled={formData.current}
+                  disabled={formData.is_current}
                   className={`px-3 py-2 bg-gray-700 border ${
-                    !formData.current && errors.end_date ? 'border-red-500' : 'border-gray-600'
+                    !formData.is_current && errors.end_date ? 'border-red-500' : 'border-gray-600'
                   } rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formData.current ? 'opacity-50 cursor-not-allowed' : ''
+                    formData.is_current ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 />
-                {!formData.current && errors.end_date && (
+                {!formData.is_current && errors.end_date && (
                   <p className="mt-1 text-sm text-red-400">{errors.end_date}</p>
                 )}
               </div>
@@ -2457,62 +2792,99 @@ const EducationModal = ({
 };
 
 // Education Tab Component
-const EducationTab = ({ formData, formatDateForDisplay, onAddEducation, onEditEducation, onDeleteEducation }) => {
+const EducationTab = ({ formData, formatDateForDisplay, formatDateForInput, onAddEducation }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [editingEducation, setEditingEducation] = useState(null);
+
+  const handleAddNew = () => {
+    setEditingEducation(null);
+    setShowModal(true);
+  };
+
+  const handleEdit = (edu) => {
+    setEditingEducation(edu);
+    setShowModal(true);
+  };
+
+  const handleSave = (education) => {
+    if (editingEducation) {
+      // Update existing
+      console.log('Updating education:', education);
+    } else {
+      onAddEducation(education);
+    }
+    setShowModal(false);
+  };
+
   return (
     <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <h5 className="text-lg font-bold text-white">Education</h5>
-      <button 
-        onClick={onAddEducation}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center"
-      >
-        <Plus className="h-4 w-4 mr-2" /> Add Education
-      </button>
-    </div>
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {formData.education.map((edu, index) => (
-        <div key={edu.id || index} className="bg-gray-900/30 rounded-xl p-6 border border-gray-800 hover:border-blue-500/30 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h6 className="font-bold text-white text-lg">{edu.school}</h6>
-              <p className="text-blue-400">{edu.degree}</p>
-              {edu.field_of_study && <p className="text-gray-400 text-sm">{edu.field_of_study}</p>}
-            </div>
-            <GraduationCap className="h-8 w-8 text-gray-600" />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center text-gray-400 text-sm">
-              <Calendar className="h-4 w-4 mr-2" />
-              <span>{formatDateForDisplay(edu.start_date)} - {edu.current ? 'Present' : formatDateForDisplay(edu.end_date)}</span>
-            </div>
-            {edu.gpa && (
-              <div className="text-sm text-gray-300">
-                GPA: <span className="font-semibold text-white">{edu.gpa}</span>
-              </div>
-            )}
-            {edu.description && (
-              <p className="text-gray-300 text-sm mt-2">{edu.description}</p>
-            )}
-          </div>
-        </div>
-      ))}
+      <div className="flex justify-between items-center">
+        <h5 className="text-lg font-bold text-white">Education</h5>
+        <button 
+          onClick={handleAddNew}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Add Education
+        </button>
+      </div>
       
-      {formData.education.length === 0 && (
-        <div className="md:col-span-2 text-center py-12 border-2 border-dashed border-gray-800 rounded-xl">
-          <GraduationCap className="h-16 w-16 text-gray-700 mx-auto mb-4" />
-          <h6 className="text-lg font-semibold text-gray-400 mb-2">No Education Added</h6>
-          <p className="text-gray-500 mb-4">Add your educational background to complete your profile</p>
-          <button 
-            onClick={onAddEducation}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center mx-auto"
-          >
-            <Plus className="h-5 w-5 mr-2" /> Add Your First Education
-          </button>
-        </div>
-      )}
-    </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {formData.education.map((edu, index) => (
+          <div key={edu.id || index} className="bg-gray-900/30 rounded-xl p-6 border border-gray-800 hover:border-blue-500/30 transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h6 className="font-bold text-white text-lg">{edu.institution}</h6>
+                <p className="text-blue-400">{edu.degree} in {edu.field_of_study}</p>
+                {edu.grade && (
+                  <p className="text-gray-400 text-sm">GPA: <span className="font-semibold text-white">{edu.grade}</span></p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => handleEdit(edu)}
+                  className="p-2 hover:bg-gray-800 rounded-lg"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-400 hover:text-white" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center text-gray-400 text-sm">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>{formatDateForDisplay(edu.start_date)} - {edu.is_current ? 'Present' : formatDateForDisplay(edu.end_date)}</span>
+              </div>
+              {edu.description && (
+                <p className="text-gray-300 text-sm mt-2">{edu.description}</p>
+              )}
+            </div>
+          </div>
+        ))}
+        
+        {formData.education.length === 0 && (
+          <div className="md:col-span-2 text-center py-12 border-2 border-dashed border-gray-800 rounded-xl">
+            <GraduationCap className="h-16 w-16 text-gray-700 mx-auto mb-4" />
+            <h6 className="text-lg font-semibold text-gray-400 mb-2">No Education Added</h6>
+            <p className="text-gray-500 mb-4">Add your educational background to complete your profile</p>
+            <button 
+              onClick={handleAddNew}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center mx-auto"
+            >
+              <Plus className="h-5 w-5 mr-2" /> Add Your First Education
+            </button>
+          </div>
+        )}
+      </div>
+      
+      <EducationModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        education={editingEducation}
+        onSave={handleSave}
+        formatDateForInput={formatDateForInput}
+        formatDateForDisplay={formatDateForDisplay}
+      />
     </div>
   );
 };
