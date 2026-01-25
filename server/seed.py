@@ -1,1167 +1,773 @@
 # seed.py
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from flask import Flask
-from models import db, User, AcademicYear, Semester, Department, Classroom, Course, Enrollment
-from models import Assignment, Grade, Attendance, Announcement, Library, Book, LibraryTransaction
-from models import Invoice, Payment, ParentStudent, CourseMaterial, Discussion, Message, AssignmentSubmission
-from werkzeug.security import generate_password_hash
-from datetime import datetime, date, timedelta
+import sys
+from datetime import datetime, timedelta
 import random
+import json
 from faker import Faker
-from sqlalchemy.exc import IntegrityError
-import click
+from werkzeug.security import generate_password_hash
 
+# Add the server directory to the Python path
+server_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'server'))
+sys.path.append(server_dir)
+
+from app import create_app
+from extensions import db
+from models.models import (
+    User, Profile, Student, Company, Job, Application, SavedJob, Notification,
+    Interview, SavedCandidate, CompanyReview, Message, Conversation, Participant,
+    Share, SavedSearch, DashboardStats
+)
+
+# Initialize Faker
 fake = Faker()
 
-def create_app():
-    """Create Flask application for seeding"""
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///studenthub.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'dev-secret-key-for-seeding'
-    
-    db.init_app(app)
-    
-    return app
+# Constants
+NUM_STUDENTS = 50
+NUM_EMPLOYERS = 10
+NUM_JOBS_PER_COMPANY = 5
+MAX_APPLICATIONS_PER_STUDENT = 20
+MAX_SAVED_JOBS_PER_STUDENT = 10
+MAX_SAVED_CANDIDATES_PER_COMPANY = 15
+MAX_REVIEWS_PER_COMPANY = 8
 
-def clear_database():
-    """Clear all existing data from database"""
-    print("Clearing existing data...")
-    
-    # Clear in reverse dependency order
-    tables_to_clear = [
-        AssignmentSubmission, Message, Discussion, CourseMaterial,
-        ParentStudent, Payment, Invoice, LibraryTransaction, Book, Library,
-        Announcement, Attendance, Grade, Assignment, Enrollment,
-        Course, Classroom, Semester, AcademicYear, Department, User
-    ]
-    
-    for table in tables_to_clear:
-        try:
-            db.session.query(table).delete()
-            print(f"  Cleared {table.__tablename__}")
-        except Exception as e:
-            db.session.rollback()
-            print(f"  Error clearing {table.__tablename__}: {e}")
-    
-    db.session.commit()
-    print("Database cleared successfully!\n")
+# Common data
+JOB_TITLES = [
+    'Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+    'DevOps Engineer', 'Data Scientist', 'Machine Learning Engineer', 'Data Analyst',
+    'Product Manager', 'UX/UI Designer', 'Product Designer', 'Cloud Architect',
+    'Solutions Architect', 'Security Engineer', 'Network Engineer', 'Mobile Developer',
+    'iOS Developer', 'Android Developer', 'QA Engineer', 'Technical Program Manager',
+    'Engineering Manager', 'Director of Engineering', 'Business Analyst',
+    'Marketing Manager', 'Sales Engineer', 'Customer Success Manager'
+]
 
-def create_academic_years():
-    """Create academic years"""
-    print("Creating Academic Years...")
-    
-    academic_years = [
-        {
-            'name': '2023-2024',
-            'start_date': date(2023, 9, 1),
-            'end_date': date(2024, 6, 30),
-            'is_current': False
-        },
-        {
-            'name': '2024-2025',
-            'start_date': date(2024, 9, 1),
-            'end_date': date(2025, 6, 30),
-            'is_current': True
-        },
-        {
-            'name': '2025-2026',
-            'start_date': date(2025, 9, 1),
-            'end_date': date(2026, 6, 30),
-            'is_current': False
-        }
-    ]
-    
-    created_years = []
-    for year_data in academic_years:
-        year = AcademicYear(**year_data)
-        db.session.add(year)
-        created_years.append(year)
-        print(f"  Created Academic Year: {year.name}")
-    
-    db.session.commit()
-    return created_years
+COMPANY_NAMES = [
+    'TechCorp', 'InnoTech', 'DataSystems', 'WebSolutions', 'CloudNine', 'ByteDance',
+    'CodeCraft', 'NexusLabs', 'QuantumLeap', 'AlphaByte', 'BetaSystems', 'GammaTech',
+    'DeltaSoft', 'EpsilonData', 'ZetaWeb', 'EtaLabs', 'ThetaSystems', 'IotaTech',
+    'KappaSoft', 'LambdaLabs'
+]
 
-def create_semesters(academic_years):
-    """Create semesters"""
-    print("\nCreating Semesters...")
-    
-    current_year = next((y for y in academic_years if y.is_current), academic_years[0])
-    
-    semesters = [
-        {
-            'name': 'Fall 2024',
-            'start_date': date(2024, 9, 1),
-            'end_date': date(2024, 12, 20),
-            'academic_year_id': current_year.id
-        },
-        {
-            'name': 'Spring 2025',
-            'start_date': date(2025, 1, 15),
-            'end_date': date(2025, 5, 30),
-            'academic_year_id': current_year.id
-        },
-        {
-            'name': 'Summer 2025',
-            'start_date': date(2025, 6, 1),
-            'end_date': date(2025, 7, 31),
-            'academic_year_id': current_year.id
-        }
-    ]
-    
-    created_semesters = []
-    for semester_data in semesters:
-        semester = Semester(**semester_data)
-        db.session.add(semester)
-        created_semesters.append(semester)
-        print(f"  Created Semester: {semester.name}")
-    
-    db.session.commit()
-    return created_semesters
+INDUSTRIES = [
+    'Technology', 'Finance', 'Healthcare', 'E-commerce', 'Entertainment',
+    'Automotive', 'Aerospace', 'Consulting', 'Retail', 'Manufacturing',
+    'Education', 'Real Estate', 'Energy', 'Telecommunications', 'Biotechnology'
+]
 
-def create_departments():
-    """Create departments"""
-    print("\nCreating Departments...")
-    
-    departments_data = [
-        {'name': 'Computer Science', 'code': 'CS', 'head_title': 'Chairperson'},
-        {'name': 'Mathematics', 'code': 'MATH', 'head_title': 'Department Head'},
-        {'name': 'Physics', 'code': 'PHY', 'head_title': 'Director'},
-        {'name': 'English', 'code': 'ENG', 'head_title': 'Chair'},
-        {'name': 'Business', 'code': 'BUS', 'head_title': 'Dean'},
-        {'name': 'Biology', 'code': 'BIO', 'head_title': 'Head'},
-        {'name': 'History', 'code': 'HIS', 'head_title': 'Chairperson'},
-        {'name': 'Psychology', 'code': 'PSY', 'head_title': 'Director'}
-    ]
-    
-    created_departments = []
-    for dept_data in departments_data:
-        department = Department(
-            name=dept_data['name'],
-            code=dept_data['code'],
-            description=f"{dept_data['name']} Department offering various courses and programs"
-        )
-        db.session.add(department)
-        created_departments.append((department, dept_data['head_title']))
-        print(f"  Created Department: {department.name}")
-    
-    db.session.commit()
-    return created_departments
+SKILLS = [
+    'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Go', 'Rust', 'Swift',
+    'React', 'Angular', 'Vue.js', 'Node.js', 'Express.js', 'Django', 'Flask', 'Spring Boot',
+    'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Terraform', 'Jenkins', 'Git',
+    'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Firebase', 'Elasticsearch',
+    'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Data Analysis',
+    'Tableau', 'Power BI', 'Figma', 'Adobe XD', 'Photoshop', 'Illustrator',
+    'Agile', 'Scrum', 'DevOps', 'CI/CD', 'Microservices', 'REST API', 'GraphQL'
+]
 
-def create_users(departments_info):
-    """Create users (admins, teachers, students, parents)"""
-    print("\nCreating Users...")
-    
-    default_password = generate_password_hash('password123')
-    users = []
-    
-    # Create Admin Users
-    print("\n  Creating Admin Users...")
-    admin_users = [
-        {
-            'email': 'admin@studenthub.edu',
-            'first_name': 'System',
-            'last_name': 'Administrator',
-            'role': 'admin',
-            'phone': '+1 (555) 123-4567',
-            'address': '123 Admin Street, Tech City',
-            'date_of_birth': date(1980, 1, 15),
-            'gender': 'male'
-        },
-        {
-            'email': 'registrar@studenthub.edu',
-            'first_name': 'Sarah',
-            'last_name': 'Wilson',
-            'role': 'admin',
-            'phone': '+1 (555) 987-6543',
-            'address': '456 Registrar Ave, Tech City',
-            'date_of_birth': date(1975, 3, 22),
-            'gender': 'female'
-        }
-    ]
-    
-    for admin_data in admin_users:
-        admin = User(
-            **admin_data,
-            password_hash=default_password
-        )
-        db.session.add(admin)
-        users.append(admin)
-        print(f"    Created Admin: {admin.first_name} {admin.last_name}")
-    
-    # Create Department Heads
-    print("\n  Creating Department Heads...")
-    dept_heads = []
-    dept_head_names = [
-        ('Robert', 'Johnson'), ('Jennifer', 'Smith'), ('Michael', 'Brown'),
-        ('Lisa', 'Davis'), ('David', 'Wilson'), ('Susan', 'Miller'),
-        ('Thomas', 'Taylor'), ('Patricia', 'Anderson')
-    ]
-    
-    for i, ((department, head_title), (first_name, last_name)) in enumerate(zip(departments_info, dept_head_names)):
-        dept_head = User(
-            email=f'depthead{i+1}@studenthub.edu',
-            first_name=first_name,
-            last_name=last_name,
-            role='staff',
-            phone=f'+1 (555) 111-000{i+1}',
-            address=f'{i+1} University Blvd, Tech City',
-            date_of_birth=date(1970 + i, (i % 12) + 1, 15),
-            gender='male' if i % 2 == 0 else 'female',
-            password_hash=default_password,
-            department_id=department.id,
-            title=head_title
-        )
-        db.session.add(dept_head)
-        users.append(dept_head)
-        dept_heads.append(dept_head)
-        print(f"    Created Department Head: {first_name} {last_name} for {department.name}")
-    
-    # Create Teachers
-    print("\n  Creating Teachers...")
-    teachers_data = [
-        # Computer Science Teachers
-        {'first_name': 'John', 'last_name': 'Doe', 'department_idx': 0, 'title': 'Professor'},
-        {'first_name': 'Alice', 'last_name': 'Smith', 'department_idx': 0, 'title': 'Associate Professor'},
-        {'first_name': 'Brian', 'last_name': 'Wilson', 'department_idx': 0, 'title': 'Assistant Professor'},
-        # Mathematics Teachers
-        {'first_name': 'Richard', 'last_name': 'Johnson', 'department_idx': 1, 'title': 'Professor'},
-        {'first_name': 'Emily', 'last_name': 'Chen', 'department_idx': 1, 'title': 'Lecturer'},
-        # Physics Teachers
-        {'first_name': 'David', 'last_name': 'Williams', 'department_idx': 2, 'title': 'Professor'},
-        {'first_name': 'Karen', 'last_name': 'Martinez', 'department_idx': 2, 'title': 'Assistant Professor'},
-        # English Teachers
-        {'first_name': 'Thomas', 'last_name': 'Brown', 'department_idx': 3, 'title': 'Professor'},
-        {'first_name': 'Jessica', 'last_name': 'Taylor', 'department_idx': 3, 'title': 'Associate Professor'},
-        # Business Teachers
-        {'first_name': 'Catherine', 'last_name': 'Miller', 'department_idx': 4, 'title': 'Professor'},
-        {'first_name': 'James', 'last_name': 'Davis', 'department_idx': 4, 'title': 'Lecturer'},
-        # Biology Teachers
-        {'first_name': 'Robert', 'last_name': 'Garcia', 'department_idx': 5, 'title': 'Professor'},
-        # History Teachers
-        {'first_name': 'Elizabeth', 'last_name': 'Rodriguez', 'department_idx': 6, 'title': 'Professor'},
-        # Psychology Teachers
-        {'first_name': 'William', 'last_name': 'Martinez', 'department_idx': 7, 'title': 'Professor'}
-    ]
-    
-    teachers = []
-    for i, teacher_data in enumerate(teachers_data):
-        teacher = User(
-            email=f'teacher{i+1}@studenthub.edu',
-            first_name=teacher_data['first_name'],
-            last_name=teacher_data['last_name'],
-            role='teacher',
-            phone=f'+1 (555) 222-{1000 + i:04d}',
-            address='Faculty Housing, University Campus',
-            date_of_birth=date(1975 + (i % 20), (i % 12) + 1, (i % 28) + 1),
-            gender='male' if i % 2 == 0 else 'female',
-            password_hash=default_password,
-            department_id=departments_info[teacher_data['department_idx']][0].id,
-            title=teacher_data['title']
-        )
-        db.session.add(teacher)
-        users.append(teacher)
-        teachers.append(teacher)
-        print(f"    Created Teacher: {teacher.first_name} {teacher.last_name}")
-    
-    # Create Students
-    print("\n  Creating Students...")
-    student_id_counter = 20240001
-    year_levels = ['Freshman', 'Sophomore', 'Junior', 'Senior']
-    majors = [
-        'Computer Science', 'Mathematics', 'Physics', 'English Literature',
-        'Business Administration', 'Computer Engineering', 'Data Science',
-        'Economics', 'Psychology', 'Biology', 'History', 'Chemistry'
-    ]
-    
-    students = []
-    for i in range(100):  # Create 100 students
-        student = User(
-            email=f'student{student_id_counter}@studenthub.edu',
-            first_name=fake.first_name(),
-            last_name=fake.last_name(),
-            role='student',
-            phone=f'+1 (555) 333-{1000 + i:04d}',
-            address=f'{i+1} Student Residence, University Campus',
-            date_of_birth=date(2000 + (i % 6), (i % 12) + 1, (i % 28) + 1),
-            gender='male' if i % 2 == 0 else 'female',
-            password_hash=default_password,
-            student_id=str(student_id_counter),
-            year_level=year_levels[i % len(year_levels)],
-            major=random.choice(majors),
-            gpa=round(2.5 + (random.random() * 2.0), 2),  # GPA between 2.5 and 4.5
-            enrollment_date=date(2024, 8, 15) - timedelta(days=random.randint(0, 365))
-        )
-        db.session.add(student)
-        users.append(student)
-        students.append(student)
-        student_id_counter += 1
-        
-        if (i + 1) % 20 == 0:
-            print(f"    Created {i + 1} students...")
-    
-    print(f"    Created {len(students)} students total")
-    
-    # Create Parents
-    print("\n  Creating Parents...")
-    parents = []
-    for i in range(30):  # Create 30 parents
-        parent = User(
-            email=f'parent{i+1}@example.com',
-            first_name=fake.first_name_male() if i % 2 == 0 else fake.first_name_female(),
-            last_name=fake.last_name(),
-            role='parent',
-            phone=f'+1 (555) 777-{1000 + i:04d}',
-            address=f'{i+1} Family Street, Hometown',
-            date_of_birth=date(1970 + (i % 25), (i % 12) + 1, (i % 28) + 1),
-            gender='male' if i % 2 == 0 else 'female',
-            password_hash=default_password
-        )
-        db.session.add(parent)
-        users.append(parent)
-        parents.append(parent)
-    
-    print(f"    Created {len(parents)} parents")
-    
-    db.session.commit()
-    return {
-        'users': users,
-        'admins': [u for u in users if u.role == 'admin'],
-        'teachers': teachers,
-        'students': students,
-        'parents': parents,
-        'dept_heads': dept_heads
-    }
+UNIVERSITIES = [
+    'Stanford University', 'MIT', 'Harvard University', 'UC Berkeley', 'Carnegie Mellon',
+    'University of Washington', 'Georgia Tech', 'University of Texas', 'UIUC', 'UMich',
+    'Cornell University', 'Princeton University', 'Columbia University', 'Yale University',
+    'Brown University', 'Duke University', 'Northwestern University', 'Johns Hopkins',
+    'University of Pennsylvania', 'University of Chicago', 'USC', 'UCLA', 'NYU'
+]
 
-def create_classrooms():
-    """Create classrooms"""
-    print("\nCreating Classrooms...")
-    
-    buildings = ['Science', 'Humanities', 'Business', 'Engineering', 'Library', 'Arts']
-    classrooms = []
-    
-    for i in range(20):  # Create 20 classrooms
-        building = buildings[i % len(buildings)]
-        classroom = Classroom(
-            room_number=f'{building[0].upper()}{100 + i}',
-            building=building,
-            capacity=random.choice([25, 30, 35, 40, 45, 50]),
-            floor=(i % 4) + 1,
-            has_projector=random.choice([True, False]),
-            has_computers=random.choice([True, False]),
-            is_active=True
-        )
-        db.session.add(classroom)
-        classrooms.append(classroom)
-    
-    db.session.commit()
-    print(f"  Created {len(classrooms)} classrooms")
-    return classrooms
+MAJORS = [
+    'Computer Science', 'Computer Engineering', 'Data Science', 'Software Engineering',
+    'Information Systems', 'Electrical Engineering', 'Mechanical Engineering',
+    'Business Administration', 'Economics', 'Mathematics', 'Statistics',
+    'Biology', 'Chemistry', 'Physics', 'Psychology', 'English', 'History'
+]
 
-def create_courses(departments_info, teachers):
-    """Create courses"""
-    print("\nCreating Courses...")
-    
-    courses_data = [
-        # Computer Science Courses
-        {'code': 'CS101', 'name': 'Introduction to Computer Science', 'credits': 3, 'dept_idx': 0, 'level': 'Undergraduate', 'fee': 1200.00},
-        {'code': 'CS102', 'name': 'Programming Fundamentals', 'credits': 4, 'dept_idx': 0, 'level': 'Undergraduate', 'fee': 1300.00},
-        {'code': 'CS201', 'name': 'Data Structures and Algorithms', 'credits': 4, 'dept_idx': 0, 'level': 'Undergraduate', 'fee': 1500.00},
-        {'code': 'CS301', 'name': 'Database Systems', 'credits': 3, 'dept_idx': 0, 'level': 'Undergraduate', 'fee': 1400.00},
-        {'code': 'CS302', 'name': 'Software Engineering', 'credits': 3, 'dept_idx': 0, 'level': 'Undergraduate', 'fee': 1450.00},
-        {'code': 'CS401', 'name': 'Artificial Intelligence', 'credits': 3, 'dept_idx': 0, 'level': 'Graduate', 'fee': 1600.00},
-        {'code': 'CS402', 'name': 'Machine Learning', 'credits': 3, 'dept_idx': 0, 'level': 'Graduate', 'fee': 1650.00},
-        
-        # Mathematics Courses
-        {'code': 'MATH101', 'name': 'Calculus I', 'credits': 4, 'dept_idx': 1, 'level': 'Undergraduate', 'fee': 1100.00},
-        {'code': 'MATH102', 'name': 'Calculus II', 'credits': 4, 'dept_idx': 1, 'level': 'Undergraduate', 'fee': 1150.00},
-        {'code': 'MATH201', 'name': 'Linear Algebra', 'credits': 3, 'dept_idx': 1, 'level': 'Undergraduate', 'fee': 1300.00},
-        {'code': 'MATH301', 'name': 'Differential Equations', 'credits': 3, 'dept_idx': 1, 'level': 'Undergraduate', 'fee': 1350.00},
-        
-        # Physics Courses
-        {'code': 'PHY101', 'name': 'General Physics I', 'credits': 4, 'dept_idx': 2, 'level': 'Undergraduate', 'fee': 1250.00},
-        {'code': 'PHY102', 'name': 'General Physics II', 'credits': 4, 'dept_idx': 2, 'level': 'Undergraduate', 'fee': 1300.00},
-        {'code': 'PHY201', 'name': 'Modern Physics', 'credits': 3, 'dept_idx': 2, 'level': 'Undergraduate', 'fee': 1400.00},
-        
-        # English Courses
-        {'code': 'ENG101', 'name': 'Composition and Rhetoric', 'credits': 3, 'dept_idx': 3, 'level': 'Undergraduate', 'fee': 1000.00},
-        {'code': 'ENG102', 'name': 'Introduction to Literature', 'credits': 3, 'dept_idx': 3, 'level': 'Undergraduate', 'fee': 1050.00},
-        {'code': 'ENG201', 'name': 'British Literature', 'credits': 3, 'dept_idx': 3, 'level': 'Undergraduate', 'fee': 1150.00},
-        
-        # Business Courses
-        {'code': 'BUS101', 'name': 'Introduction to Business', 'credits': 3, 'dept_idx': 4, 'level': 'Undergraduate', 'fee': 1150.00},
-        {'code': 'BUS201', 'name': 'Financial Accounting', 'credits': 4, 'dept_idx': 4, 'level': 'Undergraduate', 'fee': 1400.00},
-        {'code': 'BUS301', 'name': 'Marketing Management', 'credits': 3, 'dept_idx': 4, 'level': 'Undergraduate', 'fee': 1350.00},
-        {'code': 'BUS401', 'name': 'Strategic Management', 'credits': 3, 'dept_idx': 4, 'level': 'Graduate', 'fee': 1550.00},
-        
-        # Biology Courses
-        {'code': 'BIO101', 'name': 'General Biology I', 'credits': 4, 'dept_idx': 5, 'level': 'Undergraduate', 'fee': 1200.00},
-        {'code': 'BIO102', 'name': 'General Biology II', 'credits': 4, 'dept_idx': 5, 'level': 'Undergraduate', 'fee': 1250.00},
-        
-        # History Courses
-        {'code': 'HIS101', 'name': 'World History I', 'credits': 3, 'dept_idx': 6, 'level': 'Undergraduate', 'fee': 1050.00},
-        {'code': 'HIS201', 'name': 'American History', 'credits': 3, 'dept_idx': 6, 'level': 'Undergraduate', 'fee': 1100.00},
-        
-        # Psychology Courses
-        {'code': 'PSY101', 'name': 'Introduction to Psychology', 'credits': 3, 'dept_idx': 7, 'level': 'Undergraduate', 'fee': 1100.00},
-        {'code': 'PSY201', 'name': 'Developmental Psychology', 'credits': 3, 'dept_idx': 7, 'level': 'Undergraduate', 'fee': 1200.00}
-    ]
-    
-    courses = []
-    for course_data in courses_data:
-        description = f"This course covers fundamental concepts in {course_data['name'].split(' ', 1)[1].lower()}. Students will learn essential principles and applications."
-        
-        course = Course(
-            code=course_data['code'],
-            name=course_data['name'],
-            description=description,
-            credits=course_data['credits'],
-            department_id=departments_info[course_data['dept_idx']][0].id,
-            level=course_data['level'],
-            prerequisites='',
-            fee=course_data['fee']
-        )
-        db.session.add(course)
-        courses.append(course)
-        print(f"  Created Course: {course.code} - {course.name}")
-    
-    db.session.commit()
-    return courses
+JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary']
+WORK_MODES = ['Remote', 'Hybrid', 'On-site']
+EXPERIENCE_LEVELS = ['Entry', 'Mid', 'Senior', 'Lead', 'Executive']
+DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations']
 
-def create_enrollments(students, teachers, courses, classrooms, semesters):
-    """Create enrollments"""
-    print("\nCreating Enrollments...")
-    
-    current_semester = next((s for s in semesters if s.name == 'Spring 2025'), semesters[0])
-    enrollments = []
-    
-    # Create sections for each course
-    sections = []
-    for course in courses:
-        # Each course has 1-3 sections
-        section_count = random.randint(1, 3)
-        
-        for section_num in range(1, section_count + 1):
-            teacher = random.choice(teachers)
-            classroom = random.choice(classrooms)
-            
-            sections.append({
-                'course': course,
-                'teacher': teacher,
-                'classroom': classroom,
-                'section_num': section_num,
-                'max_students': classroom.capacity - 5  # Leave some seats empty
-            })
-    
-    # Enroll students in sections
-    enrollment_count = 0
-    for section in sections:
-        # Determine how many students to enroll (50-90% of capacity)
-        num_students = min(
-            random.randint(int(section['max_students'] * 0.5), int(section['max_students'] * 0.9)),
-            len(students)
-        )
-        
-        # Select random students
-        students_to_enroll = random.sample(students, num_students)
-        
-        for student in students_to_enroll:
-            section_code = f"{section['course'].code}-{section['section_num']:02d}"
-            
-            enrollment = Enrollment(
-                user_id=student.id,
-                course_id=section['course'].id,
-                teacher_id=section['teacher'].id,
-                classroom_id=section['classroom'].id,
-                semester_id=current_semester.id,
-                section_code=section_code,
-                enrollment_date=current_semester.start_date + timedelta(days=random.randint(0, 14)),
-                status='active'
-            )
-            db.session.add(enrollment)
-            enrollments.append(enrollment)
-            enrollment_count += 1
-    
-    db.session.commit()
-    print(f"  Created {enrollment_count} enrollments")
-    return enrollments
+BENEFITS = [
+    'Health insurance', 'Dental insurance', 'Vision insurance', '401(k) matching',
+    'Paid time off', 'Flexible schedule', 'Remote work options', 'Parental leave',
+    'Professional development', 'Stock options', 'Gym membership', 'Free lunch',
+    'Commuter benefits', 'Tuition reimbursement', 'Wellness program'
+]
 
-def create_assignments(courses):
-    """Create assignments"""
-    print("\nCreating Assignments...")
-    
-    assignments = []
-    assignment_types = ['Homework', 'Quiz', 'Project', 'Midterm', 'Final Exam']
-    
-    for course in courses:
-        # Create 3-6 assignments per course
-        num_assignments = random.randint(3, 6)
-        
-        for i in range(num_assignments):
-            due_date = date.today() + timedelta(days=7 * (i + 1))
-            assignment_type = assignment_types[i % len(assignment_types)]
-            
-            assignment = Assignment(
-                course_id=course.id,
-                title=f"{course.code} {assignment_type} {i + 1}",
-                description=f"This {assignment_type.lower()} covers topics from weeks {(i * 2) + 1}-{(i * 2) + 2} of the course.",
-                due_date=due_date,
-                max_score=random.choice([100, 50, 75, 150, 200]),
-                assignment_type=assignment_type,
-                submission_type=random.choice(['file', 'text', 'both']),
-                is_published=True
-            )
-            db.session.add(assignment)
-            assignments.append(assignment)
-        
-        print(f"  Created {num_assignments} assignments for {course.code}")
-    
-    db.session.commit()
-    return assignments
+CULTURE_VALUES = [
+    'Work-life balance', 'Diversity and inclusion', 'Innovation', 'Collaboration',
+    'Transparency', 'Ownership', 'Customer focus', 'Continuous learning',
+    'Agile methodology', 'Data-driven', 'Open communication', 'Work hard, play hard',
+    'Sustainability', 'Social responsibility', 'Teamwork'
+]
 
-def create_grades(enrollments, assignments, teachers):
-    """Create grades"""
-    print("\nCreating Grades...")
-    
-    grades = []
-    
-    for assignment in assignments:
-        # Get enrollments for this assignment's course
-        course_enrollments = [e for e in enrollments if e.course_id == assignment.course_id]
-        
-        if not course_enrollments:
-            continue
-        
-        # Grade 60-80% of enrollments
-        num_to_grade = random.randint(
-            int(len(course_enrollments) * 0.6),
-            int(len(course_enrollments) * 0.8)
-        )
-        
-        graded_enrollments = random.sample(course_enrollments, num_to_grade)
-        
-        for enrollment in graded_enrollments:
-            score = random.randint(0, assignment.max_score)
-            percentage = (score / assignment.max_score) * 100
-            
-            # Determine letter grade
-            if percentage >= 90:
-                letter_grade = 'A'
-            elif percentage >= 80:
-                letter_grade = 'B'
-            elif percentage >= 70:
-                letter_grade = 'C'
-            elif percentage >= 60:
-                letter_grade = 'D'
-            else:
-                letter_grade = 'F'
-            
-            feedback_options = [
-                'Excellent work!',
-                'Good job overall.',
-                'Needs improvement in some areas.',
-                'Please review the material and resubmit.',
-                'Well done!',
-                'Good understanding of concepts.',
-                'Could use more detail.',
-                'Excellent analysis.'
-            ]
-            
-            grade = Grade(
-                enrollment_id=enrollment.id,
-                assignment_id=assignment.id,
-                score=score,
-                max_score=assignment.max_score,
-                percentage=round(percentage, 2),
-                letter_grade=letter_grade,
-                feedback=random.choice(feedback_options),
-                graded_by_id=random.choice(teachers).id,
-                graded_at=assignment.due_date + timedelta(days=random.randint(1, 7))
-            )
-            db.session.add(grade)
-            grades.append(grade)
-        
-        print(f"  Created grades for {len(graded_enrollments)} students in {assignment.title}")
-    
-    db.session.commit()
-    return grades
-
-def create_attendance(enrollments, teachers):
-    """Create attendance records"""
-    print("\nCreating Attendance Records...")
-    
-    attendance_records = []
-    
-    # Create attendance for past 30 days
-    for day_offset in range(30):
-        current_date = date.today() - timedelta(days=day_offset)
-        
-        # Skip weekends
-        if current_date.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
-            continue
-        
-        # Select 20-40 enrollments to mark attendance for
-        num_attendances = random.randint(20, 40)
-        enrollments_for_day = random.sample(enrollments, min(num_attendances, len(enrollments)))
-        
-        for enrollment in enrollments_for_day:
-            # 85% present, 10% absent, 5% late
-            rand_val = random.random()
-            if rand_val < 0.85:
-                status = 'present'
-                notes = None
-            elif rand_val < 0.95:
-                status = 'absent'
-                notes = random.choice(['Sick', 'Family emergency', 'Doctor appointment', 'Personal reasons'])
-            else:
-                status = 'late'
-                notes = 'Arrived late to class'
-            
-            attendance = Attendance(
-                enrollment_id=enrollment.id,
-                date=current_date,
-                status=status,
-                notes=notes,
-                recorded_by_id=enrollment.teacher_id
-            )
-            db.session.add(attendance)
-            attendance_records.append(attendance)
-    
-    db.session.commit()
-    print(f"  Created {len(attendance_records)} attendance records")
-    return attendance_records
-
-def create_announcements(admins, teachers):
-    """Create announcements"""
-    print("\nCreating Announcements...")
-    
-    announcements_data = [
-        {
-            'title': 'Important Academic Calendar Update',
-            'content': 'Please note that the spring break has been extended by one week. Check the updated calendar on the portal.',
-            'priority': 'high',
-            'target_audience': 'all'
-        },
-        {
-            'title': 'Upcoming Final Examinations Schedule',
-            'content': 'Final exams will be held from May 12th to May 20th. The detailed schedule is available on the portal.',
-            'priority': 'high',
-            'target_audience': 'students'
-        },
-        {
-            'title': 'New Library Resources Available',
-            'content': 'The library has added new online journals and databases. Access them through the library portal.',
-            'priority': 'medium',
-            'target_audience': 'all'
-        },
-        {
-            'title': 'Campus Maintenance Notice',
-            'content': 'The Science building will be undergoing maintenance this weekend. Some classrooms may be unavailable.',
-            'priority': 'medium',
-            'target_audience': 'all'
-        },
-        {
-            'title': 'Student Club Activities This Week',
-            'content': 'Various student clubs are hosting events this week. Check the student activities board for details.',
-            'priority': 'low',
-            'target_audience': 'students'
-        },
-        {
-            'title': 'Scholarship Application Deadline',
-            'content': 'The deadline for spring semester scholarship applications is March 15th. Apply now!',
-            'priority': 'high',
-            'target_audience': 'students'
-        },
-        {
-            'title': 'Career Fair Announcement',
-            'content': 'Annual career fair will be held on April 10th. Over 50 companies will be participating.',
-            'priority': 'medium',
-            'target_audience': 'students'
-        },
-        {
-            'title': 'Faculty Meeting Schedule',
-            'content': 'Monthly faculty meeting will be held this Friday at 3 PM in the conference room.',
-            'priority': 'medium',
-            'target_audience': 'teachers'
-        }
-    ]
-    
-    announcements = []
-    for i, ann_data in enumerate(announcements_data):
-        # Alternate between admins and teachers as publishers
-        publisher = admins[0] if i % 2 == 0 else random.choice(teachers)
-        
-        announcement = Announcement(
-            title=ann_data['title'],
-            content=ann_data['content'],
-            published_by_id=publisher.id,
-            publish_date=date.today() - timedelta(days=random.randint(0, 10)),
-            expiry_date=date.today() + timedelta(days=random.randint(30, 60)),
-            priority=ann_data['priority'],
-            target_audience=ann_data['target_audience']
-        )
-        db.session.add(announcement)
-        announcements.append(announcement)
-    
-    db.session.commit()
-    print(f"  Created {len(announcements)} announcements")
-    return announcements
-
-def create_library_system():
-    """Create library system"""
-    print("\nSetting up Library System...")
-    
-    # Create Library
-    library = Library(
-        name='University Main Library',
-        location='Central Campus Building A',
-        opening_hours='Mon-Fri: 8:00 AM - 10:00 PM, Sat: 9:00 AM - 6:00 PM, Sun: 12:00 PM - 8:00 PM',
-        contact_phone='+1 (555) 444-1234',
-        email='library@studenthub.edu'
+def create_admin():
+    """Create an admin user"""
+    admin = User(
+        email='admin@studentu.com',
+        first_name='Admin',
+        last_name='System',
+        role='admin',
+        password_hash=generate_password_hash('admin123'),
+        is_verified=True,
+        created_at=datetime.utcnow()
     )
-    db.session.add(library)
-    db.session.commit()
-    print(f"  Created Library: {library.name}")
+    db.session.add(admin)
     
-    # Create Books
-    print("\n  Creating Books...")
-    book_categories = ['Computer Science', 'Mathematics', 'Physics', 'Literature', 'Business', 
-                      'History', 'Biology', 'Engineering', 'Psychology', 'Economics']
+    # Create admin profile
+    profile = Profile(
+        user=admin,
+        headline='System Administrator',
+        bio='I manage the StudentU platform and ensure everything runs smoothly.',
+        location='San Francisco, CA',
+        phone='+15551234567',
+        website='https://studentu.com',
+        profile_picture='https://ui-avatars.com/api/?name=Admin+System&background=random',
+        created_at=datetime.utcnow()
+    )
+    db.session.add(profile)
     
-    books = []
-    for i in range(150):  # Create 150 books
-        category = random.choice(book_categories)
-        total_copies = random.randint(1, 5)
-        available_copies = random.randint(0, total_copies)
-        
-        book = Book(
-            library_id=library.id,
-            title=f'{category} Volume {i+1}: {fake.catch_phrase()}',
-            author=fake.name(),
-            isbn=fake.isbn13(),
-            category=category,
-            publication_year=random.randint(2000, 2024),
-            publisher=random.choice(['Pearson', 'McGraw-Hill', 'Wiley', 'Springer', 'Elsevier', 'Oxford', 'Cambridge']),
-            total_copies=total_copies,
-            available_copies=available_copies,
-            location=f'Shelf {random.randint(1, 50)}, Row {random.randint(1, 10)}'
+    return admin
+
+def create_employer(email, company_name, index):
+    """Create an employer user with a company"""
+    # Create employer user
+    employer = User(
+        email=email,
+        first_name=fake.first_name(),
+        last_name=fake.last_name(),
+        role='employer',
+        password_hash=generate_password_hash('password123'),
+        is_verified=True,
+        created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365)),
+        is_online=random.choice([True, False])
+    )
+    db.session.add(employer)
+    
+    # Create profile for employer
+    profile = Profile(
+        user=employer,
+        headline=f"HR at {company_name}",
+        bio=fake.paragraph(nb_sentences=3),
+        location=f"{fake.city()}, {fake.country_code()}",
+        phone=fake.phone_number(),
+        website=f"https://{company_name.lower().replace(' ', '')}.com",
+        profile_picture=f"https://i.pravatar.cc/300?u={email}",
+        title=f"{random.choice(['HR', 'Talent Acquisition', 'Recruiting'])} {random.choice(['Manager', 'Specialist', 'Director'])}",
+        department=random.choice(['Human Resources', 'Talent Acquisition', 'Recruiting']),
+        created_at=datetime.utcnow()
+    )
+    db.session.add(profile)
+    
+    # Create company - FIXED: description should be a string, not a list
+    company = Company(
+        user=employer,
+        company_name=company_name,
+        description=' '.join(fake.paragraphs(nb=3)),  # Join paragraphs into a single string
+        industry=random.choice(INDUSTRIES),
+        company_size=random.choice(['1-10', '11-50', '51-200', '201-500', '500+']),
+        founded_year=random.randint(1990, 2020),
+        website=f"https://{company_name.lower().replace(' ', '')}.com",
+        phone=fake.phone_number(),
+        location=f"{fake.city()}, {fake.country_code()}",
+        address=fake.address().replace('\n', ', '),
+        logo_url=f"https://ui-avatars.com/api/?name={company_name.replace(' ', '+')}&background=random",
+        cover_image_url=f"https://picsum.photos/1200/300?random={index}",
+        linkedin_url=f"https://linkedin.com/company/{company_name.lower().replace(' ', '')}",
+        twitter_url=f"https://twitter.com/{company_name.lower().replace(' ', '')}",
+        verification_status=random.choices(
+            ['verified', 'unverified', 'pending'],
+            weights=[0.7, 0.2, 0.1]
+        )[0],
+        benefits=json.dumps(random.sample(BENEFITS, k=random.randint(3, 8))),
+        culture_values=json.dumps(random.sample(CULTURE_VALUES, k=random.randint(3, 5))),
+        created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365))
+    )
+    db.session.add(company)
+    
+    # Create dashboard stats for employer
+    dashboard = DashboardStats(
+        user=employer,
+        date=datetime.utcnow().date(),
+        posted_jobs=0,  # Will be updated later
+        active_jobs=0,  # Will be updated later
+        total_applicants=0,  # Will be updated later
+        unread_messages=random.randint(0, 5),
+        created_at=datetime.utcnow()
+    )
+    db.session.add(dashboard)
+    
+    return employer, company
+
+def create_student(index):
+    """Create a student user with profile and related data"""
+    # Create user
+    email = f'student{index}@studentu.com'
+    first_name = fake.first_name()
+    last_name = fake.last_name()
+    
+    user = User(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        role='student',
+        password_hash=generate_password_hash('password123'),
+        is_verified=True,
+        created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365)),
+        is_online=random.choice([True, False]),
+        last_seen=datetime.utcnow() - timedelta(hours=random.randint(1, 72))
+    )
+    db.session.add(user)
+    
+    # Create profile
+    university = random.choice(UNIVERSITIES)
+    major = random.choice(MAJORS)
+    graduation_year = random.randint(2023, 2026)
+    
+    profile = Profile(
+        user=user,
+        headline=f"{major} Student at {university}",
+        bio='\n\n'.join(fake.paragraphs(nb=2)),
+        location=f"{fake.city()}, {fake.country_code()}",
+        phone=fake.phone_number(),
+        website=f"https://{first_name.lower()}{last_name.lower()}.com",
+        profile_picture=f"https://i.pravatar.cc/300?u={email}",
+        cover_picture=f"https://picsum.photos/1200/400?random={1000+index}",
+        github=f"https://github.com/{first_name.lower()}{last_name.lower()}",
+        linkedin=f"https://linkedin.com/in/{first_name.lower()}-{last_name.lower()}",
+        portfolio=f"https://{first_name.lower()}{last_name.lower()}.com/portfolio",
+        university=university,
+        major=major,
+        graduation_year=graduation_year,
+        gpa=round(random.uniform(2.5, 4.0), 2),
+        degree_type=random.choice(["Bachelor's", "Master's", "PhD"]),
+        looking_for_job=random.choice([True, False]),
+        open_to_relocation=random.choice([True, False]),
+        open_to_remote=random.choice([True, False]),
+        preferred_locations=json.dumps([fake.city() for _ in range(random.randint(1, 3))]),
+        preferred_roles=json.dumps(random.sample(JOB_TITLES, k=random.randint(1, 3))),
+        expected_salary=f"${random.randint(50, 100)}k",
+        job_types=json.dumps(random.sample(JOB_TYPES, k=random.randint(1, 3))),
+        availability=random.choice(['immediate', '2weeks', '1month', '3months']),
+        show_profile=True,
+        show_contact_info=random.choice([True, False]),
+        show_education=True,
+        show_experience=True,
+        show_skills=True,
+        email_notifications=True,
+        job_alerts=random.choice([True, False]),
+        connection_requests=True,
+        message_notifications=True,
+        created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365))
+    )
+    db.session.add(profile)
+    
+    # Create student record - FIXED: JSON fields should be JSON strings
+    student = Student(
+        user=user,
+        phone=profile.phone,
+        location=profile.location,
+        bio=profile.bio,
+        education=json.dumps([{
+            "school": university,
+            "degree": major,
+            "field_of_study": major,
+            "start_year": graduation_year - 4,
+            "end_year": graduation_year,
+            "gpa": profile.gpa,
+            "description": "Relevant coursework and academic achievements."
+        }]),
+        work_experience=json.dumps([{
+            "company": fake.company(),
+            "position": fake.job(),
+            "start_date": f"{graduation_year - random.randint(1, 3)}-{random.randint(1, 12):02d}",
+            "end_date": "Present" if random.choice([True, False]) else f"{graduation_year - 1}-{random.randint(1, 12):02d}",
+            "description": fake.paragraph()
+        } for _ in range(random.randint(0, 3))]),
+        skills=json.dumps(random.sample(SKILLS, k=random.randint(5, 15))),
+        years_of_experience=random.randint(0, 5),
+        resume_url=f"https://{first_name.lower()}{last_name.lower()}.com/resume.pdf",
+        profile_picture=profile.profile_picture,
+        linkedin_url=profile.linkedin,
+        github_url=profile.github,
+        created_at=profile.created_at
+    )
+    db.session.add(student)
+    
+    # Create dashboard stats for student
+    dashboard = DashboardStats(
+        user=user,
+        date=datetime.utcnow().date(),
+        total_applications=0,  # Will be updated later
+        pending_applications=0,  # Will be updated later
+        interview_applications=0,  # Will be updated later
+        rejected_applications=0,  # Will be updated later
+        accepted_applications=0,  # Will be updated later
+        saved_jobs=0,  # Will be updated later
+        viewed_jobs=random.randint(5, 50),
+        recommended_jobs=random.randint(5, 20),
+        profile_views=random.randint(0, 50),
+        profile_completion=random.randint(60, 100),
+        unread_messages=random.randint(0, 5),
+        created_at=datetime.utcnow()
+    )
+    db.session.add(dashboard)
+    
+    return user, student
+
+def create_job(company, employer, index):
+    """Create a job posting"""
+    title = random.choice(JOB_TITLES)
+    job_type = random.choice(JOB_TYPES)
+    experience_level = random.choice(EXPERIENCE_LEVELS)
+    
+    # Set salary based on experience level
+    if experience_level == 'Entry':
+        salary_min = random.randint(50000, 80000)
+        salary_max = salary_min + random.randint(10000, 20000)
+    elif experience_level == 'Mid':
+        salary_min = random.randint(80000, 120000)
+        salary_max = salary_min + random.randint(15000, 30000)
+    elif experience_level == 'Senior':
+        salary_min = random.randint(120000, 180000)
+        salary_max = salary_min + random.randint(20000, 40000)
+    else:  # Lead/Executive
+        salary_min = random.randint(150000, 250000)
+        salary_max = salary_min + random.randint(50000, 100000)
+    
+    # Adjust salary based on job type
+    if job_type == 'Part-time':
+        salary_min = int(salary_min * 0.6)
+        salary_max = int(salary_max * 0.6)
+    elif job_type == 'Internship':
+        salary_min = random.randint(20, 50) * 1000  # Annualized
+        salary_max = salary_min + 10000
+    
+    job = Job(
+        company=company,
+        employer=employer,
+        title=title,
+        description='\n\n'.join(
+            [f"<h3>{s}</h3>\n<p>{' '.join(fake.paragraphs(nb=2))}</p>" 
+             for s in ['About the Role', 'Key Responsibilities', 'What We\'re Looking For']] +
+            [f"<h3>About {company.company_name}</h3>\n<p>{' '.join(fake.paragraphs(nb=2))}</p>"]
+        ),
+        requirements='\n'.join(
+            [f"<li>{s}</li>" for s in [
+                f"Bachelor's degree in {random.choice(MAJORS)} or related field",
+                f"{random.randint(1, 10)}+ years of experience in a similar role",
+                f"Strong knowledge of {random.choice(SKILLS)} and {random.choice(SKILLS)}",
+                f"Experience with {random.choice(['Agile', 'Scrum', 'Kanban'])} methodologies",
+                f"Excellent communication and teamwork skills"
+            ]] + 
+            [f"<li>{s}</li>" for s in fake.sentences(nb=random.randint(2, 5))]
+        ),
+        responsibilities='\n'.join(
+            [f"<li>{s}</li>" for s in [
+                f"Design, develop, and maintain {random.choice(['web applications', 'APIs', 'data pipelines'])}",
+                f"Collaborate with {random.choice(['product managers', 'designers', 'other engineers'])} to define and implement features",
+                "Write clean, maintainable, and efficient code",
+                "Participate in code reviews and provide constructive feedback",
+                "Troubleshoot, debug and upgrade existing systems"
+            ]] +
+            [f"<li>{s}</li>" for s in fake.sentences(nb=random.randint(2, 5))]
+        ),
+        location=company.location if random.choice([True, False]) else f"{fake.city()}, {fake.country_code()}",
+        job_type=job_type,
+        work_mode=random.choice(WORK_MODES),
+        department=random.choice(DEPARTMENTS),
+        experience_level=experience_level,
+        salary_min=salary_min,
+        salary_max=salary_max,
+        salary_currency='USD',
+        required_skills=json.dumps(random.sample(SKILLS, k=random.randint(3, 7))),
+        preferred_skills=json.dumps(random.sample(SKILLS, k=random.randint(2, 5))),
+        benefits=json.dumps(random.sample(BENEFITS, k=random.randint(3, 8))),
+        application_deadline=datetime.utcnow() + timedelta(days=random.randint(7, 90)),
+        positions_available=random.randint(1, 5),
+        is_active=random.choices([True, False], weights=[0.8, 0.2])[0],
+        is_featured=random.choices([True, False], weights=[0.3, 0.7])[0],
+        views_count=random.randint(0, 500),
+        created_at=datetime.utcnow() - timedelta(days=random.randint(0, 60))
+    )
+    db.session.add(job)
+    # Flush to get the job ID before creating analytics
+    db.session.flush()
+    
+    # Create job analytics
+    for i in range(30):  # Last 30 days of data
+        date = datetime.utcnow().date() - timedelta(days=29 - i)
+        # Use SQLAlchemy to insert job analytics
+        from models.models import JobAnalytics
+        analytics = JobAnalytics(
+            job_id=job.id,
+            date=date,
+            views=random.randint(0, 50),
+            applications=random.randint(0, 10) if i > 7 else 0,  # No applications in the first week
+            clicks=random.randint(0, 20),
+            unique_visitors=random.randint(0, 30)
         )
-        db.session.add(book)
-        books.append(book)
+        db.session.add(analytics)
     
-    db.session.commit()
-    print(f"    Created {len(books)} books")
-    
-    return library, books
+    return job
 
-def create_financial_system(students, courses):
-    """Create financial system (invoices and payments)"""
-    print("\nSetting up Financial System...")
+def create_application(student, job, status=None):
+    """Create a job application"""
+    if not status:
+        status = random.choices(
+            ['pending', 'reviewing', 'interview_scheduled', 'rejected', 'hired'],
+            weights=[0.4, 0.3, 0.15, 0.1, 0.05]
+        )[0]
     
-    invoices = []
-    payments = []
+    applied_at = job.created_at + timedelta(days=random.randint(0, (datetime.utcnow() - job.created_at).days))
     
-    for student in students:
-        # Each student has 1-4 invoices
-        num_invoices = random.randint(1, 4)
+    application = Application(
+        job=job,
+        student=student,
+        cover_letter=f"""
+        Dear Hiring Manager,
         
-        for i in range(num_invoices):
-            invoice_date = date.today() - timedelta(days=random.randint(30, 120))
-            due_date = invoice_date + timedelta(days=30)
-            is_paid = random.random() > 0.4  # 60% paid
-            
-            # Get courses for this student to calculate amount
-            student_courses = random.sample(courses, min(3, len(courses)))
-            total_amount = sum(course.fee for course in student_courses)
-            
-            invoice = Invoice(
-                user_id=student.id,
-                invoice_number=f'INV-{student.student_id}-{i+1:03d}',
-                invoice_date=invoice_date,
-                due_date=due_date,
-                status='paid' if is_paid else 'pending',
-                total_amount=round(total_amount + random.uniform(-100, 100), 2),
-                description=f'Tuition and fees for {random.choice(["Fall", "Spring", "Summer"])} semester'
-            )
-            db.session.add(invoice)
-            invoices.append(invoice)
-            
-            # Create payment if invoice is paid
-            if is_paid:
-                payment_date = invoice_date + timedelta(days=random.randint(1, 30))
-                
-                payment = Payment(
-                    invoice_id=invoice.id,
-                    amount=invoice.total_amount,
-                    payment_date=payment_date,
-                    payment_method=random.choice(['credit_card', 'bank_transfer', 'check', 'cash']),
-                    transaction_id=f'TXN{random.randint(1000000, 9999999)}',
-                    status='completed'
-                )
-                db.session.add(payment)
-                payments.append(payment)
-    
-    db.session.commit()
-    print(f"  Created {len(invoices)} invoices and {len(payments)} payments")
-    return invoices, payments
-
-def create_parent_relationships(students, parents):
-    """Create parent-student relationships"""
-    print("\nCreating Parent-Student Relationships...")
-    
-    relationships = ['Mother', 'Father', 'Guardian', 'Grandparent']
-    parent_students = []
-    
-    # Each student has 0-2 parents
-    for student in students:
-        num_parents = random.randint(0, 2)
+        I am excited to apply for the {job.title} position at {job.company.company_name}. 
+        {' '.join(fake.paragraphs(nb=2))}
         
-        if num_parents > 0 and parents:  # Ensure we have parents to assign
-            selected_parents = random.sample(parents, min(num_parents, len(parents)))
-            
-            for i, parent in enumerate(selected_parents):
-                parent_student = ParentStudent(
-                    parent_id=parent.id,
-                    student_id=student.id,
-                    relationship=relationships[i] if i < len(relationships) else 'Guardian',
-                    is_primary=(i == 0)
-                )
-                db.session.add(parent_student)
-                parent_students.append(parent_student)
+        Best regards,
+        {student.user.first_name} {student.user.last_name}
+        """,
+        resume_url=student.resume_url,
+        status=status,
+        match_percentage=random.randint(60, 95),
+        applied_at=applied_at,
+        created_at=applied_at
+    )
     
-    db.session.commit()
-    print(f"  Created {len(parent_students)} parent-student relationships")
-    return parent_students
-
-def create_course_materials(courses, teachers):
-    """Create course materials"""
-    print("\nCreating Course Materials...")
-    
-    material_types = ['syllabus', 'lecture_notes', 'reading', 'assignment', 'exam', 'slides', 'video']
-    materials = []
-    
-    for course in courses:
-        # Create 2-5 materials per course
-        num_materials = random.randint(2, 5)
+    if status in ['interview_scheduled', 'hired']:
+        interview_date = applied_at + timedelta(days=random.randint(3, 14))
         
-        for i in range(num_materials):
-            material_type = random.choice(material_types)
-            
-            material = CourseMaterial(
-                course_id=course.id,
-                title=f'{course.code} {material_type.replace("_", " ").title()} {i+1}',
-                description=f'{material_type.replace("_", " ")} material for {course.name}',
-                material_type=material_type,
-                file_url=f'/materials/{course.code.lower()}_{material_type}_{i+1}.pdf',
-                uploaded_by_id=random.choice(teachers).id,
-                upload_date=date.today() - timedelta(days=random.randint(1, 60)),
-                is_public=random.choice([True, False])
-            )
-            db.session.add(material)
-            materials.append(material)
-        
-        print(f"  Created {num_materials} materials for {course.code}")
-    
-    db.session.commit()
-    return materials
-
-def create_discussions_and_messages(courses, students, teachers):
-    """Create discussions and messages"""
-    print("\nCreating Discussions and Messages...")
-    
-    discussions = []
-    messages = []
-    
-    for course in courses:
-        # Create 1-2 discussions per course
-        num_discussions = random.randint(1, 2)
-        
-        for i in range(num_discussions):
-            discussion_topics = [
-                f'{course.code} General Discussion',
-                f'{course.code} Assignment Help',
-                f'{course.code} Exam Preparation',
-                f'{course.code} Project Discussion'
-            ]
-            
-            discussion = Discussion(
-                title=random.choice(discussion_topics),
-                description=f'Discuss course topics, assignments, and questions for {course.code} here.',
-                course_id=course.id,
-                created_by_id=random.choice(teachers).id,
-                is_pinned=(i == 0)  # First discussion is pinned
-            )
-            db.session.add(discussion)
-            discussions.append(discussion)
-            
-            # Create 3-10 messages per discussion
-            num_messages = random.randint(3, 10)
-            
-            for j in range(num_messages):
-                # Alternate between teachers and students
-                if j == 0:
-                    author = discussion.created_by
-                else:
-                    author = random.choice(students) if j % 2 == 0 else random.choice(teachers)
-                
-                message_content = [
-                    f'This is an important point about {course.code}.',
-                    f'Can someone explain the concept from chapter {j+1}?',
-                    f'I found this resource helpful for the assignment.',
-                    f'When is the deadline for the next assignment?',
-                    f'Great discussion everyone!',
-                    f'I have a question about the material from last week.',
-                    f'Here are my thoughts on the topic.',
-                    f'Does anyone want to form a study group?'
-                ]
-                
-                message = Message(
-                    discussion_id=discussion.id,
-                    user_id=author.id,
-                    content=random.choice(message_content),
-                    created_at=datetime.utcnow() - timedelta(days=random.randint(0, 7))
-                )
-                db.session.add(message)
-                messages.append(message)
-    
-    db.session.commit()
-    print(f"  Created {len(discussions)} discussions and {len(messages)} messages")
-    return discussions, messages
-
-def create_assignment_submissions(assignments, students):
-    """Create assignment submissions"""
-    print("\nCreating Assignment Submissions...")
-    
-    submissions = []
-    
-    for assignment in assignments:
-        # Get students for this assignment's course
-        course_students = [s for s in students if any(
-            e.course_id == assignment.course_id for e in s.enrollments
-        )]
-        
-        if not course_students:
-            continue
-        
-        # 50-80% of students submit the assignment
-        num_submissions = random.randint(
-            int(len(course_students) * 0.5),
-            int(len(course_students) * 0.8)
+        # Create interview record
+        interview = Interview(
+            application=application,
+            interview_type=random.choice(['phone', 'video', 'in-person']),
+            scheduled_at=interview_date,
+            duration_minutes=random.choice([30, 45, 60]),
+            location_or_link=(
+                f"Zoom: https://zoom.us/j/{fake.uuid4()}" 
+                if random.choice([True, False]) 
+                else f"{job.company.company_name} HQ, {job.location}"
+            ),
+            interviewer_name=fake.name(),
+            interviewer_email=fake.email(),
+            status='scheduled',
+            notes=fake.paragraph() if random.choice([True, False]) else None,
+            created_at=datetime.utcnow()
         )
+        db.session.add(interview)
         
-        submitting_students = random.sample(course_students, num_submissions)
-        
-        for student in submitting_students:
-            submitted_at = assignment.due_date - timedelta(days=random.randint(0, 2))
-            is_late = submitted_at > assignment.due_date
-            
-            submission = AssignmentSubmission(
-                assignment_id=assignment.id,
-                user_id=student.id,
-                submission_text=f'This is my submission for {assignment.title}. I have completed all requirements.',
-                submission_file_url=None if is_late else f'/submissions/{student.id}_{assignment.id}.pdf',
-                submitted_at=submitted_at,
-                status='submitted',
-                is_late=is_late
-            )
-            db.session.add(submission)
-            submissions.append(submission)
-        
-        print(f"  Created {len(submitting_students)} submissions for {assignment.title}")
-    
-    db.session.commit()
-    return submissions
-
-def create_library_transactions(books, students):
-    """Create library transactions"""
-    print("\nCreating Library Transactions...")
-    
-    transactions = []
-    
-    for _ in range(50):  # Create 50 transactions
-        # Find a book with available copies
-        available_books = [b for b in books if b.available_copies > 0]
-        
-        if not available_books:
-            break
-        
-        book = random.choice(available_books)
-        student = random.choice(students)
-        
-        checkout_date = date.today() - timedelta(days=random.randint(1, 30))
-        due_date = checkout_date + timedelta(days=14)
-        returned = random.random() > 0.3  # 70% returned
-        
-        if returned:
-            return_date = checkout_date + timedelta(days=random.randint(1, 20))
-            late_fee = max(0, (return_date - due_date).days) * 0.5  # $0.50 per day late
-            status = 'returned'
-        else:
-            return_date = None
-            late_fee = 0
-            status = 'checked_out'
-        
-        transaction = LibraryTransaction(
-            book_id=book.id,
-            user_id=student.id,
-            checkout_date=checkout_date,
-            due_date=due_date,
-            return_date=return_date,
-            status=status,
-            late_fee=late_fee
+        # Create notification for student
+        notification = Notification(
+            user=student.user,
+            notification_type='interview_scheduled',
+            title=f"Interview Scheduled for {job.title}",
+            message=f"You have an interview scheduled for {job.title} at {job.company.company_name} on {interview_date.strftime('%B %d, %Y at %I:%M %p')}",
+            link_url=f"/applications/{application.id}",
+            notification_metadata=json.dumps({
+                'job_id': job.id,
+                'job_title': job.title,
+                'company_name': job.company.company_name,
+                'interview_date': interview_date.isoformat(),
+                'interview_type': interview.interview_type
+            }),
+            created_at=datetime.utcnow()
         )
-        db.session.add(transaction)
-        transactions.append(transaction)
-        
-        # Update book availability
-        if returned:
-            book.available_copies += 1
+        db.session.add(notification)
     
-    db.session.commit()
-    print(f"  Created {len(transactions)} library transactions")
-    return transactions
+    db.session.add(application)
+    
+    # Create notification for employer
+    notification = Notification(
+        user=job.employer,
+        notification_type='new_application',
+        title=f"New Application for {job.title}",
+        message=f"{student.user.first_name} {student.user.last_name} has applied for {job.title}",
+        link_url=f"/company/jobs/{job.id}/applications/{application.id}",
+        notification_metadata=json.dumps({
+            'job_id': job.id,
+            'job_title': job.title,
+            'student_id': student.id,
+            'student_name': f"{student.user.first_name} {student.user.last_name}",
+            'application_id': application.id
+        }),
+        created_at=applied_at
+    )
+    db.session.add(notification)
+    
+    # Update dashboard stats
+    student_dashboard = DashboardStats.query.filter_by(user_id=student.user_id).first()
+    if student_dashboard:
+        student_dashboard.total_applications += 1
+        if status == 'pending':
+            student_dashboard.pending_applications += 1
+        elif status == 'interview_scheduled':
+            student_dashboard.interview_applications += 1
+        elif status == 'rejected':
+            student_dashboard.rejected_applications += 1
+        elif status == 'hired':
+            student_dashboard.accepted_applications += 1
+    
+    employer_dashboard = DashboardStats.query.filter_by(user_id=job.employer_id).first()
+    if employer_dashboard:
+        employer_dashboard.total_applicants += 1
+    
+    return application
 
-def print_summary():
-    """Print summary of created data"""
-    print("\n" + "="*60)
-    print("SEED DATA GENERATION COMPLETE!")
-    print("="*60)
-    print("\nSummary of Created Data:")
-    print("-"*60)
+def create_saved_job(student, job):
+    """Save a job for a student"""
+    saved_job = SavedJob(
+        student=student,
+        job=job,
+        notes=random.choice([None, fake.sentence(), "Looks interesting!", "Apply soon"]),
+        saved_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
+    )
+    db.session.add(saved_job)
     
-    models = [
-        ('Academic Years', AcademicYear),
-        ('Semesters', Semester),
-        ('Departments', Department),
-        ('Users', User),
-        ('Classrooms', Classroom),
-        ('Courses', Course),
-        ('Enrollments', Enrollment),
-        ('Assignments', Assignment),
-        ('Grades', Grade),
-        ('Attendance Records', Attendance),
-        ('Announcements', Announcement),
-        ('Library Books', Book),
-        ('Library Transactions', LibraryTransaction),
-        ('Invoices', Invoice),
-        ('Payments', Payment),
-        ('Parent-Student Relationships', ParentStudent),
-        ('Course Materials', CourseMaterial),
-        ('Discussions', Discussion),
-        ('Messages', Message),
-        ('Assignment Submissions', AssignmentSubmission)
-    ]
+    # Update dashboard stats
+    dashboard = DashboardStats.query.filter_by(user_id=student.user_id).first()
+    if dashboard:
+        dashboard.saved_jobs += 1
     
-    for name, model in models:
-        count = model.query.count()
-        print(f"{name}: {count}")
-    
-    print("-"*60)
-    
-    # User breakdown
-    admin_count = User.query.filter_by(role='admin').count()
-    teacher_count = User.query.filter_by(role='teacher').count()
-    student_count = User.query.filter_by(role='student').count()
-    parent_count = User.query.filter_by(role='parent').count()
-    staff_count = User.query.filter_by(role='staff').count()
-    
-    print(f"\nUser Breakdown:")
-    print(f"  Admins: {admin_count}")
-    print(f"  Teachers: {teacher_count}")
-    print(f"  Students: {student_count}")
-    print(f"  Parents: {parent_count}")
-    print(f"  Staff: {staff_count}")
-    
-    print("\nDefault Login Credentials:")
-    print("-"*60)
-    print("Admin: admin@studenthub.edu / password123")
-    print("Teacher: teacher1@studenthub.edu / password123")
-    print("Student: student20240001@studenthub.edu / password123")
-    print("Parent: parent1@example.com / password123")
-    print("-"*60)
-    
-    print("\nNote: All passwords are 'password123' for development purposes.")
-    print("Remember to change passwords in production!")
+    return saved_job
 
-@click.command()
-@click.option('--clear', is_flag=True, help='Clear existing data before seeding')
-def seed_database(clear):
-    """Seed the database with comprehensive StudentHub data"""
+def create_saved_candidate(company, student):
+    """Save a candidate for a company"""
+    saved_candidate = SavedCandidate(
+        company=company,
+        student=student,
+        notes=random.choice([
+            None, 
+            "Great fit for our engineering team", 
+            "Strong background in data science",
+            "Potential candidate for future roles"
+        ]),
+        saved_at=datetime.utcnow() - timedelta(days=random.randint(0, 90))
+    )
+    db.session.add(saved_candidate)
+    return saved_candidate
+
+def create_company_review(company, student):
+    """Create a company review from a student"""
+    overall_rating = random.randint(3, 5)  # Mostly positive reviews
+    
+    review = CompanyReview(
+        company=company,
+        student=student,
+        overall_rating=overall_rating,
+        work_life_balance_rating=random.randint(3, 5),
+        culture_rating=random.randint(3, 5),
+        benefits_rating=random.randint(3, 5),
+        management_rating=random.randint(3, 5),
+        review_title=fake.sentence(),
+        review_text='\n\n'.join(fake.paragraphs(nb=2)),
+        pros='\n'.join([f"• {s}" for s in fake.paragraphs(nb=random.randint(2, 4))]),
+        cons='\n'.join([f"• {s}" for s in fake.paragraphs(nb=random.randint(1, 3))]),
+        is_current_employee=random.choice([True, False]),
+        employment_status=random.choice(['current', 'former', 'intern']),
+        is_anonymous=random.choice([True, False]),
+        is_approved=True,
+        helpful_count=random.randint(0, 50),
+        created_at=datetime.utcnow() - timedelta(days=random.randint(0, 365))
+    )
+    db.session.add(review)
+    return review
+
+def create_notification(user, notification_type, title, message, link_url, metadata=None):
+    """Create a notification for a user"""
+    notification = Notification(
+        user=user,
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        link_url=link_url,
+        is_read=random.choice([True, False]),
+        notification_metadata=json.dumps(metadata or {}),
+        created_at=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+        read_at=datetime.utcnow() - timedelta(days=random.randint(0, 7)) if random.choice([True, False]) else None
+    )
+    db.session.add(notification)
+    return notification
+
+def create_saved_search(user, search_query, filters=None):
+    """Create a saved search for a user"""
+    saved_search = SavedSearch(
+        user=user,
+        search_query=search_query,
+        filters=json.dumps(filters or {}),
+        search_count=random.randint(1, 50),
+        last_searched=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+        created_at=datetime.utcnow() - timedelta(days=random.randint(1, 90))
+    )
+    db.session.add(saved_search)
+    return saved_search
+
+def main():
+    """Main function to seed the database"""
+    print("Starting database seeding...")
+    
     app = create_app()
-    
     with app.app_context():
-        # Create all tables if they don't exist
+        # Clear existing data
+        print("Dropping all tables...")
+        db.drop_all()
         db.create_all()
         
-        if clear:
-            clear_database()
+        # Create admin
+        print("Creating admin user...")
+        admin = create_admin()
         
-        print("Starting StudentHub seed data generation...")
-        print("="*60)
+        # Create employers and companies
+        print("Creating employers and companies...")
+        employers = []
+        companies = []
+        for i in range(NUM_EMPLOYERS):
+            email = f'employer{i+1}@studentu.com'
+            company_name = COMPANY_NAMES[i % len(COMPANY_NAMES)]
+            employer, company = create_employer(email, company_name, i)
+            employers.append(employer)
+            companies.append(company)
         
-        try:
-            # Step 1: Create academic structure
-            academic_years = create_academic_years()
-            semesters = create_semesters(academic_years)
-            departments_info = create_departments()
+        # Create students
+        print("Creating students...")
+        students = []
+        for i in range(1, NUM_STUDENTS + 1):
+            user, student = create_student(i)
+            students.append(student)
+        
+        # Create jobs for each company
+        print("Creating jobs...")
+        all_jobs = []
+        for company, employer in zip(companies, employers):
+            for _ in range(NUM_JOBS_PER_COMPANY):
+                job = create_job(company, employer, len(all_jobs))
+                if job:
+                    all_jobs.append(job)
+        
+        db.session.commit()  # Commit all created data
+        
+        # Create applications
+        print("Creating job applications...")
+        for student in students:
+            max_apps = min(MAX_APPLICATIONS_PER_STUDENT, len(all_jobs))
+            jobs_to_apply = random.sample(all_jobs, k=random.randint(0, max_apps))
             
-            # Step 2: Create users
-            users_data = create_users(departments_info)
+            for job in jobs_to_apply:
+                create_application(student, job)
+        
+        # Save jobs for students
+        print("Creating saved jobs...")
+        for student in students:
+            max_saves = min(MAX_SAVED_JOBS_PER_STUDENT, len(all_jobs))
+            jobs_to_save = random.sample(all_jobs, k=random.randint(0, max_saves))
             
-            # Step 3: Create infrastructure
-            classrooms = create_classrooms()
-            courses = create_courses(departments_info, users_data['teachers'])
+            for job in jobs_to_save:
+                create_saved_job(student, job)
+        
+        # Save candidates for companies
+        print("Creating saved candidates...")
+        for company in companies:
+            max_candidates = min(MAX_SAVED_CANDIDATES_PER_COMPANY, len(students))
+            candidates_to_save = random.sample(students, k=random.randint(0, max_candidates))
             
-            # Step 4: Create academic data
-            enrollments = create_enrollments(
-                users_data['students'], 
-                users_data['teachers'], 
-                courses, 
-                classrooms, 
-                semesters
-            )
-            assignments = create_assignments(courses)
-            grades = create_grades(enrollments, assignments, users_data['teachers'])
-            attendance = create_attendance(enrollments, users_data['teachers'])
-            announcements = create_announcements(users_data['admins'], users_data['teachers'])
+            for student in candidates_to_save:
+                create_saved_candidate(company, student)
+        
+        # Create company reviews
+        print("Creating company reviews...")
+        for company in companies:
+            max_reviews = min(MAX_REVIEWS_PER_COMPANY, len(students))
+            reviewers = random.sample(students, k=random.randint(0, max_reviews))
             
-            # Step 5: Create library system
-            library, books = create_library_system()
+            for student in reviewers:
+                create_company_review(company, student)
+        
+        # Create some notifications
+        print("Creating notifications...")
+        for student in students:
+            # Job match notifications
+            if random.random() > 0.5:
+                create_notification(
+                    student.user,
+                    'job_match',
+                    'New Job Match!',
+                    f"We found {random.randint(1, 5)} new jobs that match your profile",
+                    '/jobs/recommended',
+                    {'match_count': random.randint(1, 5)}
+                )
             
-            # Step 6: Create financial system
-            invoices, payments = create_financial_system(users_data['students'], courses)
-            
-            # Step 7: Create parent relationships
-            parent_students = create_parent_relationships(users_data['students'], users_data['parents'])
-            
-            # Step 8: Create course materials
-            materials = create_course_materials(courses, users_data['teachers'])
-            
-            # Step 9: Create discussions and messages
-            discussions, messages = create_discussions_and_messages(
-                courses, 
-                users_data['students'], 
-                users_data['teachers']
-            )
-            
-            # Step 10: Create assignment submissions
-            submissions = create_assignment_submissions(assignments, users_data['students'])
-            
-            # Step 11: Create library transactions
-            transactions = create_library_transactions(books, users_data['students'])
-            
-            # Final summary
-            print_summary()
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"\nError during seeding: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            sys.exit(1)
+            # Profile view notifications
+            if random.random() > 0.7:
+                create_notification(
+                    student.user,
+                    'profile_viewed',
+                    'Your profile was viewed',
+                    f"{fake.company()} viewed your profile",
+                    '/profile/analytics',
+                    {'company_name': fake.company()}
+                )
+        
+        # Create saved searches
+        print("Creating saved searches...")
+        for student in students:
+            for search in random.sample(JOB_TITLES, k=random.randint(1, 3)):
+                create_saved_search(
+                    student.user,
+                    search,
+                    {'location': student.location, 'job_type': 'Full-time'}
+                )
+        
+        # Update dashboard stats for employers
+        print("Updating dashboard stats...")
+        for company, employer in zip(companies, employers):
+            dashboard = DashboardStats.query.filter_by(user_id=employer.id).first()
+            if dashboard:
+                company_jobs = [j for j in all_jobs if j.company_id == company.id]
+                dashboard.posted_jobs = len(company_jobs)
+                dashboard.active_jobs = len([j for j in company_jobs if j.is_active])
+                
+                # Count applicants for this company's jobs
+                total_applicants = 0
+                for job in company_jobs:
+                    total_applicants += Application.query.filter_by(job_id=job.id).count()
+                dashboard.total_applicants = total_applicants
+        
+        # Final commit
+        db.session.commit()
+        
+        print("\n" + "="*50)
+        print("Database seeded successfully!")
+        print("="*50)
+        print("\nLogin Credentials:")
+        print("-"*30)
+        print("Admin:")
+        print(f"  Email: admin@studentu.com")
+        print(f"  Password: admin123")
+        
+        print("\nEmployers:")
+        for i, employer in enumerate(employers[:3], 1):
+            print(f"  Email: employer{i}@studentu.com")
+            print(f"  Password: password123")
+        
+        print("\nStudents:")
+        for i, student in enumerate(students[:5], 1):
+            print(f"  Email: student{i}@studentu.com")
+            print(f"  Password: password123")
+        
+        print("\nStatistics:")
+        print("-"*30)
+        print(f"  Total Users: {User.query.count()}")
+        print(f"  Total Students: {Student.query.count()}")
+        print(f"  Total Employers: {len(employers)}")
+        print(f"  Total Companies: {Company.query.count()}")
+        print(f"  Total Jobs: {Job.query.count()}")
+        print(f"  Total Applications: {Application.query.count()}")
+        print(f"  Total Saved Jobs: {SavedJob.query.count()}")
+        print(f"  Total Notifications: {Notification.query.count()}")
+        print("="*50)
 
 if __name__ == '__main__':
-    seed_database()
+    main()
