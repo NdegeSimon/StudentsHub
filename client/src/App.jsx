@@ -4,7 +4,6 @@ import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from "react-toastify";
 
-
 // Context Providers
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -21,9 +20,16 @@ import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
 import LandingPage from "./pages/LandinPage.jsx";
 import SavedJobsPage from './pages/SavedJobs.jsx';
+import EmployerDashboard from "./pages/EmployerDashboard.jsx";
 
+// Employer Components - You need to create these files
+import EmployerJobs from "./pages/employer/EmployerJobs.jsx";
+import EmployerApplicants from "./pages/employer/EmployerApplicants.jsx";
+import EmployerAnalytics from "./pages/employer/EmployerAnalytics.jsx";
+import EmployerSettings from "./pages/employer/EmployerSettings.jsx";
+import EmployerMessages from "./pages/employer/EmployerMessages.jsx";
 
-
+// Other imports
 import JobPostings from "./pages/JobPosting.jsx";
 import MessagingSystem from "./pages/messages.jsx";
 import InterviewPrep from "./pages/resources/InterviewPrep.jsx";
@@ -33,23 +39,12 @@ import CareerTips from "./pages/resources/CareerTips.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import PremiumPayment from "./pages/PremiumPayment.jsx";
-import MyApplications from "./pages/ApplicationsList.jsx";
-import InternshipsPage from "./pages/internships.jsx";
-// Add this import at the top
-
-
-// Add this route inside your Routes component
-
-
-
-// New Components
-import CompanyProfile from "./pages/company/CompanyProfile.jsx";
-
 import ApplicationsList from "./pages/ApplicationsList.jsx";
-import CompanyJobs from "./pages/company/CompanyJobs.jsx";
+import InternshipsPage from "./pages/internships.jsx";
 
-// Components
-import JobCard from "./components/JobCard.jsx";
+// Company Components
+import CompanyProfile from "./pages/company/CompanyProfile.jsx";
+import CompanyJobs from "./pages/company/CompanyJobs.jsx";
 
 // ------------------- Protected Route -------------------
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -116,6 +111,35 @@ const App = () => {
                     {/* Auth */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
+                    
+                    {/* Employer Dashboard Routes */}
+                    <Route
+                      path="/employer"
+                      element={
+                        <ProtectedRoute roles={['employer', 'company']}>
+                          <EmployerDashboard />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<EmployerDashboard />} />
+                      <Route path="jobs" element={<EmployerJobs />} />
+                      <Route path="applicants" element={<EmployerApplicants />} />
+                      <Route path="analytics" element={<EmployerAnalytics />}>
+                        <Route path="overview" element={<div>Overview</div>} />
+                        <Route path="reports" element={<div>Reports</div>} />
+                      </Route>
+                      <Route path="settings" element={<EmployerSettings />} />
+                      <Route path="messages" element={<EmployerMessages />} />
+                    </Route>
+
+                    <Route
+                      path="/employer/dashboard"
+                      element={
+                        <ProtectedRoute roles={['employer', 'company']}>
+                          <EmployerDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     {/* Protected */}
                     <Route
@@ -128,6 +152,7 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
+                    
                     {/* Admin Routes - Only accessible to users with 'admin' role */}
                     <Route
                       path="/admin"
@@ -183,7 +208,7 @@ const App = () => {
                     />
                     
                     {/* Redirect old route to new one for backward compatibility */}
-                     <Route 
+                    <Route 
                       path="/myapplications"
                       element={
                         <Navigate to="/my-applications" replace />}

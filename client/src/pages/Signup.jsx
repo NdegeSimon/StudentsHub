@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FaGoogle, FaGithub, FaFacebook, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import { FiUser, FiMail, FiLock, FiCheck } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiCheck, FiBriefcase } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { googleProvider } from "./firebase.js";
 import { getAuth, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { authAPI } from "../utils/api";
+import { toast } from "react-toastify";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const darkMode = true;
 
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student", // This will be mapped to 'student' or 'employer'
+    userType: "student",
+    companyName: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +72,14 @@ const Signup = () => {
     }));
   };
 
+  const handleUserTypeChange = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      userType: type,
+      companyName: type === 'employer' ? prev.companyName : ''
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -89,10 +98,15 @@ const Signup = () => {
       return;
     }
 
+    if (formData.userType === 'employer' && !formData.companyName.trim()) {
+      setError("Company name is required for employer accounts");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Map frontend fields to backend expected fields
       // Map frontend userType to backend role
-      const role = formData.userType === 'company' ? 'employer' : formData.userType;
+      const role = formData.userType === 'employer' ? 'employer' : 'student';
       
       const userData = {
         email: formData.email,
@@ -101,6 +115,11 @@ const Signup = () => {
         last_name: "",
         role: role,
       };
+
+      // Add company name for employers
+      if (formData.userType === 'employer' && formData.companyName) {
+        userData.company_name = formData.companyName;
+      }
 
       console.log('Sending registration request...', userData);
       
@@ -111,7 +130,12 @@ const Signup = () => {
         throw new Error('No response received from server');
       }
       
-      setSuccess("Account created successfully! Redirecting to dashboard...");
+      const successMessage = formData.userType === 'employer' 
+        ? "Employer account created successfully! Redirecting to employer dashboard..."
+        : "Account created successfully! Redirecting to login...";
+      
+      setSuccess(successMessage);
+      toast.success(successMessage);
       
       // Store token and user data
       if (response.data.access_token) {
@@ -120,9 +144,13 @@ const Signup = () => {
         console.log('Token and user data stored successfully');
       }
       
-      // Redirect to dashboard after 2 seconds
+      // Redirect based on user type
       setTimeout(() => {
-        navigate('/login');
+        if (formData.userType === 'employer') {
+          window.location.href = '/employer/dashboard';
+        } else {
+          navigate('/login');
+        }
       }, 2000);
       
     } catch (error) {
@@ -141,19 +169,9 @@ const Signup = () => {
       }
       
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const signInWithGitHub = async () => {
-    try {
-      const result = await signInWithPopup(auth, githubProvider);
-      console.log('GitHub login success:', result.user);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error("GitHub SignIn Error:", error);
-      setError("Failed to sign in with GitHub. Please try again.");
     }
   };
 
@@ -161,10 +179,27 @@ const Signup = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log('Google login success:', result.user);
-      navigate('/dashboard');
+      
+      // For social login, we need to handle the employer registration separately
+      // For now, redirect to general dashboard
+      window.location.href = '/dashboard';
+      
     } catch (error) {
       console.error("Google SignIn Error:", error);
       setError("Failed to sign in with Google. Please try again.");
+      toast.error("Failed to sign in with Google");
+    }
+  };
+
+  const signInWithGitHub = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      console.log('GitHub login success:', result.user);
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error("GitHub SignIn Error:", error);
+      setError("Failed to sign in with GitHub. Please try again.");
+      toast.error("Failed to sign in with GitHub");
     }
   };
 
@@ -172,10 +207,11 @@ const Signup = () => {
     try {
       const result = await signInWithPopup(auth, facebookProvider);
       console.log('Facebook login success:', result.user);
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error("Facebook SignIn Error:", error);
       setError("Failed to sign in with Facebook. Please try again.");
+      toast.error("Failed to sign in with Facebook");
     }
   };
 
@@ -225,7 +261,7 @@ const Signup = () => {
             Join Students Hub
           </motion.h1>
           <motion.p className="text-gray-300" variants={itemVariants}>
-            Start your journey to finding the perfect job
+            Start your journey to finding the perfect job or talent
           </motion.p>
         </div>
 
@@ -248,43 +284,59 @@ const Signup = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* User Type Selector */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <label className="block text-sm font-medium mb-2 text-gray-300">
               I am signing up as:
             </label>
             <div className="mt-1 grid grid-cols-2 gap-4 p-1 rounded-xl bg-gray-700/50">
-              <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
-                formData.userType === 'student' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'hover:bg-gray-600/50'
-              }`}>
-                <input
-                  type="radio"
-                  name="userType"
-                  value="student"
-                  checked={formData.userType === 'student'}
-                  onChange={handleChange}
-                  className="sr-only"
-                />
+              <button
+                type="button"
+                onClick={() => handleUserTypeChange('student')}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer transition-all ${
+                  formData.userType === 'student' 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
+                    : 'hover:bg-gray-600/50'
+                }`}
+              >
+                <FiUser className="h-5 w-5 mb-1" />
                 <span className="text-sm font-medium">Student</span>
-              </label>
-              <label className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
-                formData.userType === 'employer' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'hover:bg-gray-600/50'
-              }`}>
-                <input
-                  type="radio"
-                  name="userType"
-                  value="employer"
-                  checked={formData.userType === 'employer'}
-                  onChange={handleChange}
-                  className="sr-only"
-                />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUserTypeChange('employer')}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer transition-all ${
+                  formData.userType === 'employer' 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
+                    : 'hover:bg-gray-600/50'
+                }`}
+              >
+                <FiBriefcase className="h-5 w-5 mb-1" />
                 <span className="text-sm font-medium">Employer</span>
-              </label>
+              </button>
             </div>
           </motion.div>
+
+          {/* Company Name Field (Only for Employers) */}
+          {formData.userType === 'employer' && (
+            <motion.div className="space-y-1" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiBriefcase className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="companyName"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
+                  placeholder="Company Name"
+                  required={formData.userType === 'employer'}
+                />
+              </div>
+            </motion.div>
+          )}
 
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
@@ -298,7 +350,7 @@ const Signup = () => {
                 value={formData.username}
                 onChange={handleChange}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
-                placeholder="Username"
+                placeholder={formData.userType === 'employer' ? "Contact Person Name" : "Username"}
                 required
               />
             </div>
@@ -316,7 +368,7 @@ const Signup = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="block w-full pl-10 pr-10 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
-                placeholder="Email"
+                placeholder={formData.userType === 'employer' ? "Company Email" : "Email"}
                 required
               />
               {formData.email && (
@@ -469,7 +521,7 @@ const Signup = () => {
                   Creating your account...
                 </span>
               ) : (
-                "Sign Up"
+                `Sign Up as ${formData.userType === 'employer' ? 'Employer' : 'Student'}`
               )}
             </button>
             <p className="mt-3 text-center text-sm text-gray-400">

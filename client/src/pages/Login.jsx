@@ -41,7 +41,12 @@ export default function Login() {
       
       // Hard redirect to dashboard after brief delay
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        const userData = response.data.user;
+        if (userData.role === 'admin' || userData.role === 'superadmin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 800);
       
     } catch (error) {
@@ -74,7 +79,12 @@ export default function Login() {
       toast.success('Google login successful!');
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        const userData = response.data.user;
+        if (userData.role === 'admin' || userData.role === 'superadmin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 800);
       
     } catch (error) {
@@ -102,7 +112,12 @@ export default function Login() {
       toast.success('GitHub login successful!');
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        const userData = response.data.user;
+        if (userData.role === 'admin' || userData.role === 'superadmin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 800);
       
     } catch (error) {
@@ -130,7 +145,12 @@ export default function Login() {
       toast.success('Facebook login successful!');
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        const userData = response.data.user;
+        if (userData.role === 'admin' || userData.role === 'superadmin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 800);
       
     } catch (error) {
