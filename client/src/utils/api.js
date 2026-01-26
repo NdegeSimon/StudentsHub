@@ -190,6 +190,45 @@ export const dashboardAPI = {
   markAllNotificationsRead: () => api.put('/dashboard/notifications/read-all'),
 };
 
+// ============== ADMIN API ==============
+export const adminAPI = {
+  // User Management
+  getUsers: (params = {}) => api.get('/admin/users', { params }),
+  getUser: (userId) => api.get(`/admin/users/${userId}`),
+  createUser: (userData) => api.post('/admin/users', userData),
+  updateUser: (userId, userData) => api.put(`/admin/users/${userId}`, userData),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+  updateUserStatus: (userId, status) => api.patch(`/admin/users/${userId}/status`, { status }),
+  
+  // Job Management (Admin)
+  getAllJobsAdmin: (params = {}) => api.get('/admin/jobs', { params }),
+  updateJobStatus: (jobId, status) => api.patch(`/admin/jobs/${jobId}/status`, { status }),
+  
+  // Application Management (Admin)
+  getAllApplications: (params = {}) => api.get('/admin/applications', { params }),
+  getApplication: (applicationId) => api.get(`/admin/applications/${applicationId}`),
+  updateApplicationStatus: (applicationId, status) => 
+    api.patch(`/admin/applications/${applicationId}/status`, { status }),
+  
+  // System Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (settings) => api.put('/admin/settings', settings),
+  
+  // Reports
+  generateReport: (reportType, params = {}) => 
+    api.get(`/admin/reports/${reportType}`, { params }),
+  
+  // System Health
+  getSystemStatus: () => api.get('/admin/system/status'),
+  
+  // Logs
+  getLogs: (params = {}) => api.get('/admin/logs', { params }),
+  
+  // Backup & Restore
+  createBackup: () => api.post('/admin/backup'),
+  restoreBackup: (backupData) => api.post('/admin/restore', backupData),
+};
+
 // ============== SEARCH API ==============
 export const searchAPI = {
   getSavedSearches: () => api.get('/searches/saved'),

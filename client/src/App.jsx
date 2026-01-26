@@ -15,11 +15,13 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import JobsPage from "./pages/JobsPage.jsx";
 import LandingPage from "./pages/LandinPage.jsx";
 import SavedJobsPage from './pages/SavedJobs.jsx';
+
 
 
 import JobPostings from "./pages/JobPosting.jsx";
@@ -125,6 +127,32 @@ const App = () => {
                           </ErrorBoundary>
                         </ProtectedRoute>
                       }
+                    />
+                    {/* Admin Routes - Only accessible to users with 'admin' role */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute roles={['admin']}>
+                          <ErrorBoundary>
+                            <AdminDashboard />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="users" element={<div>User Management</div>} />
+                      <Route path="settings" element={<div>Admin Settings</div>} />
+                      <Route path="reports" element={<div>Reports</div>} />
+                    </Route>
+
+                    {/* Redirect old admin route to new one */}
+                    <Route 
+                      path="/admindashboard" 
+                      element={
+                        <ProtectedRoute roles={['admin']}>
+                          <Navigate to="/admin" replace />
+                        </ProtectedRoute>
+                      } 
                     />
 
                     <Route
