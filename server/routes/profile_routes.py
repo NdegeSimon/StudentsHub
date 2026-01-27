@@ -60,17 +60,18 @@ def get_current_student():
 #         return jsonify({"status": "error", "message": str(e)}), 500
 
 @profile_bp.route('/basic', methods=['PUT'])
-
 @jwt_required()
 def update_basic_info():
-    """Update basic user information"""
+    """Update user profile information"""
     try:
         current_user = get_jwt_identity()
         user_id = current_user.get('id') if isinstance(current_user, dict) else current_user
         
         data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+            
         user = User.query.get(user_id)
-        
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
         
@@ -79,23 +80,47 @@ def update_basic_info():
             user.first_name = data['first_name']
         if 'last_name' in data:
             user.last_name = data['last_name']
-        if 'phone' in data and user.role == 'student' and user.student_profile:
-            user.student_profile.phone = data['phone']
-        if 'location' in data and user.role == 'student' and user.student_profile:
-            user.student_profile.location = data['location']
-        if 'bio' in data and user.role == 'student' and user.student_profile:
-            user.student_profile.bio = data['bio']
-            
+        if 'email' in data:
+            user.email = data['email']
+        
+        # Create profile if it doesn't exist
+        if not hasattr(user, 'profile') or not user.profile:
+            if user.role == 'student':
+                user.profile = Student(user_id=user_id)
+            else:
+                user.profile = Company(user_id=user_id)
+            db.session.add(user.profile)
+        
+        profile = user.profile
+        
+        # Update profile fields
+        profile_fields = [
+            'phone', 'location', 'bio', 'portfolio_url', 'github_url',
+            'linkedin_url', 'resume_url', 'profile_picture', 'years_of_experience',
+            'availability', 'skills', 'work_experience', 'education', 'preferred_job_types'
+        ]
+        
+        for field in profile_fields:
+            if field in data:
+                setattr(profile, field, data[field])
+        
         db.session.commit()
+        
+        # Get updated profile data
+        updated_profile = user.to_dict()
+        if hasattr(user, 'profile'):
+            profile_data = user.profile.to_dict()
+            updated_profile.update(profile_data)
         
         return jsonify({
             "status": "success",
-            "message": "Profile updated successfully"
+            "message": "Profile updated successfully",
+            "data": updated_profile
         }), 200
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error updating basic info: {str(e)}")
+        logger.error(f"Error updating profile: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Education endpoints
@@ -462,8 +487,8 @@ def get_my_profile():
         }
         
         # Add student profile data if exists
-        if user.role == 'student' and user.student_profile:
-            student = user.student_profile
+        if user.role == 'student' and user.profile:
+            student = user.profile
             profile_data.update({
                 "phone": student.phone,
                 "location": student.location,

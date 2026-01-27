@@ -167,7 +167,7 @@ def login():
 
         # Verify password
         try:
-            if not check_password_hash(user.password_hash, password):
+            if not user.check_password(password):
                 current_app.logger.warning(f"Invalid password for user: {email}")
                 return jsonify({"error": "Invalid email or password"}), 401
         except Exception as pwd_error:
