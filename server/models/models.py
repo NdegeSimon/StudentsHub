@@ -1133,3 +1133,28 @@ class ProfileCertification(db.Model):
             'skills': self.skills or [],
             'created_at': self.created_at.isoformat()
         }
+
+
+class TokenBlocklist(db.Model):
+    """Model for storing invalidated JWT tokens"""
+    __tablename__ = 'token_blocklist'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), nullable=False, index=True)
+    token_type = db.Column(db.String(10), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<TokenBlocklist {self.jti}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'jti': self.jti,
+            'token_type': self.token_type,
+            'user_id': self.user_id,
+            'expires_at': self.expires_at.isoformat(),
+            'created_at': self.created_at.isoformat()
+        }

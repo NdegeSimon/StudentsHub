@@ -84,6 +84,10 @@ def create_app():
 
     # Register blueprints
     try:
+        from routes.dashboard_routes import dashboard_bp
+        app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+        print("✅ Dashboard blueprint registered")  
+
         # Import and register auth routes
         from routes.routes import bp as auth_bp
         app.register_blueprint(auth_bp, url_prefix='/api')
