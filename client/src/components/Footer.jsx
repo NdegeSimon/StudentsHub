@@ -59,16 +59,39 @@ const Footer = () => {
   };
 
   const partners = [
-    { name: 'Safaricom', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Safaricom_Logo.svg/320px-Safaricom_Logo.svg.png' },
-    { name: 'Equity Bank', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Equity_Bank_Logo.svg/320px-Equity_Bank_Logo.svg.png' },
-    { name: 'KCB Group', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/KCB_Group_Logo.svg/320px-KCB_Group_Logo.svg.png' },
-    { name: 'Andela', logo: 'https://images.crunchbase.com/image/upload/c_pad,h_170,w_170,f_auto,b_white,q_auto:eco,dpr_1/v1506816751/kqw2o1spvqgsxtetf4s8.png' },
-    { name: 'M-KOPA', logo: 'https://www.m-kopa.com/wp-content/themes/mkopa/assets/images/logo.svg' },
-    { name: 'Twiga Foods', logo: 'https://twiga.com/wp-content/uploads/2022/06/Twiga-logo-600x158.png' },
-    { name: 'Flutterwave', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Flutterwave_Logo.png/320px-Flutterwave_Logo.png' },
-    { name: 'NCBA', logo: 'https://www.ncbagroup.com/wp-content/uploads/2021/03/NCBA-Logo.png' }
-  ];
-
+  { 
+    name: 'Safaricom', 
+    logo: '/assets/safaricom.png' 
+  },
+  { 
+    name: 'Equity Bank', 
+    logo: '/assets/Equity.png' 
+  },
+  { 
+    name: 'KCB Group', 
+    logo: '/assets/Ncba.png' 
+  },
+  { 
+    name: 'Andela', 
+    logo: '/assets/Andela.png' 
+  },
+  { 
+    name: 'M-KOPA', 
+    logo: '/assets/Mkopa.png' 
+  },
+  { 
+    name: 'Twiga Foods', 
+    logo: '/assets/twiga.png' 
+  },
+  { 
+    name: 'Flutterwave', 
+    logo: '/assets/flutterwave.png' 
+  },
+  { 
+    name: 'NCBA', 
+    logo: '/assets/Ncba.png' 
+  }
+];
   const socialLinks = [
     { name: 'Facebook', icon: <Facebook className="h-5 w-5" />, href: '#' },
     { name: 'Twitter', icon: <Twitter className="h-5 w-5" />, href: '#' },
