@@ -13,6 +13,16 @@ import {
   Heart
 } from 'lucide-react';
 
+
+import safaricom from '../assets/safaricom.png';
+import equity from '../assets/Equity.png';  // Make sure this file exists
+import kcb from '../assets/Kcb.jpg';        // Make sure this file exists
+import andela from '../assets/Andela.png';
+import mkopa from '../assets/Mkopa.png';
+import twiga from '../assets/twiga.png';
+import flutterwave from '../assets/flutterwave.png';
+import ncba from '../assets/Ncba.png';
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -59,39 +69,40 @@ const Footer = () => {
   };
 
   const partners = [
-  { 
-    name: 'Safaricom', 
-    logo: '/assets/safaricom.png' 
-  },
-  { 
-    name: 'Equity Bank', 
-    logo: '/assets/Equity.png' 
-  },
-  { 
-    name: 'KCB Group', 
-    logo: '/assets/Ncba.png' 
-  },
-  { 
-    name: 'Andela', 
-    logo: '/assets/Andela.png' 
-  },
-  { 
-    name: 'M-KOPA', 
-    logo: '/assets/Mkopa.png' 
-  },
-  { 
-    name: 'Twiga Foods', 
-    logo: '/assets/twiga.png' 
-  },
-  { 
-    name: 'Flutterwave', 
-    logo: '/assets/flutterwave.png' 
-  },
-  { 
-    name: 'NCBA', 
-    logo: '/assets/Ncba.png' 
-  }
-];
+    { 
+      name: 'Safaricom', 
+      logo: safaricom  // Use imported variable, not string path
+    },
+    { 
+      name: 'Equity Bank', 
+      logo: equity  // Make sure this file exists in assets
+    },
+    { 
+      name: 'KCB Group', 
+      logo: kcb  // Make sure this file exists in assets
+    },
+    { 
+      name: 'Andela', 
+      logo: andela
+    },
+    { 
+      name: 'M-KOPA', 
+      logo: mkopa
+    },
+    { 
+      name: 'Twiga Foods', 
+      logo: twiga
+    },
+    { 
+      name: 'Flutterwave', 
+      logo: flutterwave
+    },
+    { 
+      name: 'NCBA', 
+      logo: ncba
+    }
+  ];
+
   const socialLinks = [
     { name: 'Facebook', icon: <Facebook className="h-5 w-5" />, href: '#' },
     { name: 'Twitter', icon: <Twitter className="h-5 w-5" />, href: '#' },
@@ -137,16 +148,22 @@ const Footer = () => {
                 key={index}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center hover:border-purple-500/50 transition-all cursor-pointer group h-24"
               >
-                <img 
-                  src={partner.logo} 
-                  alt={partner.name}
-                  className="max-h-12 max-w-full object-contain grayscale group-hover:grayscale-0 transition-all opacity-70 group-hover:opacity-100"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
-                  }}
-                />
-                <span className="text-xs text-gray-400 text-center mt-2 hidden">{partner.name}</span>
+                {partner.logo ? (
+                  <img 
+                    src={partner.logo} 
+                    alt={partner.name}
+                    onError={(e) => {
+                      console.log('Failed to load partner logo:', partner.name, partner.logo);
+                      e.target.style.border = '2px solid red';
+                      e.target.src = ''; // Clear src to show fallback
+                    }}
+                    className="h-full w-auto object-contain grayscale group-hover:grayscale-0 transition-all opacity-70 group-hover:opacity-100"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-gray-500 text-sm">
+                    {partner.name}
+                  </div>
+                )}
               </div>
             ))}
           </div>

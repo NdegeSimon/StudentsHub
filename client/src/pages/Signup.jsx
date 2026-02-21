@@ -86,6 +86,26 @@ const Signup = () => {
     setError("");
     setSuccess("");
 
+    // Validate username
+    const trimmedUsername = formData.username.trim();
+    if (!trimmedUsername) {
+      setError("Please enter your name");
+      setLoading(false);
+      return;
+    }
+
+    if (trimmedUsername.length < 2) {
+      setError("Name must be at least 2 characters long");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.email) {
+      setError("Please enter your email");
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       setLoading(false);
@@ -175,19 +195,110 @@ const Signup = () => {
     }
   };
 
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [socialUser, setSocialUser] = useState(null);
+  const [companyName, setCompanyName] = useState('');
+
+  const handleSocialRegistration = async (userType) => {
+    try {
+      setLoading(true);
+      
+      const userData = {
+        email: socialUser.email,
+        first_name: socialUser.displayName || socialUser.email.split('@')[0],
+        last_name: "",
+        role: userType,
+      };
+
+      // Add company name for employers
+      if (userType === 'employer') {
+        userData.company_name = companyName;
+      }
+
+      // Check if user exists
+      const checkResponse = await authAPI.checkUserExists({ email: socialUser.email });
+      
+      if (checkResponse.data.exists) {
+        // User exists, log them in
+        const loginResponse = await authAPI.login({
+          email: socialUser.email,
+          social_login: true,
+          provider: 'google'
+        });
+        
+        // Store token and user data
+        localStorage.setItem('token', loginResponse.data.access_token);
+        localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+        
+        // Redirect based on role
+        const redirectPath = loginResponse.data.user.role === 'employer' ? '/employer/dashboard' : '/dashboard';
+        window.location.href = redirectPath;
+      } else {
+        // New user, register them
+        const registerResponse = await authAPI.register(userData);
+        
+        // Store token and user data
+        localStorage.setItem('token', registerResponse.data.access_token);
+        localStorage.setItem('user', JSON.stringify(registerResponse.data.user));
+        
+        // Redirect based on role
+        const redirectPath = userType === 'employer' ? '/employer/dashboard' : '/dashboard';
+        window.location.href = redirectPath;
+      }
+      
+    } catch (error) {
+      console.error('Social registration error:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to complete registration. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+      setShowCompanyModal(false);
+    }
+  };
+
   const handleGoogleSignUp = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log('Google login success:', result.user);
       
-      // For social login, we need to handle the employer registration separately
-      // For now, redirect to general dashboard
-      window.location.href = '/dashboard';
+      // Store the social user data
+      const userData = {
+        email: result.user.email,
+        displayName: result.user.displayName,
+        uid: result.user.uid
+      };
+      
+      setSocialUser(userData);
+      
+      // Check if user exists
+      const checkResponse = await authAPI.checkUserExists({ email: userData.email });
+      
+      if (checkResponse.data.exists) {
+        // User exists, log them in
+        const loginResponse = await authAPI.login({
+          email: userData.email,
+          social_login: true,
+          provider: 'google'
+        });
+        
+        // Store token and user data
+        localStorage.setItem('token', loginResponse.data.access_token);
+        localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+        
+        // Redirect based on role
+        const redirectPath = loginResponse.data.user.role === 'employer' ? '/employer/dashboard' : '/dashboard';
+        window.location.href = redirectPath;
+      } else {
+        // Show company modal for new users to select account type
+        setShowCompanyModal(true);
+      }
       
     } catch (error) {
       console.error("Google SignIn Error:", error);
-      setError("Failed to sign in with Google. Please try again.");
-      toast.error("Failed to sign in with Google");
+      const errorMessage = error.response?.data?.error || "Failed to sign in with Google. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -351,7 +462,8 @@ const Signup = () => {
                 onChange={handleChange}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder={formData.userType === 'employer' ? "Contact Person Name" : "Username"}
-                required
+                minLength={2}
+                maxLength={50}
               />
             </div>
           </motion.div>
@@ -530,14 +642,104 @@ const Signup = () => {
           </motion.div>
         </form>
 
-        <motion.div className="relative my-6" variants={itemVariants}>
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-800/90 text-gray-400">Or continue with</span>
-          </div>
-        </motion.div>
+        {/* Company Info Modal */}
+      {showCompanyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            className="bg-gray-800 rounded-2xl p-6 w-full max-w-md relative"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <h3 className="text-xl font-bold text-white mb-4">Complete Your Registration</h3>
+            <p className="text-gray-300 mb-6">Please select your account type and provide the required information.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  I am signing up as:
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, userType: 'student' }))}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      formData.userType === 'student'
+                        ? 'border-blue-500 bg-blue-500/10 text-white'
+                        : 'border-gray-600 hover:border-gray-500 text-gray-300'
+                    }`}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, userType: 'employer' }))}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      formData.userType === 'employer'
+                        ? 'border-purple-500 bg-purple-500/10 text-white'
+                        : 'border-gray-600 hover:border-gray-500 text-gray-300'
+                    }`}
+                  >
+                    Employer
+                  </button>
+                </div>
+              </div>
+
+              {formData.userType === 'employer' && (
+                <div>
+                  <label htmlFor="modal-company-name" className="block text-sm font-medium text-gray-300 mb-2">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="modal-company-name"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your company name"
+                    required={formData.userType === 'employer'}
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCompanyModal(false);
+                    setCompanyName('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSocialRegistration(formData.userType)}
+                  disabled={loading || (formData.userType === 'employer' && !companyName.trim())}
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
+                    loading || (formData.userType === 'employer' && !companyName.trim())
+                      ? 'bg-gray-600 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'Continue'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      <motion.div className="relative my-6" variants={itemVariants}>
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-700"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-gray-800/90 text-gray-400">Or continue with</span>
+        </div>
+      </motion.div>
 
         <motion.div className="grid grid-cols-3 gap-3 mt-6" variants={itemVariants}>
           <button
