@@ -86,7 +86,6 @@ const Signup = () => {
     setError("");
     setSuccess("");
 
-    // Validate username
     const trimmedUsername = formData.username.trim();
     if (!trimmedUsername) {
       setError("Please enter your name");
@@ -125,9 +124,8 @@ const Signup = () => {
     }
 
     try {
-      // Map frontend userType to backend role
       const role = formData.userType === 'employer' ? 'employer' : 'student';
-      
+
       const userData = {
         email: formData.email,
         password: formData.password,
@@ -136,58 +134,50 @@ const Signup = () => {
         role: role,
       };
 
-      // Add company name for employers
       if (formData.userType === 'employer' && formData.companyName) {
         userData.company_name = formData.companyName;
       }
 
       console.log('Sending registration request...', userData);
-      
+
       const response = await authAPI.register(userData);
       console.log('Registration response:', response);
-      
+
       if (!response || !response.data) {
         throw new Error('No response received from server');
       }
-      
-      const successMessage = formData.userType === 'employer' 
-        ? "Employer account created successfully! Redirecting to employer dashboard..."
-        : "Account created successfully! Redirecting to login...";
-      
+
+      const successMessage = "Account created successfully! Redirecting to login...";
+
       setSuccess(successMessage);
       toast.success(successMessage);
-      
-      // Store token and user data
+
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         console.log('Token and user data stored successfully');
       }
-      
-      // Redirect based on user type
+
+      // All users redirect to login after signup
       setTimeout(() => {
-        if (formData.userType === 'employer') {
-          window.location.href = '/employer/dashboard';
-        } else {
-          navigate('/login');
-        }
+        navigate('/login');
       }, 2000);
-      
+
     } catch (error) {
       console.error('Signup error:', error);
-      
+
       let errorMessage = "Signup failed. Please try again.";
-      
+
       if (error.response?.data) {
-        errorMessage = error.response.data.error || 
-                      error.response.data.message || 
+        errorMessage = error.response.data.error ||
+                      error.response.data.message ||
                       JSON.stringify(error.response.data);
       } else if (error.request) {
         errorMessage = "No response from server. Please check your connection.";
       } else {
         errorMessage = error.message || "An unknown error occurred";
       }
-      
+
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -202,7 +192,7 @@ const Signup = () => {
   const handleSocialRegistration = async (userType) => {
     try {
       setLoading(true);
-      
+
       const userData = {
         email: socialUser.email,
         first_name: socialUser.displayName || socialUser.email.split('@')[0],
@@ -210,42 +200,34 @@ const Signup = () => {
         role: userType,
       };
 
-      // Add company name for employers
       if (userType === 'employer') {
         userData.company_name = companyName;
       }
 
-      // Check if user exists
       const checkResponse = await authAPI.checkUserExists({ email: socialUser.email });
-      
+
       if (checkResponse.data.exists) {
-        // User exists, log them in
         const loginResponse = await authAPI.login({
           email: socialUser.email,
           social_login: true,
           provider: 'google'
         });
-        
-        // Store token and user data
+
         localStorage.setItem('token', loginResponse.data.access_token);
         localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
-        
-        // Redirect based on role
+
         const redirectPath = loginResponse.data.user.role === 'employer' ? '/employer/dashboard' : '/dashboard';
         window.location.href = redirectPath;
       } else {
-        // New user, register them
         const registerResponse = await authAPI.register(userData);
-        
-        // Store token and user data
+
         localStorage.setItem('token', registerResponse.data.access_token);
         localStorage.setItem('user', JSON.stringify(registerResponse.data.user));
-        
-        // Redirect based on role
+
         const redirectPath = userType === 'employer' ? '/employer/dashboard' : '/dashboard';
         window.location.href = redirectPath;
       }
-      
+
     } catch (error) {
       console.error('Social registration error:', error);
       const errorMessage = error.response?.data?.error || 'Failed to complete registration. Please try again.';
@@ -261,39 +243,33 @@ const Signup = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log('Google login success:', result.user);
-      
-      // Store the social user data
+
       const userData = {
         email: result.user.email,
         displayName: result.user.displayName,
         uid: result.user.uid
       };
-      
+
       setSocialUser(userData);
-      
-      // Check if user exists
+
       const checkResponse = await authAPI.checkUserExists({ email: userData.email });
-      
+
       if (checkResponse.data.exists) {
-        // User exists, log them in
         const loginResponse = await authAPI.login({
           email: userData.email,
           social_login: true,
           provider: 'google'
         });
-        
-        // Store token and user data
+
         localStorage.setItem('token', loginResponse.data.access_token);
         localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
-        
-        // Redirect based on role
+
         const redirectPath = loginResponse.data.user.role === 'employer' ? '/employer/dashboard' : '/dashboard';
         window.location.href = redirectPath;
       } else {
-        // Show company modal for new users to select account type
         setShowCompanyModal(true);
       }
-      
+
     } catch (error) {
       console.error("Google SignIn Error:", error);
       const errorMessage = error.response?.data?.error || "Failed to sign in with Google. Please try again.";
@@ -377,7 +353,7 @@ const Signup = () => {
         </div>
 
         {error && (
-          <motion.div 
+          <motion.div
             className="mb-4 p-3 bg-red-900/50 border border-red-500/50 text-red-200 rounded-lg text-sm"
             variants={itemVariants}
           >
@@ -386,7 +362,7 @@ const Signup = () => {
         )}
 
         {success && (
-          <motion.div 
+          <motion.div
             className="mb-4 p-3 bg-green-900/50 border border-green-500/50 text-green-200 rounded-lg text-sm"
             variants={itemVariants}
           >
@@ -394,7 +370,9 @@ const Signup = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* FIX: autoComplete="off" prevents browser from injecting phantom autofill fields */}
+        <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
+
           {/* User Type Selector */}
           <motion.div className="space-y-1" variants={itemVariants}>
             <label className="block text-sm font-medium mb-2 text-gray-300">
@@ -405,8 +383,8 @@ const Signup = () => {
                 type="button"
                 onClick={() => handleUserTypeChange('student')}
                 className={`flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer transition-all ${
-                  formData.userType === 'student' 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
+                  formData.userType === 'student'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
                     : 'hover:bg-gray-600/50'
                 }`}
               >
@@ -417,8 +395,8 @@ const Signup = () => {
                 type="button"
                 onClick={() => handleUserTypeChange('employer')}
                 className={`flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer transition-all ${
-                  formData.userType === 'employer' 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
+                  formData.userType === 'employer'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
                     : 'hover:bg-gray-600/50'
                 }`}
               >
@@ -428,26 +406,33 @@ const Signup = () => {
             </div>
           </motion.div>
 
-          {/* Company Name Field (Only for Employers) */}
-          {formData.userType === 'employer' && (
-            <motion.div className="space-y-1" variants={itemVariants}>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiBriefcase className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
-                  placeholder="Company Name"
-                  required={formData.userType === 'employer'}
-                />
+          {/* FIX: Company Name — always in DOM, hidden via CSS so browser doesn't inject phantom field */}
+          <motion.div
+            className={`space-y-1 transition-all duration-300 ${
+              formData.userType === 'employer'
+                ? 'opacity-100 max-h-20'
+                : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
+            }`}
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiBriefcase className="h-5 w-5 text-gray-400" />
               </div>
-            </motion.div>
-          )}
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                autoComplete="off"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
+                placeholder="Company Name"
+              />
+            </div>
+          </motion.div>
 
           <motion.div className="space-y-1" variants={itemVariants}>
             <div className="relative">
@@ -460,6 +445,7 @@ const Signup = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
+                autoComplete="off"
                 className="block w-full pl-10 pr-3 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder={formData.userType === 'employer' ? "Contact Person Name" : "Username"}
                 minLength={2}
@@ -479,6 +465,7 @@ const Signup = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="off"
                 className="block w-full pl-10 pr-10 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder={formData.userType === 'employer' ? "Company Email" : "Email"}
                 required
@@ -500,6 +487,7 @@ const Signup = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="new-password"
                 className="block w-full pl-10 pr-10 py-3 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-blue-400 rounded-xl focus:ring-2 focus:border-transparent focus:outline-none transition duration-200"
                 placeholder="Password"
                 required
@@ -581,6 +569,7 @@ const Signup = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                autoComplete="new-password"
                 className={`block w-full pl-10 pr-10 py-3 border ${
                   formData.password &&
                   formData.confirmPassword &&
@@ -608,8 +597,8 @@ const Signup = () => {
               )}
           </motion.div>
 
-          <motion.div 
-            className="mt-8" 
+          <motion.div
+            className="mt-8"
             variants={itemVariants}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -643,103 +632,104 @@ const Signup = () => {
         </form>
 
         {/* Company Info Modal */}
-      {showCompanyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <motion.div 
-            className="bg-gray-800 rounded-2xl p-6 w-full max-w-md relative"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <h3 className="text-xl font-bold text-white mb-4">Complete Your Registration</h3>
-            <p className="text-gray-300 mb-6">Please select your account type and provide the required information.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  I am signing up as:
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, userType: 'student' }))}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      formData.userType === 'student'
-                        ? 'border-blue-500 bg-blue-500/10 text-white'
-                        : 'border-gray-600 hover:border-gray-500 text-gray-300'
-                    }`}
-                  >
-                    Student
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, userType: 'employer' }))}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      formData.userType === 'employer'
-                        ? 'border-purple-500 bg-purple-500/10 text-white'
-                        : 'border-gray-600 hover:border-gray-500 text-gray-300'
-                    }`}
-                  >
-                    Employer
-                  </button>
-                </div>
-              </div>
+        {showCompanyModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <motion.div
+              className="bg-gray-800 rounded-2xl p-6 w-full max-w-md relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h3 className="text-xl font-bold text-white mb-4">Complete Your Registration</h3>
+              <p className="text-gray-300 mb-6">Please select your account type and provide the required information.</p>
 
-              {formData.userType === 'employer' && (
+              <div className="space-y-4">
                 <div>
-                  <label htmlFor="modal-company-name" className="block text-sm font-medium text-gray-300 mb-2">
-                    Company Name
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    I am signing up as:
                   </label>
-                  <input
-                    type="text"
-                    id="modal-company-name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your company name"
-                    required={formData.userType === 'employer'}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, userType: 'student' }))}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.userType === 'student'
+                          ? 'border-blue-500 bg-blue-500/10 text-white'
+                          : 'border-gray-600 hover:border-gray-500 text-gray-300'
+                      }`}
+                    >
+                      Student
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, userType: 'employer' }))}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.userType === 'employer'
+                          ? 'border-purple-500 bg-purple-500/10 text-white'
+                          : 'border-gray-600 hover:border-gray-500 text-gray-300'
+                      }`}
+                    >
+                      Employer
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCompanyModal(false);
-                    setCompanyName('');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialRegistration(formData.userType)}
-                  disabled={loading || (formData.userType === 'employer' && !companyName.trim())}
-                  className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
-                    loading || (formData.userType === 'employer' && !companyName.trim())
-                      ? 'bg-gray-600 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  {loading ? 'Processing...' : 'Continue'}
-                </button>
+                {formData.userType === 'employer' && (
+                  <div>
+                    <label htmlFor="modal-company-name" className="block text-sm font-medium text-gray-300 mb-2">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      id="modal-company-name"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      autoComplete="off"
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your company name"
+                      required={formData.userType === 'employer'}
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCompanyModal(false);
+                      setCompanyName('');
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSocialRegistration(formData.userType)}
+                    disabled={loading || (formData.userType === 'employer' && !companyName.trim())}
+                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
+                      loading || (formData.userType === 'employer' && !companyName.trim())
+                        ? 'bg-gray-600 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                  >
+                    {loading ? 'Processing...' : 'Continue'}
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
 
-      <motion.div className="relative my-6" variants={itemVariants}>
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-700"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-gray-800/90 text-gray-400">Or continue with</span>
-        </div>
-      </motion.div>
+        <motion.div className="relative my-6" variants={itemVariants}>
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gray-800/90 text-gray-400">Or continue with</span>
+          </div>
+        </motion.div>
 
         <motion.div className="grid grid-cols-3 gap-3 mt-6" variants={itemVariants}>
           <button
