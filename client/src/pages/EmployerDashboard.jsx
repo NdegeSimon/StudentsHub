@@ -11,7 +11,155 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 
+// ─── STYLES ───────────────────────────────────────────────────────────────────
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #020617;
+    --surface:     #0f172a;
+    --surface2:    #1e293b;
+    --border:      rgba(255,255,255,0.06);
+    --border2:     rgba(255,255,255,0.11);
+    --violet:      #8b5cf6;
+    --cyan:        #06b6d4;
+    --grad:        linear-gradient(135deg, #8b5cf6, #06b6d4);
+    --violet-dim:  rgba(139,92,246,0.15);
+    --cyan-dim:    rgba(6,182,212,0.12);
+    --violet-glow: rgba(139,92,246,0.45);
+    --text:        #f1f5f9;
+    --muted:       #64748b;
+    --muted2:      #334155;
+    --green:       #4ade80;
+    --green-dim:   rgba(74,222,128,0.12);
+    --red:         #f87171;
+    --red-dim:     rgba(248,113,113,0.12);
+    --amber:       #fbbf24;
+  }
+
+  body { background: var(--bg); font-family: 'Syne', sans-serif; color: var(--text); }
+  .serif { font-family: 'DM Serif Display', serif; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 99px; }
+
+  @keyframes fadeUp  { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+  @keyframes spin    { to { transform: rotate(360deg); } }
+  @keyframes pulseV  { 0%,100% { box-shadow:0 0 0 0 var(--violet-glow); } 50% { box-shadow:0 0 0 6px transparent; } }
+
+  .fade-up  { animation: fadeUp 0.38s ease both; }
+  .d1 { animation-delay:.06s; } .d2 { animation-delay:.12s; } .d3 { animation-delay:.18s; }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, #263046 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 12px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+
+  /* Grad card (for stat cards) */
+  .card-grad {
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card-grad:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+
+  /* Nav */
+  .nav-btn {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 14px; border-radius: 12px; width: 100%;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 13px; font-weight: 600;
+    font-family: 'Syne', sans-serif; letter-spacing: 0.02em;
+    transition: all 0.18s; text-align: left;
+  }
+  .nav-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .nav-btn.active {
+    color: var(--violet);
+    background: var(--violet-dim);
+    border: 1px solid rgba(139,92,246,0.25);
+  }
+
+  /* Gradient button */
+  .btn-grad {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 12px;
+    background: var(--grad); color: #fff;
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.03em; border: none; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 0 0 0 var(--violet-glow);
+  }
+  .btn-grad:hover { box-shadow: 0 4px 24px var(--violet-glow); filter: brightness(1.08); }
+  .btn-grad:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Ghost button */
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 15px; border-radius: 12px;
+    background: transparent; color: var(--muted);
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border2); cursor: pointer; transition: all 0.18s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+
+  /* Input */
+  .field {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s; appearance: none;
+  }
+  .field::placeholder { color: var(--muted2); }
+  .field:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+
+  .label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+  /* Status badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid; }
+  .badge-active      { color: var(--green);   border-color: rgba(74,222,128,0.3);    background: var(--green-dim); }
+  .badge-closed      { color: var(--muted);   border-color: var(--border2);           background: rgba(255,255,255,0.04); }
+  .badge-new         { color: var(--cyan);    border-color: rgba(6,182,212,0.3);      background: var(--cyan-dim); }
+  .badge-reviewed    { color: #60a5fa;        border-color: rgba(96,165,250,0.3);     background: rgba(96,165,250,0.1); }
+  .badge-shortlisted { color: var(--violet);  border-color: rgba(139,92,246,0.3);     background: var(--violet-dim); }
+  .badge-interviewed { color: var(--amber);   border-color: rgba(251,191,36,0.3);     background: rgba(251,191,36,0.1); }
+  .badge-rejected    { color: var(--red);     border-color: rgba(248,113,113,0.3);    background: var(--red-dim); }
+  .badge-hired       { color: var(--green);   border-color: rgba(74,222,128,0.3);     background: var(--green-dim); }
+  .badge-draft       { color: var(--muted);   border-color: var(--border2);           background: transparent; }
+
+  .tag { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; z-index:100; background:rgba(2,6,23,0.8); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal { background:var(--surface); border:1px solid var(--border2); border-radius:20px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; animation:fadeUp 0.22s ease; }
+
+  /* Misc */
+  .spin { animation: spin 0.8s linear infinite; }
+  .notif-dot { width:7px; height:7px; border-radius:50%; background:var(--violet); animation:pulseV 2s infinite; }
+
+  /* Gradient text */
+  .grad-text { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+`;
+
+const Styles = () => <style dangerouslySetInnerHTML={{ __html: CSS }} />;
+
 // ─── API ───────────────────────────────────────────────────────────────────────
+// Default to local backend used by server/app.py (port 5001)
 const BASE = (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) || "http://localhost:5001/api";
 const getToken = () => localStorage.getItem("access_token");
 
@@ -25,8 +173,10 @@ async function apiFetch(path, opts = {}) {
 }
 
 const API = {
+  // Get employer dashboard / company summary (server: /api/employer/dashboard)
   company: async () => {
     const res = await apiFetch("/employer/dashboard");
+    // Map server shape into what the UI expects
     return {
       name: res.company?.name || res.company?.company_name || "Your Company",
       plan: res.company?.plan || "Free",
@@ -35,11 +185,15 @@ const API = {
       ...(res.company || {})
     };
   },
+
+  // Employer's jobs. Server job routes are under /api/jobs; employer list: /api/jobs/employer/my-jobs
   jobs: async () => {
     const res = await apiFetch('/jobs/employer/my-jobs');
     const list = res.jobs || res || [];
     return (list || []).map(j => ({
-      id: j.id, title: j.title, location: j.location || '',
+      id: j.id,
+      title: j.title,
+      location: j.location || '',
       salary: j.salary_min && j.salary_max ? `${j.salary_min} - ${j.salary_max}` : (j.salary || ''),
       type: j.job_type || j.type || '',
       posted: j.created_at ? new Date(j.created_at).toLocaleDateString() : (j.posted || ''),
@@ -47,8 +201,19 @@ const API = {
       status: j.is_active ? 'active' : 'closed'
     }));
   },
+
+  // Create a job: POST /api/jobs
   createJob: (d) => {
-    const payload = { title: d.title, description: d.description, location: d.location, job_type: d.job_type, experience_level: d.experience_level, requirements: d.required_skills || '' };
+    // Map frontend form fields to backend expected payload
+    const payload = {
+      title: d.title,
+      description: d.description,
+      location: d.location,
+      job_type: d.job_type,
+      experience_level: d.experience_level,
+      requirements: d.required_skills || ''
+    };
+    // Attempt to parse salary into salary_min if provided
     if (d.salary) {
       const parts = String(d.salary).split(/[–-]/).map(s => s.replace(/[^0-9]/g, '')).filter(Boolean);
       if (parts.length === 1) payload.salary_min = Number(parts[0]);
@@ -56,15 +221,35 @@ const API = {
     }
     return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload) });
   },
+
+  // Close job by marking inactive: PUT /api/jobs/:id
   closeJob: (id) => apiFetch(`/jobs/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: false }) }),
-  applicants: async () => { const res = await apiFetch('/employer/applications'); return res.applications || []; },
+
+  // Employer applicants: server route /api/employer/applications
+  applicants: async () => {
+    const res = await apiFetch('/employer/applications');
+    return res.applications || [];
+  },
+
+  // Update application status: PUT /api/employer/applications/:id
   patchApplicant: (id, d) => apiFetch(`/employer/applications/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  interviews: async () => { const res = await apiFetch('/dashboard/upcoming-deadlines'); return res || []; },
+
+  // Interviews: use dashboard upcoming deadlines /api/dashboard/upcoming-deadlines
+  interviews: async () => {
+    const res = await apiFetch('/dashboard/upcoming-deadlines');
+    return res || [];
+  },
+
+  // Messages: list conversations and send message via message routes (/api/messages/...)
   messages: () => apiFetch('/messages/conversations'),
   sendMessage: (d) => {
+    // If conversation_id provided, send to that conversation
     if (d.conversation_id) return apiFetch(`/messages/conversations/${d.conversation_id}/messages`, { method: 'POST', body: JSON.stringify(d) });
+    // Otherwise create a conversation (expects participant_ids) - caller may handle creating + sending
     return apiFetch('/messages/conversations', { method: 'POST', body: JSON.stringify(d) });
   },
+
+  // Analytics via dashboard stats
   analytics: () => apiFetch('/dashboard/stats')
 };
 
@@ -85,93 +270,66 @@ function useApi(fn, deps = []) {
 }
 
 // ─── TINY UI ───────────────────────────────────────────────────────────────────
-const Spinner = ({ size = 18 }) => (
-  <Loader2 size={size} className="animate-spin text-violet-400" />
-);
+const Spinner = ({ s = 18 }) => <Loader2 size={s} className="spin" style={{ color: "var(--violet)" }} />;
 
 const Skeletons = () => (
-  <div className="flex flex-col gap-3">
-    {[0,1,2].map(i => (
-      <div key={i} className="h-22 rounded-2xl bg-slate-800/60 animate-pulse" style={{ height: 88, animationDelay: `${i * 0.1}s` }} />
-    ))}
+  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+    {[88,88,88].map((h,i) => <div key={i} className="skeleton" style={{ height:h, animationDelay:`${i*0.1}s` }} />)}
   </div>
 );
 
 const Err = ({ msg, retry }) => (
-  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-    <AlertCircle size={15} className="shrink-0" />
-    <span className="flex-1">{msg}</span>
-    {retry && (
-      <button onClick={retry} className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg border border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors">
-        <RefreshCw size={11} /> Retry
-      </button>
-    )}
+  <div style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", borderRadius:12, background:"var(--red-dim)", border:"1px solid rgba(248,113,113,0.2)", color:"var(--red)", fontSize:13, marginBottom:16 }}>
+    <AlertCircle size={15} style={{ flexShrink:0 }} />
+    <span style={{ flex:1 }}>{msg}</span>
+    {retry && <button onClick={retry} className="btn-ghost" style={{ padding:"4px 10px", fontSize:11, borderRadius:8 }}><RefreshCw size={11} /> Retry</button>}
   </div>
 );
 
 const Empty = ({ icon: Icon, text }) => (
-  <div className="text-center py-16 text-slate-500">
-    <Icon size={28} className="mx-auto mb-3 opacity-20" />
-    <p className="text-sm">{text}</p>
+  <div style={{ textAlign:"center", padding:"60px 0", color:"var(--muted)" }}>
+    <Icon size={28} style={{ margin:"0 auto 10px", opacity:0.2 }} />
+    <p style={{ fontSize:13 }}>{text}</p>
   </div>
 );
 
-const statusStyles = {
-  active:      "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  closed:      "bg-slate-700/50 text-slate-400 border-slate-600/50",
-  new:         "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  reviewed:    "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  shortlisted: "bg-violet-500/20 text-violet-400 border-violet-500/30",
-  interviewed: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  rejected:    "bg-red-500/20 text-red-400 border-red-500/30",
-  hired:       "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  draft:       "bg-slate-700/50 text-slate-500 border-slate-600/50",
-};
-
 const StatusBadge = ({ status }) => (
-  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase border ${statusStyles[status] || statusStyles.closed}`}>
-    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+  <span className={`badge badge-${status}`}>
+    <span style={{ width:5, height:5, borderRadius:"50%", background:"currentColor" }} />
     {status}
   </span>
 );
 
+// Avatar with violet→cyan gradient by default, varied by id
 const AV_GRADS = [
-  "from-violet-500 to-cyan-500",
-  "from-indigo-500 to-violet-500",
-  "from-cyan-500 to-blue-500",
-  "from-violet-500 to-pink-500",
-  "from-cyan-400 to-violet-500",
-  "from-purple-500 to-cyan-400",
+  "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+  "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  "linear-gradient(135deg,#06b6d4,#3b82f6)",
+  "linear-gradient(135deg,#8b5cf6,#ec4899)",
+  "linear-gradient(135deg,#06b6d4,#8b5cf6)",
+  "linear-gradient(135deg,#a855f7,#06b6d4)",
 ];
-
-const Avatar = ({ name = "", id = 0, size = 42 }) => {
-  const letters = name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
-  const grad = AV_GRADS[id % AV_GRADS.length];
-  return (
-    <div
-      className={`bg-gradient-to-br ${grad} rounded-xl flex items-center justify-center font-extrabold text-white shrink-0`}
-      style={{ width: size, height: size, fontSize: size * 0.3, letterSpacing: "0.04em" }}
-    >
-      {letters}
-    </div>
-  );
-};
+const Avatar = ({ name="", id=0, size=42 }) => (
+  <div style={{ width:size, height:size, borderRadius:10, flexShrink:0, background:AV_GRADS[id%AV_GRADS.length], display:"flex", alignItems:"center", justifyContent:"center", fontSize:size*0.3, fontWeight:800, color:"#fff", letterSpacing:"0.04em" }}>
+    {name.split(" ").map(p=>p[0]).join("").slice(0,2).toUpperCase()}
+  </div>
+);
 
 const ChartTip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs">
-      <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1.5">{label}</p>
-      {payload.map((p, i) => <p key={i} style={{ color: p.color }} className="font-bold">{p.name}: {p.value}</p>)}
+    <div style={{ background:"var(--surface2)", border:"1px solid var(--border2)", borderRadius:10, padding:"10px 14px", fontFamily:"Syne", fontSize:12 }}>
+      <p style={{ color:"var(--muted)", fontSize:10, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>{label}</p>
+      {payload.map((p,i) => <p key={i} style={{ color:p.color, fontWeight:700 }}>{p.name}: {p.value}</p>)}
     </div>
   );
 };
 
 // ─── JOB MODAL ────────────────────────────────────────────────────────────────
 const JobModal = ({ onClose, onSuccess }) => {
-  const [form, setForm] = useState({ title: "", location: "", job_type: "full-time", salary: "", experience_level: "mid", description: "", required_skills: "" });
+  const [form, setForm] = useState({ title:"", location:"", job_type:"full-time", salary:"", experience_level:"mid", description:"", required_skills:"" });
   const [busy, setBusy] = useState(false);
-  const [err, setErr]   = useState(null);
+  const [err,  setErr]  = useState(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const submit = async () => {
@@ -182,60 +340,45 @@ const JobModal = ({ onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-[fadeUp_0.22s_ease]">
-        <div className="flex items-center justify-between px-7 py-6 border-b border-slate-700/50">
+    <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
+      <div className="modal">
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"24px 28px", borderBottom:"1px solid var(--border)" }}>
           <div>
-            <p className="text-xl font-bold text-white">Post a New Role</p>
-            <p className="text-xs text-slate-400 mt-1">Fill in the details to publish your listing</p>
+            <p className="serif grad-text" style={{ fontSize:"1.5rem" }}>Post a New Role</p>
+            <p style={{ fontSize:12, color:"var(--muted)", marginTop:3 }}>Fill in the details to publish your listing</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors"><X size={15} /></button>
+          <button onClick={onClose} className="btn-ghost" style={{ padding:8, borderRadius:8 }}><X size={15} /></button>
         </div>
-        <div className="px-7 py-6 flex flex-col gap-4">
+        <div style={{ padding:"22px 28px", display:"flex", flexDirection:"column", gap:16 }}>
           {err && <Err msg={err} />}
-          <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Job Title *</label>
-            <input className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all" value={form.title} onChange={set("title")} placeholder="e.g. Senior Frontend Developer" />
+          <div><label className="label">Job Title *</label><input className="field" value={form.title} onChange={set("title")} placeholder="e.g. Senior Frontend Developer" /></div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div><label className="label">Location</label><input className="field" value={form.location} onChange={set("location")} placeholder="Remote / City" /></div>
+            <div><label className="label">Salary Range</label><input className="field" value={form.salary} onChange={set("salary")} placeholder="$80k – $120k" /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
             <div>
-              <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Location</label>
-              <input className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all" value={form.location} onChange={set("location")} placeholder="Remote / City" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Salary Range</label>
-              <input className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all" value={form.salary} onChange={set("salary")} placeholder="$80k – $120k" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Job Type</label>
-              <select className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-violet-500 appearance-none cursor-pointer transition-all" value={form.job_type} onChange={set("job_type")}>
+              <label className="label">Job Type</label>
+              <select className="field" value={form.job_type} onChange={set("job_type")}>
                 <option value="full-time">Full-time</option><option value="part-time">Part-time</option>
                 <option value="contract">Contract</option><option value="internship">Internship</option>
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Experience</label>
-              <select className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-violet-500 appearance-none cursor-pointer transition-all" value={form.experience_level} onChange={set("experience_level")}>
+              <label className="label">Experience</label>
+              <select className="field" value={form.experience_level} onChange={set("experience_level")}>
                 <option value="entry">Entry Level</option><option value="mid">Mid Level</option>
                 <option value="senior">Senior Level</option><option value="lead">Lead / Principal</option>
               </select>
             </div>
           </div>
-          <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Description *</label>
-            <textarea className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-y" rows={4} value={form.description} onChange={set("description")} placeholder="Describe the role…" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Required Skills</label>
-            <input className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all" value={form.required_skills} onChange={set("required_skills")} placeholder="React, Python, Figma — comma separated" />
-          </div>
+          <div><label className="label">Description *</label><textarea className="field" rows={4} value={form.description} onChange={set("description")} placeholder="Describe the role…" style={{ resize:"vertical" }} /></div>
+          <div><label className="label">Required Skills</label><input className="field" value={form.required_skills} onChange={set("required_skills")} placeholder="React, Python, Figma — comma separated" /></div>
         </div>
-        <div className="flex gap-3 px-7 pb-6">
-          <button onClick={onClose} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:text-slate-200 hover:border-slate-600 transition-colors">Cancel</button>
-          <button onClick={submit} disabled={busy} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-violet-500/40 disabled:opacity-50 transition-all">
-            {busy ? <Spinner size={14} /> : <Zap size={14} />} {busy ? "Publishing…" : "Publish Job"}
+        <div style={{ display:"flex", gap:10, padding:"0 28px 24px" }}>
+          <button onClick={onClose} className="btn-ghost" style={{ flex:1, justifyContent:"center" }}>Cancel</button>
+          <button onClick={submit} disabled={busy} className="btn-grad" style={{ flex:1, justifyContent:"center" }}>
+            {busy ? <Spinner /> : <Zap size={14} />} {busy ? "Publishing…" : "Publish Job"}
           </button>
         </div>
       </div>
@@ -245,7 +388,7 @@ const JobModal = ({ onClose, onSuccess }) => {
 
 // ─── MESSAGE MODAL ────────────────────────────────────────────────────────────
 const MsgModal = ({ applicant, onClose }) => {
-  const [form, setForm] = useState({ message_type: "general", subject: "", body: "" });
+  const [form, setForm] = useState({ message_type:"general", subject:"", body:"" });
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [err,  setErr]  = useState(null);
@@ -259,47 +402,41 @@ const MsgModal = ({ applicant, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-7 py-5 border-b border-slate-700/50">
-          <div className="flex items-center gap-3">
+    <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
+      <div className="modal">
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"22px 28px", borderBottom:"1px solid var(--border)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <Avatar name={applicant.name} id={applicant.id} size={38} />
             <div>
-              <p className="text-sm font-bold text-white">{applicant.name}</p>
-              <p className="text-xs text-slate-400">{applicant.email}</p>
+              <p style={{ fontSize:14, fontWeight:700 }}>{applicant.name}</p>
+              <p style={{ fontSize:12, color:"var(--muted)" }}>{applicant.email}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors"><X size={15} /></button>
+          <button onClick={onClose} className="btn-ghost" style={{ padding:8, borderRadius:8 }}><X size={15} /></button>
         </div>
-        <div className="px-7 py-5 flex flex-col gap-4">
+        <div style={{ padding:"22px 28px", display:"flex", flexDirection:"column", gap:15 }}>
           {sent && (
-            <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-sm">
+            <div style={{ display:"flex", alignItems:"center", gap:9, padding:"11px 15px", borderRadius:10, background:"var(--green-dim)", border:"1px solid rgba(74,222,128,0.25)", color:"var(--green)", fontSize:13 }}>
               <CheckCircle size={15} /> Message delivered!
             </div>
           )}
           {err && <Err msg={err} />}
           <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Message Type</label>
-            <select className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-violet-500 appearance-none cursor-pointer" value={form.message_type} onChange={set("message_type")}>
+            <label className="label">Message Type</label>
+            <select className="field" value={form.message_type} onChange={set("message_type")}>
               <option value="interview_invite">Interview Invitation</option>
               <option value="acceptance">Acceptance Letter</option>
               <option value="rejection">Rejection Notice</option>
               <option value="general">General Message</option>
             </select>
           </div>
-          <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Subject</label>
-            <input className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all" value={form.subject} onChange={set("subject")} placeholder="Subject line…" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Message</label>
-            <textarea className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-y" rows={5} value={form.body} onChange={set("body")} placeholder="Write your message…" />
-          </div>
+          <div><label className="label">Subject</label><input className="field" value={form.subject} onChange={set("subject")} placeholder="Subject line…" /></div>
+          <div><label className="label">Message</label><textarea className="field" rows={5} value={form.body} onChange={set("body")} placeholder="Write your message…" style={{ resize:"vertical" }} /></div>
         </div>
-        <div className="flex gap-3 px-7 pb-6">
-          <button onClick={onClose} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:text-slate-200 hover:border-slate-600 transition-colors">Cancel</button>
-          <button onClick={submit} disabled={busy || sent} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-violet-500/40 disabled:opacity-50 transition-all">
-            {busy ? <Spinner size={14} /> : <Send size={14} />} {busy ? "Sending…" : "Send Message"}
+        <div style={{ display:"flex", gap:10, padding:"0 28px 24px" }}>
+          <button onClick={onClose} className="btn-ghost" style={{ flex:1, justifyContent:"center" }}>Cancel</button>
+          <button onClick={submit} disabled={busy||sent} className="btn-grad" style={{ flex:1, justifyContent:"center" }}>
+            {busy ? <Spinner /> : <Send size={14} />} {busy ? "Sending…" : "Send Message"}
           </button>
         </div>
       </div>
@@ -318,51 +455,50 @@ const Jobs = () => {
   };
 
   return (
-    <div>
-      <div className="flex items-end justify-between mb-7">
+    <div className="fade-up">
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Job Postings</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your listings and track applications</p>
+          <h1 className="serif" style={{ fontSize:"2rem", lineHeight:1.05 }}>Job Postings</h1>
+          <p style={{ color:"var(--muted)", fontSize:13, marginTop:5 }}>Manage your listings and track applications</p>
         </div>
-        <button onClick={() => setModal(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-violet-500/40 transition-all">
-          <Plus size={15} /> Post New Role
-        </button>
+        <button className="btn-grad" onClick={() => setModal(true)}><Plus size={15} /> Post New Role</button>
       </div>
 
       {error && <Err msg={error} retry={refetch} />}
       {loading ? <Skeletons /> : (
-        <div className="flex flex-col gap-3">
-          {(data || []).map(job => (
-            <div key={job.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 hover:border-slate-600 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shrink-0">
-                  <Briefcase size={19} className="text-violet-400" />
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {(data||[]).map((job,i) => (
+            <div key={job.id} className={`card fade-up d${Math.min(i+1,3)}`} style={{ padding:"20px 24px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+                {/* Icon box with gradient border */}
+                <div style={{ width:46, height:46, borderRadius:12, background:"var(--violet-dim)", border:"1px solid rgba(139,92,246,0.25)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <Briefcase size={19} style={{ color:"var(--violet)" }} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <p className="text-[15px] font-bold text-white">{job.title}</p>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                    <p style={{ fontSize:15, fontWeight:700 }}>{job.title}</p>
                     <StatusBadge status={job.status} />
                   </div>
-                  <div className="flex items-center gap-3.5 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-xs text-slate-400"><MapPin size={11} /> {job.location}</span>
-                    <span className="flex items-center gap-1 text-xs text-slate-400"><DollarSign size={11} /> {job.salary}</span>
-                    <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-700/60 text-slate-400 border border-slate-700">{job.type}</span>
-                    <span className="text-xs text-slate-500">{job.posted}</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:14, marginTop:5, flexWrap:"wrap" }}>
+                    <span style={{ display:"flex", alignItems:"center", gap:4, fontSize:12, color:"var(--muted)" }}><MapPin size={11}/> {job.location}</span>
+                    <span style={{ display:"flex", alignItems:"center", gap:4, fontSize:12, color:"var(--muted)" }}><DollarSign size={11}/> {job.salary}</span>
+                    <span className="tag">{job.type}</span>
+                    <span style={{ fontSize:12, color:"var(--muted2)" }}>{job.posted}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent leading-none">{job.applicants}</p>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">applicants</p>
+                <div style={{ display:"flex", alignItems:"center", gap:16, flexShrink:0 }}>
+                  <div style={{ textAlign:"right" }}>
+                    <p className="serif grad-text" style={{ fontSize:"1.6rem", lineHeight:1 }}>{job.applicants}</p>
+                    <p style={{ fontSize:10, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.05em" }}>applicants</p>
                   </div>
                   {job.status === "active" && (
-                    <button onClick={() => closeJob(job.id)} className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-xs font-semibold hover:text-slate-200 hover:border-slate-500 transition-colors">Close</button>
+                    <button className="btn-ghost" style={{ fontSize:12, padding:"7px 14px" }} onClick={() => closeJob(job.id)}>Close</button>
                   )}
                 </div>
               </div>
             </div>
           ))}
-          {!loading && !(data || []).length && <Empty icon={Briefcase} text="No jobs posted yet — create your first listing!" />}
+          {!loading && !(data||[]).length && <Empty icon={Briefcase} text="No jobs posted yet — create your first listing!" />}
         </div>
       )}
       {modal && <JobModal onClose={() => setModal(false)} onSuccess={refetch} />}
@@ -377,70 +513,75 @@ const Applicants = () => {
   const [filter, setFilter]       = useState("all");
 
   const updateStatus = async (id, status) => {
-    try { await API.patchApplicant(id, { status }); setData(prev => prev.map(a => a.id === id ? { ...a, status } : a)); }
+    try { await API.patchApplicant(id, { status }); setData(prev => prev.map(a => a.id===id ? {...a,status} : a)); }
     catch (e) { alert(e.message); }
   };
 
-  const filtered = (data || []).filter(a => filter === "all" || a.status === filter);
-  const stages   = ["all", "new", "reviewed", "shortlisted", "interviewed", "rejected"];
+  const filtered = (data||[]).filter(a => filter==="all" || a.status===filter);
+  const stages   = ["all","new","reviewed","shortlisted","interviewed","rejected"];
 
   return (
-    <div>
-      <div className="flex items-end justify-between mb-7">
+    <div className="fade-up">
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Applicants</h1>
-          <p className="text-slate-400 text-sm mt-1">Review and manage candidate applications</p>
+          <h1 className="serif" style={{ fontSize:"2rem", lineHeight:1.05 }}>Applicants</h1>
+          <p style={{ color:"var(--muted)", fontSize:13, marginTop:5 }}>Review and manage candidate applications</p>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:text-slate-200 hover:border-slate-600 transition-colors"><Filter size={13} /> Filter</button>
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:text-slate-200 hover:border-slate-600 transition-colors"><Download size={13} /> Export</button>
+        <div style={{ display:"flex", gap:8 }}>
+          <button className="btn-ghost"><Filter size={13} /> Filter</button>
+          <button className="btn-ghost"><Download size={13} /> Export</button>
         </div>
       </div>
 
       {/* Stage filter pills */}
-      <div className="flex gap-2 mb-5 flex-wrap">
+      <div style={{ display:"flex", gap:6, marginBottom:20, flexWrap:"wrap" }}>
         {stages.map(s => (
-          <button key={s} onClick={() => setFilter(s)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold capitalize border transition-all ${
-              filter === s
-                ? "bg-gradient-to-r from-violet-500 to-cyan-500 text-white border-transparent shadow-lg shadow-violet-500/30"
-                : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600 hover:text-slate-300"
-            }`}>
-            {s === "all" ? `All (${(data || []).length})` : s}
+          <button key={s} onClick={() => setFilter(s)} style={{
+            padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700,
+            fontFamily:"Syne", border:"1px solid", cursor:"pointer",
+            textTransform:"capitalize", transition:"all 0.15s",
+            ...(filter===s
+              ? { background:"var(--grad)", color:"#fff", borderColor:"transparent", boxShadow:"0 2px 12px var(--violet-glow)" }
+              : { background:"transparent", color:"var(--muted)", borderColor:"var(--border2)" })
+          }}>
+            {s==="all" ? `All (${(data||[]).length})` : s}
           </button>
         ))}
       </div>
 
       {error && <Err msg={error} retry={refetch} />}
       {loading ? <Skeletons /> : (
-        <div className="flex flex-col gap-3">
-          {filtered.map(a => (
-            <div key={a.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 hover:border-slate-600 transition-all">
-              <div className="flex items-center gap-3.5">
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {filtered.map((a,i) => (
+            <div key={a.id} className={`card fade-up d${Math.min(i+1,3)}`} style={{ padding:"18px 22px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14 }}>
                 <Avatar name={a.name} id={a.id} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-white">{a.name}</p>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <p style={{ fontSize:14, fontWeight:700 }}>{a.name}</p>
                     {a.rating > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-amber-400 font-bold">
+                      <span style={{ display:"flex", alignItems:"center", gap:3, fontSize:11, color:"var(--amber)", fontWeight:700 }}>
                         <Star size={11} fill="currentColor" /> {a.rating}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">{a.job_title} · {a.experience} · {a.location}</p>
-                  <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1"><Clock size={10} /> Applied {a.applied}</p>
+                  <p style={{ fontSize:12, color:"var(--muted)", marginTop:2 }}>{a.job_title} · {a.experience} · {a.location}</p>
+                  <p style={{ fontSize:11, color:"var(--muted2)", marginTop:3, display:"flex", alignItems:"center", gap:4 }}>
+                    <Clock size={10} /> Applied {a.applied}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                   <select
                     value={a.status}
                     onChange={e => updateStatus(a.id, e.target.value)}
-                    className={`text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border cursor-pointer outline-none appearance-none ${statusStyles[a.status] || statusStyles.closed} bg-transparent`}
+                    className={`badge badge-${a.status}`}
+                    style={{ appearance:"none", fontFamily:"Syne", cursor:"pointer", outline:"none", background:"transparent" }}
                   >
                     {["new","reviewed","shortlisted","interviewed","rejected","hired"].map(s => (
-                      <option key={s} value={s} style={{ background: "#0f172a", color: "#f1f5f9" }} className="capitalize">{s}</option>
+                      <option key={s} value={s} style={{ background:"#0f172a", color:"#f1f5f9", textTransform:"capitalize" }}>{s}</option>
                     ))}
                   </select>
-                  <button onClick={() => setMsgTarget(a)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-xs font-bold hover:shadow-lg hover:shadow-violet-500/40 transition-all">
+                  <button className="btn-grad" style={{ padding:"7px 15px", fontSize:12 }} onClick={() => setMsgTarget(a)}>
                     <Send size={12} /> Message
                   </button>
                 </div>
@@ -460,46 +601,44 @@ const Interviews = () => {
   const { data, loading, error, refetch } = useApi(API.interviews);
 
   return (
-    <div>
-      <div className="flex items-end justify-between mb-7">
+    <div className="fade-up">
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Interview Schedule</h1>
-          <p className="text-slate-400 text-sm mt-1">Upcoming sessions across all open roles</p>
+          <h1 className="serif" style={{ fontSize:"2rem", lineHeight:1.05 }}>Interview Schedule</h1>
+          <p style={{ color:"var(--muted)", fontSize:13, marginTop:5 }}>Upcoming sessions across all open roles</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-violet-500/40 transition-all">
-          <Plus size={15} /> Schedule Interview
-        </button>
+        <button className="btn-grad"><Plus size={15} /> Schedule Interview</button>
       </div>
 
       {error && <Err msg={error} retry={refetch} />}
       {loading ? <Skeletons /> : (
-        <div className="flex flex-col gap-3">
-          {(data || []).map(iv => (
-            <div key={iv.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 hover:border-slate-600 transition-all">
-              <div className="flex items-center gap-3.5">
-                <div className="relative">
-                  <Avatar name={iv.candidate} id={(iv.id || 0) + 5} />
-                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded border-2 border-slate-900 flex items-center justify-center text-white text-[8px] font-black ${iv.interview_type === "video" ? "bg-cyan-500" : "bg-violet-500"}`}>
-                    {iv.interview_type === "video" ? "V" : "P"}
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {(data||[]).map((iv,i) => (
+            <div key={iv.id} className={`card fade-up d${Math.min(i+1,3)}`} style={{ padding:"20px 24px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                <div style={{ position:"relative" }}>
+                  <Avatar name={iv.candidate} id={iv.id+5} />
+                  <div style={{ position:"absolute", bottom:-3, right:-3, width:16, height:16, borderRadius:4, background:iv.interview_type==="video" ? "var(--cyan)" : "var(--violet)", border:"2px solid var(--surface)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:900, color:"#fff" }}>
+                    {iv.interview_type==="video" ? "V" : "P"}
                   </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-white">{iv.candidate}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{iv.job_title}</p>
+                <div style={{ flex:1 }}>
+                  <p style={{ fontSize:14, fontWeight:700 }}>{iv.candidate}</p>
+                  <p style={{ fontSize:12, color:"var(--muted)", marginTop:2 }}>{iv.job_title}</p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-white">{String(iv.date)}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{String(iv.time)}</p>
+                <div style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+                  <div style={{ textAlign:"right" }}>
+                    <p style={{ fontSize:13, fontWeight:700 }}>{String(iv.date)}</p>
+                    <p style={{ fontSize:12, color:"var(--muted)", marginTop:1 }}>{String(iv.time)}</p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-700/60 text-slate-400 border border-slate-700">{iv.type}</span>
-                  <button className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-xs font-semibold hover:text-slate-200 hover:border-slate-500 transition-colors">Reschedule</button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-xs font-bold hover:shadow-lg hover:shadow-violet-500/40 transition-all">Send Invite</button>
+                  <span className="tag">{iv.type}</span>
+                  <button className="btn-ghost" style={{ fontSize:12, padding:"7px 13px" }}>Reschedule</button>
+                  <button className="btn-grad" style={{ fontSize:12, padding:"7px 14px" }}>Send Invite</button>
                 </div>
               </div>
             </div>
           ))}
-          {!loading && !(data || []).length && <Empty icon={Calendar} text="No interviews scheduled." />}
+          {!loading && !(data||[]).length && <Empty icon={Calendar} text="No interviews scheduled." />}
         </div>
       )}
     </div>
@@ -511,48 +650,51 @@ const Messages = () => {
   const { data, loading, error, refetch } = useApi(API.messages);
 
   return (
-    <div>
-      <div className="mb-7">
-        <h1 className="text-2xl font-bold text-white">Messages</h1>
-        <p className="text-slate-400 text-sm mt-1">All outbound candidate communications</p>
+    <div className="fade-up">
+      <div style={{ marginBottom:28 }}>
+        <h1 className="serif" style={{ fontSize:"2rem", lineHeight:1.05 }}>Messages</h1>
+        <p style={{ color:"var(--muted)", fontSize:13, marginTop:5 }}>All outbound candidate communications</p>
       </div>
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: "190px 1fr" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"190px 1fr", gap:14 }}>
         {/* Quick compose */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 h-fit">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-3">Quick Actions</p>
-          {["Interview Invitation", "Acceptance Letter", "Rejection Notice"].map(l => (
-            <button key={l} className="w-full flex items-center gap-2 px-3 py-2 mb-2 rounded-xl border border-slate-700 text-slate-400 text-xs font-semibold text-left hover:text-slate-200 hover:border-slate-600 transition-colors">
+        <div className="card" style={{ padding:16, height:"fit-content" }}>
+          <p className="label" style={{ marginBottom:12 }}>Quick Actions</p>
+          {["Interview Invitation","Acceptance Letter","Rejection Notice"].map(l => (
+            <button key={l} className="btn-ghost" style={{ width:"100%", justifyContent:"flex-start", marginBottom:6, fontSize:12, borderRadius:10 }}>
               <ChevronRight size={11} /> {l}
             </button>
           ))}
         </div>
 
         {/* Message list */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-700/50">
-            <p className="text-sm font-bold text-white">Recent Messages</p>
+        <div className="card" style={{ overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px", borderBottom:"1px solid var(--border)" }}>
+            <p style={{ fontSize:13, fontWeight:700 }}>Recent Messages</p>
           </div>
-          {error && <div className="p-4"><Err msg={error} retry={refetch} /></div>}
-          {loading ? <div className="p-5"><Skeletons /></div> : (
+          {error && <div style={{ padding:16 }}><Err msg={error} retry={refetch} /></div>}
+          {loading ? <div style={{ padding:20 }}><Skeletons /></div> : (
             <div>
-              {(data || []).map((msg, i) => (
+              {(data||[]).map((msg,i) => (
                 <div key={msg.id}
-                  className="flex items-center gap-3.5 px-5 py-3.5 cursor-pointer hover:bg-slate-700/30 transition-colors"
-                  style={{ borderBottom: i < data.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                  style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 20px", borderBottom:i<data.length-1?"1px solid var(--border)":"none", cursor:"pointer", transition:"background 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background="var(--surface2)"}
+                  onMouseLeave={e => e.currentTarget.style.background="transparent"}
                 >
                   <Avatar name={msg.applicant_name} id={msg.applicant} size={36} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white">{msg.applicant_name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{msg.subject}</p>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:13, fontWeight:700 }}>{msg.applicant_name}</p>
+                    <p style={{ fontSize:12, color:"var(--muted)", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{msg.subject}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-700/60 text-slate-400 border border-slate-700">{(msg.message_type || "").replace("_", " ")}</span>
-                    <p className="text-[11px] text-slate-500 mt-1">{new Date(msg.sent).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <span className="tag" style={{ fontSize:10 }}>{(msg.message_type||"").replace("_"," ")}</span>
+                    <p style={{ fontSize:11, color:"var(--muted2)", marginTop:4 }}>
+                      {new Date(msg.sent).toLocaleDateString("en-US",{month:"short",day:"numeric"})}
+                    </p>
                   </div>
                 </div>
               ))}
-              {!loading && !(data || []).length && <Empty icon={MessageSquare} text="No messages sent yet." />}
+              {!loading && !(data||[]).length && <Empty icon={MessageSquare} text="No messages sent yet." />}
             </div>
           )}
         </div>
@@ -566,41 +708,41 @@ const Analytics = () => {
   const { data, loading, error, refetch } = useApi(API.analytics);
 
   const statCards = data ? [
-    { icon: Briefcase, label: "Active Jobs",      value: data.total_jobs,             note: "+1 this week",             color: "from-violet-500 to-purple-600" },
-    { icon: Users,     label: "Total Applicants", value: data.total_applicants,       note: `+${data.new_today} today`, color: "from-cyan-500 to-blue-600"    },
-    { icon: Target,    label: "Shortlisted",      value: data.shortlisted,            note: "in pipeline",              color: "from-emerald-500 to-green-600" },
-    { icon: Award,     label: "Interviews",       value: data.interviews_this_week,   note: "this week",                color: "from-pink-500 to-rose-600"    },
+    { icon:Briefcase, label:"Active Jobs",      value:data.total_jobs,           note:"+1 this week",          bg:"linear-gradient(135deg,#8b5cf6,#6d28d9)" },
+    { icon:Users,     label:"Total Applicants", value:data.total_applicants,     note:`+${data.new_today} today`, bg:"linear-gradient(135deg,#06b6d4,#0284c7)" },
+    { icon:Target,    label:"Shortlisted",      value:data.shortlisted,          note:"in pipeline",           bg:"linear-gradient(135deg,#10b981,#059669)" },
+    { icon:Award,     label:"Interviews",       value:data.interviews_this_week, note:"this week",             bg:"linear-gradient(135deg,#f59e0b,#d97706)" },
   ] : [];
 
   return (
-    <div>
-      <div className="mb-7">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-slate-400 text-sm mt-1">Track your hiring funnel performance over time</p>
+    <div className="fade-up">
+      <div style={{ marginBottom:28 }}>
+        <h1 className="serif" style={{ fontSize:"2rem", lineHeight:1.05 }}>Analytics</h1>
+        <p style={{ color:"var(--muted)", fontSize:13, marginTop:5 }}>Track your hiring funnel performance over time</p>
       </div>
 
       {error && <Err msg={error} retry={refetch} />}
       {loading ? <Skeletons /> : (
         <>
-          <div className="grid grid-cols-4 gap-3 mb-5">
-            {statCards.map((s, i) => (
-              <div key={i} className={`bg-gradient-to-br ${s.color} rounded-2xl p-5 border border-white/10 hover:-translate-y-0.5 hover:shadow-xl transition-all`}>
-                <s.icon size={20} className="text-white/90 mb-3.5" />
-                <p className="text-3xl font-bold text-white leading-none">{s.value}</p>
-                <p className="text-xs text-white/75 font-semibold mt-1">{s.label}</p>
-                <div className="flex items-center gap-1 mt-2.5">
-                  <TrendingUp size={10} className="text-white/70" />
-                  <p className="text-[11px] text-white/70 font-semibold">{s.note}</p>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:18 }}>
+            {statCards.map((s,i) => (
+              <div key={i} className={`card-grad fade-up d${i+1}`} style={{ background:s.bg }}>
+                <s.icon size={20} style={{ color:"rgba(255,255,255,0.9)", marginBottom:14 }} />
+                <p className="serif" style={{ fontSize:"2.4rem", lineHeight:1, color:"#fff" }}>{s.value}</p>
+                <p style={{ fontSize:12, color:"rgba(255,255,255,0.75)", marginTop:4, fontFamily:"Syne", fontWeight:600 }}>{s.label}</p>
+                <div style={{ display:"flex", alignItems:"center", gap:4, marginTop:10 }}>
+                  <TrendingUp size={11} style={{ color:"rgba(255,255,255,0.7)" }} />
+                  <p style={{ fontSize:11, color:"rgba(255,255,255,0.7)", fontWeight:600 }}>{s.note}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5">
-              <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-5">Applications Trend</p>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+            <div className="card" style={{ padding:"20px 24px" }}>
+              <p className="label" style={{ marginBottom:18 }}>Applications Trend</p>
               <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={data?.weekly_data || []}>
+                <AreaChart data={data?.weekly_data||[]}>
                   <defs>
                     <linearGradient id="vGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -608,20 +750,20 @@ const Analytics = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="week" stroke="transparent" tick={{ fill: "#64748b", fontSize: 11 }} />
-                  <YAxis stroke="transparent" tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <XAxis dataKey="week" stroke="transparent" tick={{ fill:"var(--muted)", fontSize:11, fontFamily:"Syne" }} />
+                  <YAxis stroke="transparent" tick={{ fill:"var(--muted)", fontSize:11, fontFamily:"Syne" }} />
                   <Tooltip content={<ChartTip />} />
-                  <Area type="monotone" dataKey="applications" name="Applications" stroke="#8b5cf6" strokeWidth={2} fill="url(#vGrad)" dot={{ fill: "#8b5cf6", r: 4, strokeWidth: 0 }} />
+                  <Area type="monotone" dataKey="applications" name="Applications" stroke="#8b5cf6" strokeWidth={2} fill="url(#vGrad)" dot={{ fill:"#8b5cf6", r:4, strokeWidth:0 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5">
-              <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-5">Views vs Applications</p>
+            <div className="card" style={{ padding:"20px 24px" }}>
+              <p className="label" style={{ marginBottom:18 }}>Views vs Applications</p>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={data?.weekly_data || []} barGap={4}>
+                <BarChart data={data?.weekly_data||[]} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="week" stroke="transparent" tick={{ fill: "#64748b", fontSize: 11 }} />
-                  <YAxis stroke="transparent" tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <XAxis dataKey="week" stroke="transparent" tick={{ fill:"var(--muted)", fontSize:11, fontFamily:"Syne" }} />
+                  <YAxis stroke="transparent" tick={{ fill:"var(--muted)", fontSize:11, fontFamily:"Syne" }} />
                   <Tooltip content={<ChartTip />} />
                   <Bar dataKey="views" name="Views" fill="#06b6d4" radius={[4,4,0,0]} fillOpacity={0.8} />
                   <Bar dataKey="applications" name="Applications" fill="#8b5cf6" radius={[4,4,0,0]} fillOpacity={0.9} />
@@ -642,104 +784,104 @@ export default function EmployerDashboard() {
   const { data: company }         = useApi(API.company);
 
   const nav = [
-    { id: "jobs",       label: "Jobs",       icon: Briefcase     },
-    { id: "applicants", label: "Applicants", icon: Users         },
-    { id: "interviews", label: "Interviews", icon: Calendar      },
-    { id: "messages",   label: "Messages",   icon: MessageSquare },
-    { id: "analytics",  label: "Analytics",  icon: BarChart3     },
+    { id:"jobs",       label:"Jobs",        icon:Briefcase     },
+    { id:"applicants", label:"Applicants",  icon:Users         },
+    { id:"interviews", label:"Interviews",  icon:Calendar      },
+    { id:"messages",   label:"Messages",    icon:MessageSquare },
+    { id:"analytics",  label:"Analytics",   icon:BarChart3     },
   ];
 
   const pages = {
-    jobs: <Jobs />, applicants: <Applicants />,
-    interviews: <Interviews />, messages: <Messages />, analytics: <Analytics />
+    jobs:<Jobs/>, applicants:<Applicants/>,
+    interviews:<Interviews/>, messages:<Messages/>, analytics:<Analytics/>
   };
 
   const used  = company?.active_job_count || 0;
   const total = company?.job_slots        || 4;
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden">
+    <>
+      <Styles />
+      <div style={{ display:"flex", height:"100vh", background:"var(--bg)", overflow:"hidden" }}>
 
-      {/* ── Sidebar ── */}
-      <aside className={`shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300 overflow-hidden ${sidebarOpen ? "w-56" : "w-0"}`}>
+        {/* ── Sidebar ── */}
+        <aside style={{ width:sidebarOpen?220:0, flexShrink:0, overflow:"hidden", background:"var(--surface)", borderRight:"1px solid var(--border)", transition:"width 0.28s cubic-bezier(.4,0,.2,1)", display:"flex", flexDirection:"column" }}>
 
-        {/* Logo */}
-        <div className="px-5 pt-7 pb-5 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shrink-0">
-              <Zap size={16} className="text-white" fill="white" />
-            </div>
-            <div>
-              <p className="text-sm font-extrabold text-white leading-none tracking-tight">HireDesk</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Employer Portal</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="p-3 flex-1">
-          {nav.map(item => (
-            <button key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold mb-0.5 transition-all text-left border ${
-                tab === item.id
-                  ? "bg-violet-500/15 text-violet-400 border-violet-500/20"
-                  : "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800/50"
-              }`}>
-              <item.icon size={15} />
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Company card */}
-        <div className="p-3 pb-5">
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-xs font-extrabold text-white shrink-0">
-                {(company?.name || "C")[0]}
+          {/* Logo */}
+          <div style={{ padding:"26px 18px 20px", borderBottom:"1px solid var(--border)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:"var(--grad)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Zap size={16} style={{ color:"#fff" }} fill="white" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-white leading-none truncate">{company?.name || "Your Company"}</p>
-                <p className="text-[10px] text-cyan-400 capitalize mt-0.5">{company?.plan || "Free"} Plan</p>
+              <div>
+                <p style={{ fontSize:13, fontWeight:800, lineHeight:1, letterSpacing:"0.02em" }}>HireDesk</p>
+                <p style={{ fontSize:10, color:"var(--muted)", marginTop:1 }}>Employer Portal</p>
               </div>
             </div>
-            <p className="text-[10px] font-bold tracking-widest uppercase text-slate-500 mb-2">Job Slots</p>
-            <div className="flex gap-1 mb-1.5">
-              {Array.from({ length: total }).map((_, i) => (
-                <div key={i} className={`flex-1 h-1 rounded-full border border-slate-700 transition-all ${i < used ? "bg-violet-500 border-violet-500" : "bg-slate-800"}`} />
-              ))}
+          </div>
+
+          {/* Nav */}
+          <nav style={{ padding:"12px 10px", flex:1 }}>
+            {nav.map(item => (
+              <button key={item.id} className={`nav-btn ${tab===item.id?"active":""}`} onClick={() => setTab(item.id)}>
+                <item.icon size={15} /> {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Company card */}
+          <div style={{ padding:"12px 12px 18px" }}>
+            <div style={{ padding:"14px", borderRadius:14, background:"var(--surface2)", border:"1px solid var(--border)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                <div style={{ width:30, height:30, borderRadius:8, background:"var(--grad)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, color:"#fff", flexShrink:0 }}>
+                  {(company?.name||"C")[0]}
+                </div>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ fontSize:12, fontWeight:700, lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                    {company?.name||"Your Company"}
+                  </p>
+                  <p style={{ fontSize:10, color:"var(--cyan)", textTransform:"capitalize", marginTop:2 }}>
+                    {company?.plan||"Free"} Plan
+                  </p>
+                </div>
+              </div>
+              <p className="label" style={{ marginBottom:7 }}>Job Slots</p>
+              <div style={{ display:"flex", gap:4, marginBottom:5 }}>
+                {Array.from({length:total}).map((_,i) => (
+                  <div key={i} style={{ flex:1, height:4, borderRadius:2, background:i<used?"var(--violet)":"var(--surface)", border:"1px solid var(--border2)", transition:"background 0.3s" }} />
+                ))}
+              </div>
+              <p style={{ fontSize:11, color:"var(--muted2)" }}>{used} of {total} slots used</p>
             </div>
-            <p className="text-[11px] text-slate-500">{used} of {total} slots used</p>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* ── Main ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* ── Main ── */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
 
-        {/* Header */}
-        <header className="h-14 shrink-0 flex items-center justify-between px-7 bg-slate-900 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebar(o => !o)} className="p-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors">
-              <Menu size={15} />
+          {/* Header */}
+          <header style={{ height:58, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 28px", background:"var(--surface)", borderBottom:"1px solid var(--border)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <button onClick={() => setSidebar(o=>!o)} className="btn-ghost" style={{ padding:7, borderRadius:8 }}><Menu size={15}/></button>
+              <div style={{ width:1, height:16, background:"var(--border)" }} />
+              <p style={{ fontSize:12, color:"var(--muted)", fontWeight:600, textTransform:"capitalize" }}>
+                {nav.find(n=>n.id===tab)?.label}
+              </p>
+            </div>
+            <button className="btn-ghost" style={{ padding:"7px 10px", position:"relative" }}>
+              <Bell size={14}/>
+              <span className="notif-dot" style={{ position:"absolute", top:7, right:7 }} />
             </button>
-            <div className="w-px h-4 bg-slate-800" />
-            <p className="text-xs text-slate-400 font-semibold capitalize">{nav.find(n => n.id === tab)?.label}</p>
-          </div>
-          <button className="relative p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors">
-            <Bell size={14} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-violet-500" />
-          </button>
-        </header>
+          </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-4xl mx-auto">
-            {pages[tab]}
-          </div>
-        </main>
+          {/* Content */}
+          <main style={{ flex:1, overflowY:"auto", padding:"34px 36px" }}>
+            <div style={{ maxWidth:900, margin:"0 auto" }}>
+              {pages[tab]}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

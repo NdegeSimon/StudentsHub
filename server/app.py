@@ -14,16 +14,6 @@ def create_app():
     app = Flask(__name__)
     load_dotenv()
 
-    # Configure CORS
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"],
-            "supports_credentials": True
-        }
-    })
-
     # Configuration
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"),
@@ -54,24 +44,25 @@ def create_app():
     bcrypt.init_app(app)
     mail.init_app(app)
     
-    # Initialize SocketIO with threading instead of eventlet
+    # Initialize SocketIO with CORS enabled
     socketio.init_app(app, 
-                     cors_allowed_origins=os.getenv('FRONTEND_URL', 'http://localhost:3000'),
+                     cors_allowed_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
                      async_mode='threading',
                      logger=True,
                      engineio_logger=True)
 
-    # CORS - Allow all origins in development
+    # Configure CORS for Flask
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000", "http://localhost:5173", os.getenv('FRONTEND_URL', 'http://localhost:3000')],
+            "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
             "supports_credentials": True,
-            "expose_headers": ["Content-Disposition"]
+            "expose_headers": ["Content-Disposition"],
+            "max_age": 3600
         },
         r"/uploads/*": {
-            "origins": ["http://localhost:3000", "http://localhost:5173", os.getenv('FRONTEND_URL', 'http://localhost:3000')],
+            "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
             "methods": ["GET"],
             "supports_credentials": True
         }
