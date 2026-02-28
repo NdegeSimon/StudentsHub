@@ -152,11 +152,14 @@ const Signup = () => {
       setSuccess(successMessage);
       toast.success(successMessage);
 
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        console.log('Token and user data stored successfully');
-      }
+      // don't automatically log the user in after registration;
+      // redirecting to login page instead.  
+      // If you wish to auto-login you could store the token here.
+      // if (response.data.access_token) {
+      //   localStorage.setItem('token', response.data.access_token);
+      //   localStorage.setItem('user', JSON.stringify(response.data.user));
+      //   console.log('Token and user data stored successfully');
+      // }
 
       // All users redirect to login after signup
       setTimeout(() => {

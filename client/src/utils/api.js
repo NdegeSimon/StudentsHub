@@ -34,6 +34,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.status, error.message);
+    
+    // Enhanced error logging for debugging
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      // check for a request object as further clue
+      if (error.request && error.request.readyState === 0) {
+        console.error('Network Error - request never left the browser (possibly blocked by DevTools or offline mode). URL:', error.config?.url);
+        console.error('Check Chrome DevTools Network panel for blocked URLs or Offline mode.');
+      } else {
+        console.error('Network Error - Backend may not be running. URL:', error.config?.url);
+        console.error('Ensure the server is running on', API_BASE_URL);
+      }
+    }
+    
     if (error.response?.status === 401) {
       // Handle unauthorized errors
       localStorage.removeItem('token');

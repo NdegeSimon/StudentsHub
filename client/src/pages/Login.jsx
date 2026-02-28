@@ -19,6 +19,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Helper to extract token and user from different backend response shapes
+  const extractAuthFromResponse = (response) => {
+    const d = response?.data || {};
+    const token = d.access_token || d.token || d.tokens?.access_token || d.data?.access_token || d.data?.tokens?.access_token || null;
+    const user = d.user || d.data?.user || null;
+    return { token, user };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -32,18 +40,21 @@ export default function Login() {
 
       console.log('Login successful!', response.data);
 
-      // Store the token and user data
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Store the token and user data (support multiple response shapes)
+      const { token, user } = extractAuthFromResponse(response);
+      if (token) localStorage.setItem('token', token);
+      if (user) localStorage.setItem('user', JSON.stringify(user));
       
       // Show success message
       toast.success('Login successful! Redirecting...');
       
-      // Hard redirect to dashboard after brief delay
+      // Hard redirect to the appropriate area after brief delay
       setTimeout(() => {
         const userData = response.data.user;
         if (userData.role === 'admin' || userData.role === 'superadmin') {
           window.location.href = '/admin';
+        } else if (userData.role === 'employer' || userData.role === 'company') {
+          window.location.href = '/employer';
         } else {
           window.location.href = '/dashboard';
         }
@@ -51,9 +62,23 @@ export default function Login() {
       
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          'Login failed. Please check your credentials.';
+      
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      // Handle different error scenarios
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        // differentiate between backend down and DevTools blocking
+        if (error.request && error.request.readyState === 0) {
+          errorMessage = 'Network request blocked (DevTools may be blocking URLs or in offline mode). Remove any blocked URLs or disable offline throttling.';
+        } else {
+          errorMessage = 'Cannot connect to server. Make sure the backend is running on http://localhost:5001';
+        }
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       setError(errorMessage);
       toast.error(errorMessage);
       setLoading(false);
@@ -73,8 +98,9 @@ export default function Login() {
         profilePicture: user.photoURL
       });
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const g = extractAuthFromResponse(response);
+      if (g.token) localStorage.setItem('token', g.token);
+      if (g.user) localStorage.setItem('user', JSON.stringify(g.user));
       
       toast.success('Google login successful!');
       
@@ -82,6 +108,8 @@ export default function Login() {
         const userData = response.data.user;
         if (userData.role === 'admin' || userData.role === 'superadmin') {
           window.location.href = '/admin';
+        } else if (userData.role === 'employer' || userData.role === 'company') {
+          window.location.href = '/employer';
         } else {
           window.location.href = '/dashboard';
         }
@@ -106,8 +134,9 @@ export default function Login() {
         profilePicture: user.photoURL
       });
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const gh = extractAuthFromResponse(response);
+      if (gh.token) localStorage.setItem('token', gh.token);
+      if (gh.user) localStorage.setItem('user', JSON.stringify(gh.user));
       
       toast.success('GitHub login successful!');
       
@@ -115,6 +144,8 @@ export default function Login() {
         const userData = response.data.user;
         if (userData.role === 'admin' || userData.role === 'superadmin') {
           window.location.href = '/admin';
+        } else if (userData.role === 'employer' || userData.role === 'company') {
+          window.location.href = '/employer';
         } else {
           window.location.href = '/dashboard';
         }
@@ -139,8 +170,9 @@ export default function Login() {
         profilePicture: user.photoURL
       });
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const fb = extractAuthFromResponse(response);
+      if (fb.token) localStorage.setItem('token', fb.token);
+      if (fb.user) localStorage.setItem('user', JSON.stringify(fb.user));
       
       toast.success('Facebook login successful!');
       
@@ -148,6 +180,8 @@ export default function Login() {
         const userData = response.data.user;
         if (userData.role === 'admin' || userData.role === 'superadmin') {
           window.location.href = '/admin';
+        } else if (userData.role === 'employer' || userData.role === 'company') {
+          window.location.href = '/employer';
         } else {
           window.location.href = '/dashboard';
         }
