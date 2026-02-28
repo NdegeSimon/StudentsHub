@@ -216,19 +216,21 @@ const Signup = () => {
           provider: 'google'
         });
 
-        localStorage.setItem('token', loginResponse.data.access_token);
-        localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+        // support multiple response shapes
+        const lr = loginResponse?.data || {};
+        const token = lr.access_token || lr.data?.access_token || lr.data?.tokens?.access_token || lr.tokens?.access_token || null;
+        const user = lr.user || lr.data?.user || null;
+        if (token) localStorage.setItem('token', token);
+        if (user) localStorage.setItem('user', JSON.stringify(user));
 
-        const redirectPath = loginResponse.data.user.role === 'employer' ? '/employer/dashboard' : '/dashboard';
+        const redirectPath = (user?.role === 'employer') ? '/employer' : '/dashboard';
         window.location.href = redirectPath;
       } else {
         const registerResponse = await authAPI.register(userData);
-
-        localStorage.setItem('token', registerResponse.data.access_token);
-        localStorage.setItem('user', JSON.stringify(registerResponse.data.user));
-
-        const redirectPath = userType === 'employer' ? '/employer/dashboard' : '/dashboard';
-        window.location.href = redirectPath;
+        // After registering via social provider, redirect to login so user can confirm
+        // (avoid auto-login for newly created accounts)
+        toast.success('Account created. Please log in to continue.');
+        setTimeout(() => navigate('/login'), 1200);
       }
 
     } catch (error) {

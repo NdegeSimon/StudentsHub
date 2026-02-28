@@ -15,8 +15,10 @@ const useApi = (apiCall, options = {}) => {
     
     try {
       const response = await apiCall(params);
-      setData(response.data);
-      return response.data;
+      // Support apiCall returning either an axios-like response or the parsed data
+      const payload = (response && response.data !== undefined) ? response.data : response;
+      setData(payload);
+      return payload;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'An error occurred';
       setError(errorMessage);

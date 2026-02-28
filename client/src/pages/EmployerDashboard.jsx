@@ -161,7 +161,7 @@ const Styles = () => <style dangerouslySetInnerHTML={{ __html: CSS }} />;
 // ─── API ───────────────────────────────────────────────────────────────────────
 // Default to local backend used by server/app.py (port 5001)
 const BASE = (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) || "http://localhost:5001/api";
-const getToken = () => localStorage.getItem("access_token");
+const getToken = () => localStorage.getItem("token") || localStorage.getItem("access_token");
 
 async function apiFetch(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
