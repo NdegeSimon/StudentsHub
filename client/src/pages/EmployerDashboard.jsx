@@ -222,6 +222,27 @@ const API = {
     return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload) });
   },
 
+  // Update job: PUT /api/jobs/:id
+  updateJob: (id, d) => {
+    const payload = {
+      title: d.title,
+      description: d.description,
+      location: d.location,
+      job_type: d.job_type,
+      experience_level: d.experience_level,
+      requirements: d.required_skills || ''
+    };
+    if (d.salary) {
+      const parts = String(d.salary).split(/[–-]/).map(s => s.replace(/[^0-9]/g, '')).filter(Boolean);
+      if (parts.length === 1) payload.salary_min = Number(parts[0]);
+      else if (parts.length >= 2) { payload.salary_min = Number(parts[0]); payload.salary_max = Number(parts[1]); }
+    }
+    return apiFetch(`/jobs/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+  },
+
+  // Delete job: DELETE /api/jobs/:id
+  deleteJob: (id) => apiFetch(`/jobs/${id}`, { method: 'DELETE' }),
+
   // Close job by marking inactive: PUT /api/jobs/:id
   closeJob: (id) => apiFetch(`/jobs/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: false }) }),
 
@@ -326,17 +347,39 @@ const ChartTip = ({ active, payload, label }) => {
 };
 
 // ─── JOB MODAL ────────────────────────────────────────────────────────────────
-const JobModal = ({ onClose, onSuccess }) => {
+const JobModal = ({ job = null, onClose, onSuccess }) => {
   const [form, setForm] = useState({ title:"", location:"", job_type:"full-time", salary:"", experience_level:"mid", description:"", required_skills:"" });
   const [busy, setBusy] = useState(false);
   const [err,  setErr]  = useState(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
+  useEffect(() => {
+    // populate form when editing
+    if (job) {
+      setForm({
+        title: job.title || '',
+        location: job.location || '',
+        job_type: job.type || job.job_type || 'full-time',
+        salary: job.salary || '',
+        experience_level: job.experience_level || 'mid',
+        description: job.description || job.summary || '',
+        required_skills: job.required_skills || job.requirements || ''
+      });
+    }
+  }, [job]);
+
   const submit = async () => {
     if (!form.title || !form.description) return setErr("Title and description are required.");
     setBusy(true); setErr(null);
-    try { await API.createJob(form); onSuccess(); onClose(); }
-    catch (e) { setErr(e.message); setBusy(false); }
+    try {
+      if (job && job.id) {
+        await API.updateJob(job.id, form);
+      } else {
+        await API.createJob(form);
+      }
+      onSuccess(); onClose();
+    }
+    catch (e) { setErr(e.message || String(e)); setBusy(false); }
   };
 
   return (
@@ -448,10 +491,22 @@ const MsgModal = ({ applicant, onClose }) => {
 const Jobs = () => {
   const { data, loading, error, refetch } = useApi(API.jobs);
   const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   const closeJob = async id => {
     if (!window.confirm("Close this job posting?")) return;
     try { await API.closeJob(id); refetch(); } catch (e) { alert(e.message); }
+  };
+
+  const onEdit = (job) => {
+    setEditing(job);
+    setModal(true);
+  };
+
+  const onDelete = async (id) => {
+    if (!window.confirm('Delete this job? This cannot be undone.')) return;
+    try { await API.deleteJob(id); refetch(); }
+    catch (e) { alert(e.message || 'Failed to delete job'); }
   };
 
   return (
@@ -491,9 +546,13 @@ const Jobs = () => {
                     <p className="serif grad-text" style={{ fontSize:"1.6rem", lineHeight:1 }}>{job.applicants}</p>
                     <p style={{ fontSize:10, color:"var(--muted)", textTransform:"uppercase", letterSpacing:"0.05em" }}>applicants</p>
                   </div>
-                  {job.status === "active" && (
-                    <button className="btn-ghost" style={{ fontSize:12, padding:"7px 14px" }} onClick={() => closeJob(job.id)}>Close</button>
-                  )}
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    {job.status === "active" && (
+                      <button className="btn-ghost" style={{ fontSize:12, padding:"7px 14px" }} onClick={() => closeJob(job.id)}>Close</button>
+                    )}
+                    <button className="btn-ghost" style={{ fontSize:12, padding:"7px 14px" }} onClick={() => onEdit(job)}>Edit</button>
+                    <button className="btn-ghost" style={{ fontSize:12, padding:"7px 14px", color:'var(--red)' }} onClick={() => onDelete(job.id)}>Delete</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -501,7 +560,7 @@ const Jobs = () => {
           {!loading && !(data||[]).length && <Empty icon={Briefcase} text="No jobs posted yet — create your first listing!" />}
         </div>
       )}
-      {modal && <JobModal onClose={() => setModal(false)} onSuccess={refetch} />}
+      {modal && <JobModal job={editing} onClose={() => { setModal(false); setEditing(null); }} onSuccess={() => { refetch(); setEditing(null); }} />}
     </div>
   );
 };
