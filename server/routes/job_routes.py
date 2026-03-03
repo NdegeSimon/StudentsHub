@@ -81,7 +81,8 @@ def get_jobs():
         # Get saved job IDs for current user if authenticated
         saved_job_ids = set()
         try:
-            current_user_id = get_jwt_identity()
+            current_identity = get_jwt_identity()
+            current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
             if current_user_id:
                 saved_jobs = SavedJob.query.filter_by(user_id=current_user_id).all()
                 saved_job_ids = {sj.job_id for sj in saved_jobs}
@@ -154,7 +155,8 @@ def get_job_detail(job_id):
         # Get saved status for current user
         is_saved = False
         try:
-            current_user_id = get_jwt_identity()
+            current_identity = get_jwt_identity()
+            current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
             if current_user_id:
                 is_saved = SavedJob.query.filter_by(
                     user_id=current_user_id, 
@@ -242,9 +244,10 @@ def create_job():
     Create a new job posting (employers only)
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         user = User.query.get(current_user_id)
-        
+
         if not user or user.role != 'employer':
             return jsonify({
                 'success': False,
@@ -314,7 +317,8 @@ def update_job(job_id):
     Update a job posting (job owner only)
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         job = Job.query.get_or_404(job_id)
 
         # Check permissions
@@ -371,7 +375,8 @@ def delete_job(job_id):
     Delete a job posting (soft delete - sets is_active to False)
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         job = Job.query.get_or_404(job_id)
 
         # Check permissions
@@ -411,7 +416,8 @@ def get_saved_jobs():
     Get all jobs saved by the current user
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         
         page = request.args.get('page', 1, type=int)
         limit = min(request.args.get('limit', 10, type=int), 50)
@@ -467,7 +473,8 @@ def save_job(job_id):
     Save a job for the current user
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         
         # Check if job exists and is active
         job = Job.query.get(job_id)
@@ -523,8 +530,9 @@ def unsave_job(job_id):
     Unsave a job for the current user
     """
     try:
-        current_user_id = get_jwt_identity()
-        
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
+
         # Find saved job
         saved_job = SavedJob.query.filter_by(
             user_id=current_user_id,
@@ -567,9 +575,10 @@ def get_employer_jobs():
     Get all jobs posted by the current employer
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         user = User.query.get(current_user_id)
-        
+
         if not user or user.role != 'employer':
             return jsonify({
                 'success': False,
@@ -639,9 +648,10 @@ def apply_to_job(job_id):
     Apply to a job (students only)
     """
     try:
-        current_user_id = get_jwt_identity()
+        current_identity = get_jwt_identity()
+        current_user_id = current_identity.get('id') if isinstance(current_identity, dict) else current_identity
         user = User.query.get(current_user_id)
-        
+
         if not user or user.role != 'student':
             return jsonify({
                 'success': False,
