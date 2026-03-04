@@ -39,7 +39,37 @@ export default function JobDetails() {
     const fetchJobDetails = async () => {
       try {
         const response = await api.get(`/jobs/${id}`);
-        setJob(response.data);
+        const payload = response.data || response;
+
+        // Normalize different backend response shapes
+        const jobPayload = payload.job || payload.data || payload;
+
+        const normalized = {
+          id: jobPayload.id,
+          title: jobPayload.title || jobPayload.name,
+          description: jobPayload.description || jobPayload.desc || '',
+          requirements: Array.isArray(jobPayload.requirements)
+            ? jobPayload.requirements
+            : jobPayload.requirements
+              ? String(jobPayload.requirements).split('\n').filter(Boolean)
+              : null,
+          responsibilities: Array.isArray(jobPayload.responsibilities)
+            ? jobPayload.responsibilities
+            : jobPayload.responsibilities
+              ? String(jobPayload.responsibilities).split('\n').filter(Boolean)
+              : null,
+          location: jobPayload.location,
+          job_type: jobPayload.job_type || jobPayload.type,
+          experience: jobPayload.experience_level || jobPayload.experience || null,
+          salary: jobPayload.salary_min || jobPayload.salary || null,
+          postedAt: jobPayload.created_at || jobPayload.posted_date || jobPayload.postedAt,
+          company: (jobPayload.company && (jobPayload.company.name || jobPayload.company.company_name)) || jobPayload.company || jobPayload.company_name || 'Unknown',
+          companyDescription: (jobPayload.company && (jobPayload.company.description || jobPayload.company.desc)) || jobPayload.companyDescription || null,
+          companyWebsite: jobPayload.company && (jobPayload.company.website || jobPayload.company.website_url) || jobPayload.companyWebsite || null,
+          isRemote: jobPayload.work_mode === 'remote' || jobPayload.is_remote || !!jobPayload.isRemote,
+        };
+
+        setJob(normalized);
       } catch (err) {
         setError('Failed to load job details');
         console.error('Error fetching job:', err);
