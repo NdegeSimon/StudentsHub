@@ -866,20 +866,7 @@ export default function EmployerDashboard() {
         {/* ── Sidebar ── */}
         <aside style={{ width:sidebarOpen?220:0, flexShrink:0, overflow:"hidden", background:"var(--surface)", borderRight:"1px solid var(--border)", transition:"width 0.28s cubic-bezier(.4,0,.2,1)", display:"flex", flexDirection:"column" }}>
 
-          {/* Logo */}
-          <div style={{ padding:"26px 18px 20px", borderBottom:"1px solid var(--border)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <div style={{ width:32, height:32, borderRadius:8, background:"var(--grad)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <Zap size={16} style={{ color:"#fff" }} fill="white" />
-              </div>
-              <div>
-                <p style={{ fontSize:13, fontWeight:800, lineHeight:1, letterSpacing:"0.02em" }}>HireDesk</p>
-                <p style={{ fontSize:10, color:"var(--muted)", marginTop:1 }}>Employer Portal</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Nav */}
+            {/* Nav */}
           <nav style={{ padding:"12px 10px", flex:1 }}>
             {nav.map(item => (
               <button key={item.id} className={`nav-btn ${tab===item.id?"active":""}`} onClick={() => setTab(item.id)}>
