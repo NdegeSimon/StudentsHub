@@ -230,6 +230,7 @@ const App = () => {
                     <Route path="/messages" element={<MessagingSystem />} />
                     <Route path="/premium-payment" element={<PremiumPayment />} />
                     <Route path="/jobs/:id" element={<JobDetails />} />
+                    <Route path="/job/:id" element={<JobDetails />} />
                     <Route path="/internships" element={<InternshipsPage />} />
                     <Route path="/saved-jobs" element={<SavedJobsPage />} />                
                                          

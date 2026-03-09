@@ -515,7 +515,7 @@ const NextLevelDashboard = () => {
 
   const handleApplyJob = async (jobId, e) => {
     e?.stopPropagation();
-    navigate(`/job/${jobId}`);
+    navigate(`/jobs/${jobId}`);
   };
 
   // Search handler function
@@ -733,7 +733,7 @@ const NextLevelDashboard = () => {
                             <div
                               key={result.id}
                               onClick={() => {
-                                navigate(`/job/${result.id}`);
+                                navigate(`/jobs/${result.id}`);
                                 setShowSearchDropdown(false);
                               }}
                               className="p-4 hover:bg-slate-700/30 transition-colors cursor-pointer border-b border-slate-700/30 last:border-b-0"
