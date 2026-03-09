@@ -249,7 +249,22 @@ const API = {
   // Employer applicants: server route /api/employer/applications
   applicants: async () => {
     const res = await apiFetch('/employer/applications');
-    return res.applications || [];
+    const apps = res.applications || [];
+    return apps.map(a => ({
+      id: a.id,
+      name: a.student?.name || "Unknown Candidate",
+      job_title: a.job?.title || "Unknown Job",
+      experience: a.student?.experience || "Not specified",
+      location: a.student?.location || "Not specified",
+      applied: a.applied_at ? new Date(a.applied_at).toLocaleDateString() : "Recently",
+      rating: a.match_percentage || 0,
+      status: a.status || "new",
+      cover_letter: a.cover_letter || "",
+      resume_url: a.student?.resume_url || "",
+      email: a.student?.email || "",
+      phone: a.student?.phone || "",
+      profile_picture: a.student?.profile_picture || "",
+    }));
   },
 
   // Update application status: PUT /api/employer/applications/:id

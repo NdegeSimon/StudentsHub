@@ -32,7 +32,7 @@ export default function JobsPage() {
   // Fetch jobs from backend using your jobAPI
   useEffect(() => {
     fetchJobs();
-  }, [page, filters]);
+  }, [page, filters, searchText]);
 
   const fetchJobs = async () => {
     try {
@@ -60,6 +60,7 @@ export default function JobsPage() {
       }
       
       // Call your jobAPI.getAllJobs()
+      console.log("Fetching jobs with params:", queryParams);
       const response = await jobAPI.getAllJobs(queryParams);
       
       // Debug log to see response structure
@@ -68,22 +69,33 @@ export default function JobsPage() {
       // Handle different response structures from your API
       let jobsData = [];
       
-      // Case 1: response.data is the jobs array
-      if (response && Array.isArray(response.data)) {
+      // Case 1: response.data.jobs (backend returns { success, jobs, pagination })
+      if (response && response.data && response.data.jobs && Array.isArray(response.data.jobs)) {
+        console.log("Found jobs in response.data.jobs");
+        jobsData = response.data.jobs;
+      }
+      // Case 2: response.data is the jobs array
+      else if (response && Array.isArray(response.data)) {
+        console.log("Found jobs in response.data");
         jobsData = response.data;
       }
-      // Case 2: response is the jobs array directly
+      // Case 3: response is the jobs array directly
       else if (Array.isArray(response)) {
+        console.log("Found jobs directly in response");
         jobsData = response;
       }
-      // Case 3: response has a 'jobs' property
+      // Case 4: response has a 'jobs' property
       else if (response && response.jobs && Array.isArray(response.jobs)) {
+        console.log("Found jobs in response.jobs");
         jobsData = response.jobs;
       }
-      // Case 4: response.data.data structure
+      // Case 5: response.data.data structure
       else if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log("Found jobs in response.data.data");
         jobsData = response.data.data;
       }
+      
+      console.log("Extracted jobs:", jobsData);
       
       // Load saved jobs from localStorage
       const savedJobsFromStorage = JSON.parse(localStorage.getItem('savedJobs') || '[]');
