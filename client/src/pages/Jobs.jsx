@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { jobAPI } from '../services/api';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -168,7 +169,10 @@ const Jobs = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                    <button 
+                      onClick={() => navigate(`/jobs/${job.id}`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
                       Apply Now
                     </button>
                     <p className="text-xs text-gray-500 mt-1">Posted {new Date(job.created_at).toLocaleDateString()}</p>
@@ -192,7 +196,10 @@ const Jobs = () => {
                       </div>
                     )}
                   </div>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  <button 
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
                     View Details →
                   </button>
                 </div>

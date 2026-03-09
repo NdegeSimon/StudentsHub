@@ -217,28 +217,8 @@ const SavedJobsPage = () => {
   };
 
   const handleApply = async (jobId) => {
-    try {
-      // Check if user has resume
-      if (!userProfile?.resumeUrl) {
-        toast.error('Please upload your resume before applying');
-        return;
-      }
-
-      // await api.applyToJob(jobId);
-      
-      // Update local state
-      setSavedJobs(prev => prev.map(job => 
-        job.jobId === jobId ? { ...job, applied: true } : job
-      ));
-      
-      setUpcomingDeadlines(prev => prev.map(job => 
-        job.id === jobId ? { ...job, applied: true } : job
-      ));
-
-      toast.success('Application submitted successfully!');
-    } catch (error) {
-      toast.error(error.message || 'Failed to submit application');
-    }
+    // Navigate to job details page instead of applying directly
+    navigate(`/jobs/${jobId}`);
   };
 
   const UpcomingDeadlinesCard = () => (
